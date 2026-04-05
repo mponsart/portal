@@ -3,6 +3,7 @@ $user = $_SESSION['user'];
 $config = require __DIR__ . '/../config.php';
 $services = $config['services'] ?? [];
 $jobs = $config['jobs'] ?? [];
+$currentPage = 'signatures';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -28,51 +29,69 @@ $jobs = $config['jobs'] ?? [];
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900" style="font-family: 'Titillium Web', sans-serif;">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
-            <div class="flex items-center gap-4">
-                <img src="/assets/images/cloudy.png" alt="Groupe Speed Cloud" class="w-12 h-12 rounded-xl">
-                <div>
-                    <h1 class="text-xl font-bold text-white">Signatures</h1>
-                    <p class="text-gray-400 text-sm">Association Groupe Speed Cloud</p>
+    
+    <!-- Navigation Bar -->
+    <nav class="bg-black/30 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
+                    <img src="/assets/images/cloudy.png" alt="" class="w-10 h-10 rounded-lg">
+                    <span class="text-white font-bold text-lg hidden sm:block">Groupe Speed Cloud</span>
+                </a>
+                
+                <!-- Nav Links -->
+                <div class="flex items-center gap-1 sm:gap-2">
+                    <a href="/" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition <?= $currentPage === 'signatures' ? 'bg-speed-purple text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white' ?>">
+                        <span class="hidden sm:inline">✍️ Signatures</span>
+                        <span class="sm:hidden">✍️</span>
+                    </a>
+                    <a href="/chibi.php" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition <?= $currentPage === 'avatar' ? 'bg-speed-purple text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white' ?>">
+                        <span class="hidden sm:inline">✨ Avatar</span>
+                        <span class="sm:hidden">✨</span>
+                    </a>
                 </div>
-            </div>
-            <div class="flex items-center gap-4">
+                
+                <!-- User Menu -->
                 <div class="flex items-center gap-3">
                     <?php if (!empty($user['picture'])): ?>
-                    <img src="<?= htmlspecialchars($user['picture']) ?>" alt="" class="w-10 h-10 rounded-full">
+                    <img src="<?= htmlspecialchars($user['picture']) ?>" alt="" class="w-8 h-8 rounded-full border-2 border-white/20">
                     <?php endif; ?>
-                    <div class="text-right hidden sm:block">
-                        <p class="text-white text-sm font-medium"><?= htmlspecialchars($user['name']) ?></p>
+                    <div class="hidden md:block text-right">
+                        <p class="text-white text-sm font-medium leading-tight"><?= htmlspecialchars($user['name']) ?></p>
                         <p class="text-gray-400 text-xs"><?= htmlspecialchars($user['email']) ?></p>
                     </div>
+                    <a href="/logout.php" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition" title="Déconnexion">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </a>
                 </div>
-                <a href="/logout.php" class="text-gray-400 hover:text-white transition" title="Déconnexion">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                </a>
             </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Page Header -->
+        <div class="max-w-4xl mx-auto mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">✍️ Créer ma Signature</h1>
+            <p class="text-gray-400">Générez votre signature email professionnelle</p>
         </div>
 
         <!-- Tabs -->
         <div class="max-w-4xl mx-auto mb-6">
-            <div class="flex flex-col sm:flex-row gap-2">
-                <button id="tabPersonal" class="px-6 py-3 rounded-t-lg sm:rounded-t-lg bg-white/10 text-white font-medium border-b-2 border-speed-purple transition">
-                    👤 Signature Personnelle
+            <div class="flex gap-2 bg-white/5 p-1 rounded-xl w-fit">
+                <button id="tabPersonal" class="px-5 py-2.5 rounded-lg text-sm font-medium transition bg-speed-purple text-white">
+                    👤 Personnelle
                 </button>
-                <button id="tabService" class="px-6 py-3 rounded-t-lg sm:rounded-t-lg bg-white/5 text-gray-400 font-medium border-b-2 border-transparent hover:text-white transition">
-                    🏢 Signature Service
+                <button id="tabService" class="px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-300 hover:bg-white/10">
+                    🏢 Service
                 </button>
-                <a href="/chibi.php" class="px-6 py-3 rounded-t-lg sm:rounded-t-lg bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-gray-300 font-medium border-b-2 border-transparent hover:text-white hover:border-pink-400 transition flex items-center justify-center gap-2">
-                    ✨ Créer mon Chibi
-                </a>
             </div>
         </div>
 
         <!-- Main Content -->
-        <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-tl-none p-4 sm:p-8 shadow-2xl border border-white/20">
+        <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-8 shadow-2xl border border-white/20">
             
             <!-- Personal Signature Form -->
             <form id="personalForm" class="grid md:grid-cols-2 gap-6 mb-8">
@@ -205,10 +224,10 @@ $jobs = $config['jobs'] ?? [];
         // Tab switching
         tabPersonal.addEventListener('click', () => {
             currentTab = 'personal';
-            tabPersonal.classList.add('bg-white/10', 'text-white', 'border-speed-purple');
-            tabPersonal.classList.remove('bg-white/5', 'text-gray-400', 'border-transparent');
-            tabService.classList.remove('bg-white/10', 'text-white', 'border-speed-purple');
-            tabService.classList.add('bg-white/5', 'text-gray-400', 'border-transparent');
+            tabPersonal.classList.add('bg-speed-purple', 'text-white');
+            tabPersonal.classList.remove('text-gray-300', 'hover:bg-white/10');
+            tabService.classList.remove('bg-speed-purple', 'text-white');
+            tabService.classList.add('text-gray-300', 'hover:bg-white/10');
             personalForm.classList.remove('hidden');
             serviceForm.classList.add('hidden');
             updatePreview();
@@ -216,10 +235,10 @@ $jobs = $config['jobs'] ?? [];
         
         tabService.addEventListener('click', () => {
             currentTab = 'service';
-            tabService.classList.add('bg-white/10', 'text-white', 'border-speed-purple');
-            tabService.classList.remove('bg-white/5', 'text-gray-400', 'border-transparent');
-            tabPersonal.classList.remove('bg-white/10', 'text-white', 'border-speed-purple');
-            tabPersonal.classList.add('bg-white/5', 'text-gray-400', 'border-transparent');
+            tabService.classList.add('bg-speed-purple', 'text-white');
+            tabService.classList.remove('text-gray-300', 'hover:bg-white/10');
+            tabPersonal.classList.remove('bg-speed-purple', 'text-white');
+            tabPersonal.classList.add('text-gray-300', 'hover:bg-white/10');
             serviceForm.classList.remove('hidden');
             personalForm.classList.add('hidden');
             updatePreview();
