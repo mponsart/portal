@@ -141,33 +141,8 @@ $currentPage = 'signatures';
                 <input type="hidden" id="serviceSignatureType" value="service">
             </form>
             
-            <!-- Client Email Selection -->
-            <div class="mb-8">
-                <label class="block text-sm font-semibold text-gray-200 mb-2">Format de signature</label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label class="cursor-pointer">
-                        <input type="radio" name="style" value="gmail" class="peer hidden" checked>
-                        <div class="p-4 bg-white/5 border-2 border-white/10 rounded-lg text-center peer-checked:border-speed-purple peer-checked:bg-speed-purple/20 transition">
-                            <span class="text-2xl block mb-1">💻</span>
-                            <span class="text-white font-medium text-sm">Gmail Desktop</span>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="style" value="outlook" class="peer hidden">
-                        <div class="p-4 bg-white/5 border-2 border-white/10 rounded-lg text-center peer-checked:border-speed-purple peer-checked:bg-speed-purple/20 transition">
-                            <span class="text-2xl block mb-1">📧</span>
-                            <span class="text-white font-medium text-sm">Outlook</span>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="style" value="dolibarr" class="peer hidden">
-                        <div class="p-4 bg-white/5 border-2 border-white/10 rounded-lg text-center peer-checked:border-speed-purple peer-checked:bg-speed-purple/20 transition">
-                            <span class="text-2xl block mb-1">🏢</span>
-                            <span class="text-white font-medium text-sm">BackOffice</span>
-                        </div>
-                    </label>
-                </div>
-            </div>
+            <!-- Format unique (caché) -->
+            <input type="hidden" name="style" value="gmail" checked>
 
             <!-- Preview -->
             <div class="bg-white rounded-xl overflow-hidden shadow-lg">
@@ -185,7 +160,7 @@ $currentPage = 'signatures';
                             📋 Copier HTML
                         </button>
                         <button id="generateLinkBtn" class="text-sm bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition flex-1 sm:flex-initial" title="Pour Gmail">
-                            🔗 Lien Gmail
+                            🔗 Lien image
                         </button>
                     </div>
                 </div>
@@ -212,12 +187,12 @@ $currentPage = 'signatures';
                 <h3 class="text-white font-semibold mb-2">💡 Comment utiliser</h3>
                 <div class="grid sm:grid-cols-2 gap-4 text-sm">
                     <div class="bg-white/5 rounded-lg p-3">
-                        <p class="text-emerald-400 font-semibold mb-1">🔗 Gmail</p>
-                        <p class="text-gray-300">Cliquez "Lien Gmail" → Copiez l'URL → Gmail Paramètres → Signature → Insérer image → Par URL</p>
+                        <p class="text-emerald-400 font-semibold mb-1">🔗 Gmail / Outlook</p>
+                        <p class="text-gray-300">"Lien image" → Copier l'URL → Paramètres signature → Insérer image par URL</p>
                     </div>
                     <div class="bg-white/5 rounded-lg p-3">
                         <p class="text-speed-purple font-semibold mb-1">📋 Dolibarr / BackOffice</p>
-                        <p class="text-gray-300">Copiez le HTML et collez-le dans les paramètres de signature</p>
+                        <p class="text-gray-300">"Copier HTML" → Coller dans les paramètres de signature</p>
                     </div>
                 </div>
             </div>
@@ -323,11 +298,6 @@ $currentPage = 'signatures';
         // Events for service form
         serviceForm.service.addEventListener('change', updatePreview);
         
-        // Events for style selection
-        document.querySelectorAll('input[name="style"]').forEach(input => {
-            input.addEventListener('change', updatePreview);
-        });
-        
         // Copy button
         copyBtn.addEventListener('click', async () => {
             try {
@@ -403,7 +373,7 @@ $currentPage = 'signatures';
                     
                     generateLinkBtn.textContent = '✓ Lien créé !';
                     setTimeout(() => {
-                        generateLinkBtn.textContent = '🔗 Lien Gmail';
+                        generateLinkBtn.textContent = '🔗 Lien image';
                         generateLinkBtn.disabled = false;
                     }, 2000);
                 } else {
@@ -413,7 +383,7 @@ $currentPage = 'signatures';
                 console.error('Erreur upload:', e);
                 generateLinkBtn.textContent = '❌ Erreur';
                 setTimeout(() => {
-                    generateLinkBtn.textContent = '🔗 Lien Gmail';
+                    generateLinkBtn.textContent = '🔗 Lien image';
                     generateLinkBtn.disabled = false;
                 }, 2000);
             }
