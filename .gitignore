@@ -16,8 +16,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-# Uploads (images générées)
-uploads/*
-!uploads/.gitkeep
-!uploads/**/.gitkeep
