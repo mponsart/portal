@@ -6,18 +6,18 @@
       </td>
       <td style="vertical-align: middle; padding-left: 15px;">
         <!-- Name -->
-        <p style="margin: 0 0 2px 0; font-size: 16px; font-weight: bold; color: #1a1a1a;"><?= $name ?></p>
+        <p style="margin: 0 0 2px 0; font-size: 16px; font-weight: bold; color: #1a1a1a;">👤 <?= $name ?></p>
         <?php if ($job): ?>
-        <p style="margin: 0 0 8px 0; font-size: 13px; color: #8a4dfd; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;"><?= $job ?></p>
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: #8a4dfd; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">💼 <?= $job ?></p>
         <?php else: ?>
         <p style="margin: 0 0 8px 0;"></p>
         <?php endif; ?>
         
         <!-- Contact line -->
         <p style="margin: 0; font-size: 12px; color: #555555;">
-          <a href="mailto:<?= $email ?>" style="color: #555555; text-decoration: none;"><?= $email ?></a>
+          ✉️ <a href="mailto:<?= $email ?>" style="color: #555555; text-decoration: none;"><?= $email ?></a>
           <span style="color: #ccc; margin: 0 8px;">|</span>
-          <a href="<?= $company['website'] ?>" style="color: #8a4dfd; text-decoration: none; font-weight: 600;"><?= $company['domain'] ?></a>
+          🌐 <a href="<?= $company['website'] ?>" style="color: #8a4dfd; text-decoration: none; font-weight: 600;"><?= $company['domain'] ?></a>
         </p>
       </td>
     </tr>

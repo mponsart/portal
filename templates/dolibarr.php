@@ -7,9 +7,9 @@
             <img src="<?= $company['logo'] ?>" alt="" width="45" height="45" style="display: block; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3);">
           </td>
           <td style="vertical-align: middle;">
-            <span style="font-size: 15px; font-weight: 700; color: #ffffff; display: block; line-height: 1.2;"><?= $name ?></span>
+            <span style="font-size: 15px; font-weight: 700; color: #ffffff; display: block; line-height: 1.2;">👤 <?= $name ?></span>
             <?php if ($job): ?>
-            <span style="font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 500; display: block; margin-top: 2px;"><?= $job ?></span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 500; display: block; margin-top: 2px;">💼 <?= $job ?></span>
             <?php endif; ?>
           </td>
         </tr>
@@ -21,19 +21,19 @@
       <table cellpadding="0" cellspacing="0" border="0" style="font-size: 11px;">
         <tr>
           <td style="padding-bottom: 4px;">
-            <span style="color: #6c757d;">Email :</span>
+            <span style="color: #6c757d;">✉️ Email :</span>
             <a href="mailto:<?= $email ?>" style="color: #333; text-decoration: none; font-weight: 500; margin-left: 5px;"><?= $email ?></a>
           </td>
         </tr>
         <tr>
           <td style="padding-bottom: 4px;">
-            <span style="color: #6c757d;">Web :</span>
+            <span style="color: #6c757d;">🌐 Web :</span>
             <a href="<?= $company['website'] ?>" style="color: #8a4dfd; text-decoration: none; font-weight: 600; margin-left: 5px;"><?= $company['domain'] ?></a>
           </td>
         </tr>
         <tr>
           <td>
-            <span style="color: #6c757d;">Adresse :</span>
+            <span style="color: #6c757d;">📍 Adresse :</span>
             <span style="color: #333; margin-left: 5px;"><?= $company['address'] ?></span>
           </td>
         </tr>

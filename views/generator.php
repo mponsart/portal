@@ -142,7 +142,7 @@ $currentPage = 'signatures';
             </form>
             
             <!-- Format unique (caché) -->
-            <input type="hidden" name="style" value="gmail" checked>
+            <input type="hidden" id="signatureStyle" name="style" value="gmail">
 
             <!-- Preview -->
             <div class="bg-white rounded-xl overflow-hidden shadow-lg">
@@ -243,7 +243,7 @@ $currentPage = 'signatures';
         });
         
         async function updatePreview() {
-            const style = document.querySelector('input[name="style"]:checked').value;
+            const style = document.getElementById('signatureStyle').value;
             let data;
             
             if (currentTab === 'personal') {
@@ -351,7 +351,7 @@ $currentPage = 'signatures';
                 let finalCanvas = canvas;
                 
                 // Préparer le nom du fichier
-                const style = document.querySelector('input[name="style"]:checked').value;
+                const style = document.getElementById('signatureStyle').value;
                 const name = currentTab === 'personal' 
                     ? `${personalForm.firstname.value}_${personalForm.lastname.value}`.toLowerCase().replace(/\s+/g, '_')
                     : serviceForm.service.value;
