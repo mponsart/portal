@@ -189,7 +189,7 @@ $currentPage = 'signatures';
                         </button>
                     </div>
                 </div>
-                <div id="preview" class="p-2 bg-white min-h-[100px] overflow-x-auto">
+                <div id="preview" class="p-4 bg-white min-h-[120px] overflow-x-auto">
                     <!-- Signature générée ici -->
                 </div>
                 
@@ -367,31 +367,31 @@ $currentPage = 'signatures';
                     });
                 }));
                 
-                // Générer le canvas avec html2canvas
+                // Générer le canvas avec html2canvas (scale 2 pour bonne qualité)
                 const canvas = await html2canvas(preview, {
                     backgroundColor: '#ffffff',
-                    scale: 1,
+                    scale: 2,
                     useCORS: true,
                     allowTaint: true,
                     logging: false
                 });
                 
-                // Redimensionner pour une taille optimale de signature (max 400px de large)
-                const maxWidth = 400;
+                // Redimensionner pour Gmail (500px = taille idéale pour signature lisible)
+                const targetWidth = 500;
                 let finalCanvas = canvas;
                 
-                if (canvas.width > maxWidth) {
-                    const ratio = maxWidth / canvas.width;
+                if (canvas.width > targetWidth) {
+                    const ratio = targetWidth / canvas.width;
                     const newHeight = Math.round(canvas.height * ratio);
                     
                     finalCanvas = document.createElement('canvas');
-                    finalCanvas.width = maxWidth;
+                    finalCanvas.width = targetWidth;
                     finalCanvas.height = newHeight;
                     
                     const ctx = finalCanvas.getContext('2d');
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(canvas, 0, 0, maxWidth, newHeight);
+                    ctx.drawImage(canvas, 0, 0, targetWidth, newHeight);
                 }
                 
                 // Préparer le nom du fichier
