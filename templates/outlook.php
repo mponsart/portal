@@ -1,4 +1,4 @@
-<table cellpadding="0" cellspacing="0" border="0" style="font-family: Segoe UI, Tahoma, Arial, sans-serif; font-size: 13px; color: #333333; line-height: 1.5; max-width: 500px;">
+<table cellpadding="0" cellspacing="0" border="0" style="font-family: 'Titillium Web', Segoe UI, Tahoma, Arial, sans-serif; font-size: 13px; color: #333333; line-height: 1.5; max-width: 500px;">
   <tr>
     <td valign="middle" style="padding-right: 15px; vertical-align: middle; border-right: 3px solid #8a4dfd;">
       <img src="<?= $company['logo'] ?>" alt="<?= $company['name'] ?>" width="70" height="70" style="display: block; border-radius: 8px;">

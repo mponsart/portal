@@ -1,4 +1,4 @@
-<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #333333; line-height: 1.5; max-width: 500px;">
+<table cellpadding="0" cellspacing="0" border="0" style="font-family: 'Titillium Web', Arial, Helvetica, sans-serif; font-size: 13px; color: #333333; line-height: 1.5; max-width: 500px;">
   <tbody>
     <tr>
       <td style="vertical-align: middle; padding-right: 15px; border-right: 3px solid #8a4dfd;">
