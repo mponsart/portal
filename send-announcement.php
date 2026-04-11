@@ -79,9 +79,6 @@ if ($mention === 'everyone') {
     $mentionPrefix = '@here';
 }
 
-$authorName = trim((string) ($_SESSION['user']['name'] ?? 'Utilisateur inconnu'));
-$authorEmail = trim((string) ($_SESSION['user']['email'] ?? ''));
-$authorPicture = trim((string) ($_SESSION['user']['picture'] ?? ''));
 
 if ($useEmbed) {
     if (!preg_match('/^#[0-9a-fA-F]{6}$/', $colorRaw)) {
@@ -96,25 +93,23 @@ if ($useEmbed) {
         'timestamp'   => gmdate('c'),
     ];
 
-    // Author
-    $embedAuthorName = $customAuthorName !== '' ? $customAuthorName : $authorName;
-    $embedAuthorIcon = $customAuthorIcon !== '' ? $customAuthorIcon : $authorPicture;
-    $embedAuthor = ['name' => $embedAuthorName];
-    if ($embedAuthorIcon !== '' && filter_var($embedAuthorIcon, FILTER_VALIDATE_URL)) {
-        $embedAuthor['icon_url'] = $embedAuthorIcon;
+    // Author — only when explicitly provided
+    if ($customAuthorName !== '') {
+        $embedAuthor = ['name' => $customAuthorName];
+        if ($customAuthorIcon !== '' && filter_var($customAuthorIcon, FILTER_VALIDATE_URL)) {
+            $embedAuthor['icon_url'] = $customAuthorIcon;
+        }
+        $embed['author'] = $embedAuthor;
     }
-    $embed['author'] = $embedAuthor;
 
-    // Footer
-    $footerContent = $customFooterText !== ''
-        ? $customFooterText
-        : ($authorEmail !== '' ? 'Publié par ' . $authorName . ' (' . $authorEmail . ')' : 'Publié par ' . $authorName);
-    $embed['footer'] = ['text' => $footerContent];
+    // Footer — only when explicitly provided
+    if ($customFooterText !== '') {
+        $embed['footer'] = ['text' => $customFooterText];
+    }
 
-    // Thumbnail (custom URL takes priority over session avatar)
-    $effectiveThumb = $customThumbUrl !== '' ? $customThumbUrl : $authorPicture;
-    if ($effectiveThumb !== '' && filter_var($effectiveThumb, FILTER_VALIDATE_URL)) {
-        $embed['thumbnail'] = ['url' => $effectiveThumb];
+    // Thumbnail
+    if ($customThumbUrl !== '' && filter_var($customThumbUrl, FILTER_VALIDATE_URL)) {
+        $embed['thumbnail'] = ['url' => $customThumbUrl];
     }
 
     // Large image

@@ -271,6 +271,10 @@ foreach ($channels as $key => $channelConfig) {
             t = t.replace(/`([^`\n]+?)`/g, (_, c) =>
                 stash(`<code>${esc(c)}</code>`)
             );
+            // Stash Discord custom/animated emojis so their underscores don't trigger markdown
+            t = t.replace(/<a?:[\w-]+:\d+>/g, m => stash(esc(m)));
+            // Stash emoji shortcodes (:name:) so underscores inside are not italicised
+            t = t.replace(/:[\w-]+:/g, m => stash(esc(m)));
 
             // Process line by line for block elements
             t = t.split('\n').map(line => {
@@ -295,10 +299,6 @@ foreach ($channels as $key => $channelConfig) {
 
         // ── Helpers ───────────────────────────────────────────────────────────
         const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-        const DEFAULT_AUTHOR_NAME  = <?= json_encode($user['name']) ?>;
-        const DEFAULT_AUTHOR_ICON  = <?= json_encode($user['picture'] ?? '') ?>;
-        const DEFAULT_FOOTER_TEXT  = <?= json_encode('Publié par ' . ($user['name'] ?? '') . (!empty($user['email']) ? ' (' . $user['email'] . ')' : '')) ?>;
 
         // ── DOM refs ──────────────────────────────────────────────────────────
         const form             = document.getElementById('announcementForm');
@@ -404,18 +404,23 @@ foreach ($channels as $key => $channelConfig) {
                 // Mention
                 document.getElementById('previewMention').textContent = mentionText;
 
-                // Author
-                const authorName = getVal('authorName') || DEFAULT_AUTHOR_NAME;
-                const authorIcon = getVal('authorIcon') || DEFAULT_AUTHOR_ICON;
+                // Author — only shown when explicitly provided
+                const authorName = getVal('authorName');
+                const authorIcon = getVal('authorIcon');
                 const authorRow  = document.getElementById('previewAuthorRow');
                 const authorNameEl = document.getElementById('previewAuthorName');
                 const authorIconEl = document.getElementById('previewAuthorIcon');
-                authorRow.classList.remove('hidden');                authorNameEl.textContent = authorName;
-                if (authorIcon) {
-                    authorIconEl.src = authorIcon;
-                    setHidden(authorIconEl, false);
+                if (authorName) {
+                    authorRow.classList.remove('hidden');
+                    authorNameEl.textContent = authorName;
+                    if (authorIcon) {
+                        authorIconEl.src = authorIcon;
+                        setHidden(authorIconEl, false);
+                    } else {
+                        setHidden(authorIconEl, true);
+                    }
                 } else {
-                    setHidden(authorIconEl, true);
+                    authorRow.classList.add('hidden');
                 }
 
                 // Title
@@ -428,7 +433,7 @@ foreach ($channels as $key => $channelConfig) {
                     : '<span style="color:#4f545c">Le contenu apparaîtra ici.</span>';
 
                 // Thumbnail
-                const thumbUrl = getVal('thumbUrl') || authorIcon;
+                const thumbUrl = getVal('thumbUrl');
                 const thumbEl  = document.getElementById('previewThumb');
                 if (thumbUrl) {
                     thumbEl.src = thumbUrl;
@@ -465,9 +470,11 @@ foreach ($channels as $key => $channelConfig) {
                     setHidden(imageEl, true);
                 }
 
-                // Footer
-                const footerText = getVal('footerText') || DEFAULT_FOOTER_TEXT;
-                document.getElementById('previewFooter').textContent = footerText;
+                // Footer — only shown when explicitly provided
+                const footerText = getVal('footerText');
+                const footerEl   = document.getElementById('previewFooter');
+                footerEl.textContent = footerText;
+                footerEl.style.display = footerText ? '' : 'none';
 
             } else {
                 setHidden(previewEmbed,  true);
