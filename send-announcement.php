@@ -30,6 +30,7 @@ $title = trim((string) ($input['title'] ?? ''));
 $content = trim((string) ($input['content'] ?? ''));
 $mention = trim((string) ($input['mention'] ?? 'none'));
 $colorRaw = trim((string) ($input['color'] ?? '#3454d1'));
+$useEmbed = isset($input['useEmbed']) ? (bool) $input['useEmbed'] : true;
 
 if ($channelKey === '' || $title === '' || $content === '') {
     http_response_code(422);
@@ -43,10 +44,12 @@ if (mb_strlen($title) > 120) {
     exit;
 }
 
-if (mb_strlen($content) > 2000) {
-    http_response_code(422);
-    echo json_encode(['error' => 'Le message dépasse 2000 caractères']);
-    exit;
+if ($useEmbed) {
+    if (mb_strlen($content) > 2000) {
+        http_response_code(422);
+        echo json_encode(['error' => 'Le message dépasse 2000 caractères']);
+        exit;
+    }
 }
 
 $channels = $config['discord']['channels'] ?? [];
@@ -63,11 +66,6 @@ if ($webhookUrl === '') {
     exit;
 }
 
-if (!preg_match('/^#[0-9a-fA-F]{6}$/', $colorRaw)) {
-    $colorRaw = '#3454d1';
-}
-$colorDecimal = hexdec(ltrim($colorRaw, '#'));
-
 $mentionPrefix = '';
 if ($mention === 'everyone') {
     $mentionPrefix = '@everyone';
@@ -79,27 +77,55 @@ $authorName = trim((string) ($_SESSION['user']['name'] ?? 'Utilisateur inconnu')
 $authorEmail = trim((string) ($_SESSION['user']['email'] ?? ''));
 $authorPicture = trim((string) ($_SESSION['user']['picture'] ?? ''));
 
-$embed = [
-    'title' => $title,
-    'description' => $content,
-    'color' => $colorDecimal,
-    'footer' => [
-        'text' => $authorEmail !== '' ? 'Publié par ' . $authorName . ' (' . $authorEmail . ')' : 'Publié par ' . $authorName,
-    ],
-    'timestamp' => gmdate('c'),
-];
+if ($useEmbed) {
+    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $colorRaw)) {
+        $colorRaw = '#3454d1';
+    }
+    $colorDecimal = hexdec(ltrim($colorRaw, '#'));
 
-if ($authorPicture !== '') {
-    $embed['thumbnail'] = ['url' => $authorPicture];
+    $embed = [
+        'title' => $title,
+        'description' => $content,
+        'color' => $colorDecimal,
+        'footer' => [
+            'text' => $authorEmail !== '' ? 'Publié par ' . $authorName . ' (' . $authorEmail . ')' : 'Publié par ' . $authorName,
+        ],
+        'timestamp' => gmdate('c'),
+    ];
+
+    if ($authorPicture !== '') {
+        $embed['thumbnail'] = ['url' => $authorPicture];
+    }
+
+    $payload = [
+        'content' => $mentionPrefix,
+        'embeds' => [$embed],
+        'allowed_mentions' => [
+            'parse' => $mentionPrefix === '' ? [] : ['everyone'],
+        ],
+    ];
+} else {
+    $messageParts = [];
+    if ($mentionPrefix !== '') {
+        $messageParts[] = $mentionPrefix;
+    }
+    $messageParts[] = '**' . $title . '**';
+    $messageParts[] = $content;
+    $messageText = implode("\n\n", $messageParts);
+
+    if (mb_strlen($messageText) > 2000) {
+        http_response_code(422);
+        echo json_encode(['error' => 'Le message combiné (mention + titre + contenu) dépasse 2000 caractères']);
+        exit;
+    }
+
+    $payload = [
+        'content' => $messageText,
+        'allowed_mentions' => [
+            'parse' => $mentionPrefix === '' ? [] : ['everyone'],
+        ],
+    ];
 }
-
-$payload = [
-    'content' => $mentionPrefix,
-    'embeds' => [$embed],
-    'allowed_mentions' => [
-        'parse' => $mentionPrefix === '' ? [] : ['everyone'],
-    ],
-];
 
 $ch = curl_init($webhookUrl);
 curl_setopt_array($ch, [
