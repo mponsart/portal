@@ -112,10 +112,19 @@ foreach ($channels as $key => $channelConfig) {
                                 <option value="here">@here</option>
                             </select>
                         </div>
-                        <div>
+                        <div id="colorField">
                             <label for="color" class="block text-sm font-semibold mb-2">Couleur</label>
                             <input id="color" name="color" type="color" value="#3454d1" class="w-full h-12 p-1 rounded-lg bg-slate-900/60 border border-white/20 cursor-pointer">
                         </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input id="useEmbed" name="useEmbed" type="checkbox" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-brand-cyan rounded-full peer peer-checked:bg-brand-indigo after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        </label>
+                        <span id="embedToggleLabel" class="text-sm font-semibold">Mode embed</span>
+                        <span id="embedToggleHint" class="text-xs text-slate-400">(activé — titre, couleur et encadré Discord)</span>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
@@ -129,11 +138,16 @@ foreach ($channels as $key => $channelConfig) {
 
             <aside class="lg:col-span-2 bg-white/10 border border-white/15 backdrop-blur-xl rounded-2xl p-6 shadow-2xl">
                 <h2 class="text-xl font-semibold mb-5">Aperçu</h2>
-                <div class="rounded-xl bg-slate-950/70 border border-white/10 p-4 space-y-3">
+                <div id="previewEmbed" class="rounded-xl bg-slate-950/70 border border-white/10 p-4 space-y-3">
                     <p id="previewMention" class="text-xs text-cyan-300"></p>
                     <p id="previewTitle" class="font-semibold text-lg">Titre de l'annonce</p>
                     <p id="previewContent" class="text-sm text-slate-300 whitespace-pre-wrap">Le contenu apparaîtra ici.</p>
                     <p class="text-xs text-slate-400">Envoyé par <?= htmlspecialchars($user['name']) ?></p>
+                </div>
+                <div id="previewPlain" class="hidden rounded-xl bg-slate-950/70 border border-white/10 p-4 space-y-2">
+                    <p id="previewMentionPlain" class="text-xs text-cyan-300"></p>
+                    <p id="previewTitlePlain" class="font-bold text-base">Titre de l'annonce</p>
+                    <p id="previewContentPlain" class="text-sm text-slate-300 whitespace-pre-wrap">Le contenu apparaîtra ici.</p>
                 </div>
 
                 <div class="mt-5 text-xs text-slate-300 bg-black/20 rounded-lg p-3 border border-white/10">
@@ -150,20 +164,46 @@ foreach ($channels as $key => $channelConfig) {
         const previewMention = document.getElementById('previewMention');
         const previewTitle = document.getElementById('previewTitle');
         const previewContent = document.getElementById('previewContent');
+        const previewEmbed = document.getElementById('previewEmbed');
+        const previewPlain = document.getElementById('previewPlain');
+        const previewMentionPlain = document.getElementById('previewMentionPlain');
+        const previewTitlePlain = document.getElementById('previewTitlePlain');
+        const previewContentPlain = document.getElementById('previewContentPlain');
+        const colorField = document.getElementById('colorField');
+        const useEmbedToggle = document.getElementById('useEmbed');
+        const embedToggleHint = document.getElementById('embedToggleHint');
 
         function updatePreview() {
             const mention = form.mention.value;
             const title = form.title.value.trim();
             const content = form.content.value.trim();
+            const isEmbed = useEmbedToggle.checked;
 
-            previewMention.textContent = mention === 'none' ? '' : '@' + mention;
-            previewTitle.textContent = title || 'Titre de l\'annonce';
-            previewContent.textContent = content || 'Le contenu apparaîtra ici.';
+            const mentionText = mention === 'none' ? '' : '@' + mention;
+
+            if (isEmbed) {
+                previewEmbed.classList.remove('hidden');
+                previewPlain.classList.add('hidden');
+                previewMention.textContent = mentionText;
+                previewTitle.textContent = title || 'Titre de l\'annonce';
+                previewContent.textContent = content || 'Le contenu apparaîtra ici.';
+                embedToggleHint.textContent = '(activé — titre, couleur et encadré Discord)';
+            } else {
+                previewEmbed.classList.add('hidden');
+                previewPlain.classList.remove('hidden');
+                previewMentionPlain.textContent = mentionText;
+                previewTitlePlain.textContent = title || 'Titre de l\'annonce';
+                previewContentPlain.textContent = content || 'Le contenu apparaîtra ici.';
+                embedToggleHint.textContent = '(désactivé — message texte avec markdown Discord)';
+            }
+
+            colorField.classList.toggle('hidden', !isEmbed);
         }
 
         form.title.addEventListener('input', updatePreview);
         form.content.addEventListener('input', updatePreview);
         form.mention.addEventListener('change', updatePreview);
+        useEmbedToggle.addEventListener('change', updatePreview);
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -177,6 +217,7 @@ foreach ($channels as $key => $channelConfig) {
                 content: form.content.value.trim(),
                 mention: form.mention.value,
                 color: form.color.value,
+                useEmbed: useEmbedToggle.checked,
             };
 
             try {
@@ -197,6 +238,7 @@ foreach ($channels as $key => $channelConfig) {
                 statusNode.className = 'text-sm text-emerald-300';
                 form.reset();
                 form.color.value = '#3454d1';
+                useEmbedToggle.checked = true;
                 updatePreview();
             } catch (error) {
                 statusNode.textContent = error.message;
