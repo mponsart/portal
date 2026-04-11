@@ -1,6 +1,6 @@
 {
-    "name": "groupe-speed-cloud/signatures",
-    "description": "Générateur de signatures email avec authentification Google",
+    "name": "groupe-speed-cloud/discord-annonces",
+    "description": "Console d'annonces Discord avec authentification Google",
     "type": "project",
     "require": {
         "php": ">=8.0",

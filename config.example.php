@@ -21,65 +21,21 @@ return [
         'redirect_uri' => 'https://sign.groupe-speed.cloud/callback.php',
         'hosted_domain' => 'groupe-speed.cloud',
     ],
-    'company' => [
-        'name' => 'Groupe Speed Cloud',
-        'domain' => 'groupe-speed.cloud',
-        'website' => 'https://groupe-speed.cloud',
-        'address' => '10 quai du Moulin, 08600 Givet',
-        'logo' => 'https://sign.groupe-speed.cloud/assets/images/cloudy.png',
-    ],
-    // Services / Départements
-    'services' => [
-        '' => 'Aucun (personnel)',
-        'direction' => [
-            'name' => 'Direction',
-            'email' => 'direction@groupe-speed.cloud',
+    // Webhooks Discord. Ne jamais exposer ces URLs côté client.
+    'discord' => [
+        'channels' => [
+            'annonces' => [
+                'label' => 'Annonces générales',
+                'webhook_url' => 'https://discord.com/api/webhooks/ID/TOKEN',
+            ],
+            'events' => [
+                'label' => 'Events',
+                'webhook_url' => 'https://discord.com/api/webhooks/ID/TOKEN',
+            ],
+            'staff' => [
+                'label' => 'Staff',
+                'webhook_url' => 'https://discord.com/api/webhooks/ID/TOKEN',
+            ],
         ],
-        'rh' => [
-            'name' => 'Ressources Humaines',
-            'email' => 'rh@groupe-speed.cloud',
-        ],
-        'comptabilite' => [
-            'name' => 'Comptabilité',
-            'email' => 'comptabilite@groupe-speed.cloud',
-        ],
-        'communication' => [
-            'name' => 'Communication',
-            'email' => 'communication@groupe-speed.cloud',
-        ],
-        'bureau' => [
-            'name' => 'Bureau',
-            'email' => 'bureau@groupe-speed.cloud',
-        ],
-        'support' => [
-            'name' => 'Support Technique',
-            'email' => 'support@groupe-speed.cloud',
-        ],
-    ],
-    // Liste des postes disponibles
-    'jobs' => [
-        '' => '-- Sélectionner un poste --',
-        'Président' => 'Président',
-        'Co-Président' => 'Co-Président',
-        'Vice-Président' => 'Vice-Président',
-        'Vice-Présidente' => 'Vice-Présidente',
-        'Secrétaire Général' => 'Secrétaire Général',
-        'Secrétaire' => 'Secrétaire',
-        'Trésorier' => 'Trésorier',
-        'Trésorier Adjoint' => 'Trésorier Adjoint',
-        'Responsable RH' => 'Responsable RH',
-        'Chargé(e) RH' => 'Chargé(e) RH',
-        'Responsable Comptabilité' => 'Responsable Comptabilité',
-        'Comptable' => 'Comptable',
-        'Responsable Communication' => 'Responsable Communication',
-        'Chargé(e) de Communication' => 'Chargé(e) de Communication',
-        'Responsable Technique' => 'Responsable Technique',
-        'Technicien Support' => 'Technicien Support',
-        'Administrateur Système' => 'Administrateur Système',
-        'Développeur' => 'Développeur',
-        'Chef de Projet' => 'Chef de Projet',
-        'Bénévole' => 'Bénévole',
-        'Stagiaire' => 'Stagiaire',
-        '__autre__' => 'Autre...',
     ],
 ];

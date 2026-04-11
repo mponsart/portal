@@ -2,10 +2,13 @@
 session_start();
 require_once __DIR__ . '/vendor/autoload.php';
 
+use Google\Client;
+use Google\Service\Oauth2;
+
 $config = require __DIR__ . '/config.php';
 
 // Créer le client Google
-$client = new Google\Client();
+$client = new Client();
 $client->setClientId($config['google']['client_id']);
 $client->setClientSecret($config['google']['client_secret']);
 $client->setRedirectUri($config['google']['redirect_uri']);
@@ -27,7 +30,7 @@ try {
     $client->setAccessToken($token);
     
     // Récupérer les infos utilisateur
-    $oauth2 = new Google\Service\Oauth2($client);
+    $oauth2 = new Oauth2($client);
     $userInfo = $oauth2->userinfo->get();
     
     // Vérifier le domaine
@@ -60,7 +63,7 @@ try {
     <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Erreur - Signatures</title>
+        <title>Erreur - Annonces Discord</title>
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body class="min-h-screen bg-gray-900 flex items-center justify-center">

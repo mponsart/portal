@@ -2,16 +2,18 @@
 session_start();
 require_once __DIR__ . '/vendor/autoload.php';
 
+use Google\Client;
+
 $config = require __DIR__ . '/config.php';
 
 // Si déjà connecté, afficher le générateur
 if (isset($_SESSION['user'])) {
-    include __DIR__ . '/views/generator.php';
+    include __DIR__ . '/views/announcements.php';
     exit;
 }
 
 // Créer le client Google
-$client = new Google\Client();
+$client = new Client();
 $client->setClientId($config['google']['client_id']);
 $client->setClientSecret($config['google']['client_secret']);
 $client->setRedirectUri($config['google']['redirect_uri']);
@@ -26,7 +28,7 @@ $authUrl = $client->createAuthUrl();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signatures - Groupe Speed Cloud</title>
+    <title>Annonces Discord - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -47,7 +49,7 @@ $authUrl = $client->createAuthUrl();
     <div class="text-center">
         <img src="/assets/images/cloudy.png" alt="Groupe Speed Cloud" class="w-24 h-24 mx-auto mb-6 rounded-2xl">
         <h1 class="text-3xl font-bold text-white mb-2">Groupe Speed Cloud</h1>
-        <p class="text-gray-300 mb-8">Générateur de Signatures Email</p>
+        <p class="text-gray-300 mb-8">Centre d'envoi des annonces Discord</p>
         
         <a href="<?= htmlspecialchars($authUrl) ?>" 
            class="inline-flex items-center gap-3 bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg">

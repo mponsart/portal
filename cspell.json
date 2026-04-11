@@ -1,0 +1,17 @@
+{
+  "version": "0.2",
+  "language": "en,fr",
+  "words": [
+    "OAuth",
+    "webhook",
+    "webhooks",
+    "Discord",
+    "Groupe",
+    "Speed",
+    "Cloud"
+  ],
+  "ignorePaths": [
+    "vendor/**",
+    "composer.lock"
+  ]
+}
