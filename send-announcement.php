@@ -25,12 +25,18 @@ if (!is_array($input)) {
     exit;
 }
 
-$channelKey = trim((string) ($input['channel'] ?? ''));
-$title = trim((string) ($input['title'] ?? ''));
-$content = trim((string) ($input['content'] ?? ''));
-$mention = trim((string) ($input['mention'] ?? 'none'));
-$colorRaw = trim((string) ($input['color'] ?? '#3454d1'));
-$useEmbed = isset($input['useEmbed']) ? (bool) $input['useEmbed'] : true;
+$channelKey        = trim((string) ($input['channel'] ?? ''));
+$title             = trim((string) ($input['title'] ?? ''));
+$content           = trim((string) ($input['content'] ?? ''));
+$mention           = trim((string) ($input['mention'] ?? 'none'));
+$colorRaw          = trim((string) ($input['color'] ?? '#3454d1'));
+$useEmbed          = isset($input['useEmbed']) ? (bool) $input['useEmbed'] : true;
+$customAuthorName  = trim((string) ($input['authorName'] ?? ''));
+$customAuthorIcon  = trim((string) ($input['authorIcon'] ?? ''));
+$customThumbUrl    = trim((string) ($input['thumbUrl'] ?? ''));
+$customImageUrl    = trim((string) ($input['imageUrl'] ?? ''));
+$customFooterText  = trim((string) ($input['footerText'] ?? ''));
+$customFields      = isset($input['fields']) && is_array($input['fields']) ? $input['fields'] : [];
 
 if ($channelKey === '' || $title === '' || $content === '') {
     http_response_code(422);
@@ -84,22 +90,65 @@ if ($useEmbed) {
     $colorDecimal = hexdec(ltrim($colorRaw, '#'));
 
     $embed = [
-        'title' => $title,
+        'title'       => $title,
         'description' => $content,
-        'color' => $colorDecimal,
-        'footer' => [
-            'text' => $authorEmail !== '' ? 'Publié par ' . $authorName . ' (' . $authorEmail . ')' : 'Publié par ' . $authorName,
-        ],
-        'timestamp' => gmdate('c'),
+        'color'       => $colorDecimal,
+        'timestamp'   => gmdate('c'),
     ];
 
-    if ($authorPicture !== '') {
-        $embed['thumbnail'] = ['url' => $authorPicture];
+    // Author
+    $embedAuthorName = $customAuthorName !== '' ? $customAuthorName : $authorName;
+    $embedAuthorIcon = $customAuthorIcon !== '' ? $customAuthorIcon : $authorPicture;
+    $embedAuthor = ['name' => $embedAuthorName];
+    if ($embedAuthorIcon !== '' && filter_var($embedAuthorIcon, FILTER_VALIDATE_URL)) {
+        $embedAuthor['icon_url'] = $embedAuthorIcon;
+    }
+    $embed['author'] = $embedAuthor;
+
+    // Footer
+    $footerContent = $customFooterText !== ''
+        ? $customFooterText
+        : ($authorEmail !== '' ? 'Publié par ' . $authorName . ' (' . $authorEmail . ')' : 'Publié par ' . $authorName);
+    $embed['footer'] = ['text' => $footerContent];
+
+    // Thumbnail (custom URL takes priority over session avatar)
+    $effectiveThumb = $customThumbUrl !== '' ? $customThumbUrl : $authorPicture;
+    if ($effectiveThumb !== '' && filter_var($effectiveThumb, FILTER_VALIDATE_URL)) {
+        $embed['thumbnail'] = ['url' => $effectiveThumb];
+    }
+
+    // Large image
+    if ($customImageUrl !== '' && filter_var($customImageUrl, FILTER_VALIDATE_URL)) {
+        $embed['image'] = ['url' => $customImageUrl];
+    }
+
+    // Fields
+    $embedFields = [];
+    foreach ($customFields as $field) {
+        if (!is_array($field)) {
+            continue;
+        }
+        $fieldName  = trim((string) ($field['name'] ?? ''));
+        $fieldValue = trim((string) ($field['value'] ?? ''));
+        if ($fieldName === '' || $fieldValue === '') {
+            continue;
+        }
+        $embedFields[] = [
+            'name'   => mb_substr($fieldName, 0, 256),
+            'value'  => mb_substr($fieldValue, 0, 1024),
+            'inline' => isset($field['inline']) ? (bool) $field['inline'] : false,
+        ];
+        if (count($embedFields) >= 25) {
+            break;
+        }
+    }
+    if (!empty($embedFields)) {
+        $embed['fields'] = $embedFields;
     }
 
     $payload = [
         'content' => $mentionPrefix,
-        'embeds' => [$embed],
+        'embeds'  => [$embed],
         'allowed_mentions' => [
             'parse' => $mentionPrefix === '' ? [] : ['everyone'],
         ],
