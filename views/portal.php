@@ -191,10 +191,11 @@ function appEmoji(string $icon): string {
 
         .portal-shell { max-width: 1200px; }
         .hero-grid { display:grid; grid-template-columns:1fr; gap:1rem; }
-        .hero-panel { min-height: clamp(230px, 26vw, 310px); }
+        .hero-panel { min-height: clamp(190px, 22vw, 260px); }
         .mini-kpi { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
         .featured-grid { grid-template-columns:1fr; }
         .app-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+        .panel-stack { display:flex; flex-direction:column; gap:.9rem; }
         @media (min-width: 640px) {
             .app-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
         }
@@ -206,6 +207,11 @@ function appEmoji(string $icon): string {
         @media (min-width: 1024px) {
             .featured-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
             .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
+            .no-scroll-desktop { height:calc(100vh - 64px); overflow:hidden; }
+            .compact-desktop { padding-top:.8rem; padding-bottom:.8rem; }
+            .portal-scroll-region { min-height:0; overflow:auto; padding-right:.25rem; }
+            .portal-scroll-region::-webkit-scrollbar { width:8px; }
+            .portal-scroll-region::-webkit-scrollbar-thumb { background:rgba(148,163,184,.35); border-radius:999px; }
         }
 
         /* ── fade in cascade ────────────────────────────────────────── */
@@ -223,7 +229,7 @@ function appEmoji(string $icon): string {
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="page-stack portal-shell relative z-10 w-full mx-auto px-4 sm:px-6 py-7 sm:py-8">
+<main class="page-stack portal-shell no-scroll-desktop compact-desktop relative z-10 w-full mx-auto px-4 sm:px-6 py-5 sm:py-6">
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
@@ -243,7 +249,7 @@ function appEmoji(string $icon): string {
 
     <!-- ══ HERO ═════════════════════════════════════════════════════════ -->
     <section class="hero-grid fade-up d1">
-        <article class="glass hero-panel rounded-3xl p-5 sm:p-7">
+        <article class="glass hero-panel rounded-3xl p-4 sm:p-5">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
 
             <!-- Profil -->
@@ -258,7 +264,7 @@ function appEmoji(string $icon): string {
                 <?php endif; ?>
                 <div class="min-w-0">
                     <p class="text-white/40 text-xs font-medium mb-0.5">Bonjour,</p>
-                    <h1 class="text-xl sm:text-2xl font-bold text-white leading-tight"><?= htmlspecialchars($firstName) ?> 👋</h1>
+                    <h1 class="text-lg sm:text-2xl font-bold text-white leading-tight"><?= htmlspecialchars($firstName) ?> 👋</h1>
                     <p class="text-white/40 text-xs mt-0.5"><?= htmlspecialchars($user['email']) ?></p>
                 </div>
             </div>
@@ -270,7 +276,7 @@ function appEmoji(string $icon): string {
             </div>
         </div>
 
-        <hr class="divider my-5">
+        <hr class="divider my-3.5">
 
         <!-- Recherche -->
                 <form action="https://www.google.com/search" method="get" class="space-y-2.5">
@@ -290,22 +296,22 @@ function appEmoji(string $icon): string {
         </form>
         </article>
 
-        <article class="glass rounded-3xl p-5 sm:p-6">
+        <article class="glass rounded-3xl p-4 sm:p-5">
             <p class="section-label">Vue instantanée</p>
-            <div class="mt-3 grid grid-cols-2 gap-2.5">
-                <div class="mini-kpi rounded-2xl p-3">
+            <div class="mt-2.5 grid grid-cols-2 gap-2">
+                <div class="mini-kpi rounded-2xl p-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-blue-300">Actualités</p>
                     <p class="text-2xl font-bold leading-none mt-1"><?= $total ?></p>
                 </div>
-                <div class="mini-kpi rounded-2xl p-3">
+                <div class="mini-kpi rounded-2xl p-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-emerald-300">Bannière</p>
                     <p class="text-2xl font-bold leading-none mt-1"><?= $hasActiveBanner ? 'ON' : 'OFF' ?></p>
                 </div>
-                <div class="mini-kpi rounded-2xl p-3">
+                <div class="mini-kpi rounded-2xl p-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-cyan-300">Workspace</p>
                     <p class="text-2xl font-bold leading-none mt-1"><?= $workspaceCount ?></p>
                 </div>
-                <div class="mini-kpi rounded-2xl p-3">
+                <div class="mini-kpi rounded-2xl p-2.5">
                     <p class="text-[11px] uppercase tracking-wider text-amber-300">Applications</p>
                     <p class="text-2xl font-bold leading-none mt-1"><?= $portalCount ?></p>
                 </div>
@@ -317,6 +323,7 @@ function appEmoji(string $icon): string {
     </section>
 
     <!-- ══ ANNONCES À LA UNE ═════════════════════════════════════════════ -->
+    <div class="portal-scroll-region panel-stack">
     <?php if (!empty($featured)): ?>
     <section class="fade-up d2">
         <p class="section-label mb-3">📌 &nbsp;À la une</p>
@@ -339,7 +346,7 @@ function appEmoji(string $icon): string {
                         <?php if ($annTitle): ?>
                         <p class="font-semibold text-sm text-white mb-1 leading-snug"><?= $annTitle ?></p>
                         <?php endif; ?>
-                        <div class="text-white/55 text-xs leading-relaxed line-clamp-3"><?= strip_tags($annHtml) ?></div>
+                        <div class="text-white/55 text-xs leading-relaxed line-clamp-2"><?= strip_tags($annHtml) ?></div>
                         <div class="flex items-center justify-between mt-2">
                             <?php if ($annDate): ?><p class="text-white/25 text-xs"><?= $annDate ?></p><?php endif; ?>
                             <a href="/article.php?id=<?= urlencode((string)($ann['id'] ?? '')) ?>" class="text-xs text-brand-lt hover:underline ml-auto">Lire l'article &rarr;</a>
@@ -365,7 +372,7 @@ function appEmoji(string $icon): string {
                 $delay   = 'd' . min($i + 1, 12);
             ?>
             <a href="<?= $appUrl ?>"
-               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-4 flex flex-col items-center gap-2.5">
+               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-3 flex flex-col items-center gap-1.5">
                 <div class="w-10 h-10 flex items-center justify-center">
                     <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
@@ -393,7 +400,7 @@ function appEmoji(string $icon): string {
                 $delay   = 'd' . min($index + 1, 12);
             ?>
             <a href="<?= $appUrl ?>"
-               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-4 flex flex-col items-center gap-2.5">
+               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-3 flex flex-col items-center gap-1.5">
                 <div class="w-10 h-10 flex items-center justify-center">
                     <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
@@ -403,6 +410,7 @@ function appEmoji(string $icon): string {
         </div>
         <?php endif; ?>
     </section>
+    </div>
 
 </main>
 

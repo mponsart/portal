@@ -56,6 +56,32 @@ function normalizeEmoji(string $emoji): string {
     return mb_substr(trim($emoji), 0, 8);
 }
 
+function normalizeAdminOnly(mixed $value): bool {
+    return $value === '1' || $value === 1 || $value === true || $value === 'on';
+}
+
+function isWorkspaceIcon(string $icon): bool {
+    return in_array($icon, ['gmail','drive','calendar','meet','docs','sheets','slides'], true);
+}
+
+function moveWithinFiltered(array &$apps, int $idx, string $direction, callable $predicate): bool {
+    if (!isset($apps[$idx])) return false;
+    $positions = [];
+    foreach ($apps as $i => $app) {
+        if ($predicate($app)) $positions[] = $i;
+    }
+
+    $currentPos = array_search($idx, $positions, true);
+    if ($currentPos === false) return false;
+
+    $targetPos = $direction === 'up' ? $currentPos - 1 : $currentPos + 1;
+    if (!isset($positions[$targetPos])) return false;
+
+    $swapIdx = $positions[$targetPos];
+    [$apps[$idx], $apps[$swapIdx]] = [$apps[$swapIdx], $apps[$idx]];
+    return true;
+}
+
 function appEmoji(string $icon): string {
     return match($icon) {
         'gmail' => '📧',
@@ -97,8 +123,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $url = normalizeUrl((string)($_POST['url'] ?? ''));
         $icon = normalizeIcon((string)($_POST['icon'] ?? 'link'));
         $emoji = normalizeEmoji((string)($_POST['emoji'] ?? ''));
+        $adminOnly = normalizeAdminOnly($_POST['admin_only'] ?? false);
         if ($name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-            $apps[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji];
+            $apps[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'admin_only' => $adminOnly];
             $ok = saveJsonArray($appsFile, $apps);
         }
     }
@@ -109,8 +136,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $url = normalizeUrl((string)($_POST['url'] ?? ''));
         $icon = normalizeIcon((string)($_POST['icon'] ?? 'link'));
         $emoji = normalizeEmoji((string)($_POST['emoji'] ?? ''));
+        $adminOnly = normalizeAdminOnly($_POST['admin_only'] ?? false);
         if (isset($apps[$idx]) && $name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-            $apps[$idx] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji];
+            $apps[$idx] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'admin_only' => $adminOnly];
             $ok = saveJsonArray($appsFile, $apps);
         }
     }
@@ -120,6 +148,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($apps[$idx])) {
             unset($apps[$idx]);
             $ok = saveJsonArray($appsFile, $apps);
+        }
+    }
+
+    if ($action === 'move_app') {
+        $idx = (int)($_POST['index'] ?? -1);
+        $direction = trim((string)($_POST['direction'] ?? ''));
+        if (in_array($direction, ['up', 'down'], true)) {
+            $ok = moveWithinFiltered(
+                $apps,
+                $idx,
+                $direction,
+                static fn(array $app): bool => !isWorkspaceIcon(strtolower(trim((string)($app['icon'] ?? 'link'))))
+            );
+            if ($ok) $ok = saveJsonArray($appsFile, $apps);
         }
     }
 
@@ -156,6 +198,10 @@ unset($_SESSION['admin_apps_flash']);
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .card { transition:transform .15s,border-color .15s; }
         .card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.2); }
+        .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#e5e7eb; }
+        .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.3); }
+        .btn-soft { border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); }
+        .btn-soft:hover { background:rgba(255,255,255,.15); }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -187,13 +233,13 @@ unset($_SESSION['admin_apps_flash']);
 
     <section class="panel p-4 space-y-3">
         <h2 class="font-semibold">➕ Ajouter une application</h2>
-        <form method="post" class="grid sm:grid-cols-5 gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <form method="post" class="grid sm:grid-cols-6 gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
             <input type="hidden" name="action" value="add_app">
-            <input type="text" name="name" maxlength="80" required placeholder="Nom de l'app" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-            <input type="text" name="url" maxlength="220" required placeholder="https://..." class="sm:col-span-2 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-            <input type="text" name="emoji" maxlength="8" placeholder="Emoji (ex: 🚀)" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-            <select name="icon" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+            <input type="text" name="name" maxlength="80" required placeholder="Nom de l'app" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
+            <input type="text" name="url" maxlength="220" required placeholder="https://..." class="input-dark sm:col-span-2 px-3 py-2 rounded-xl text-sm">
+            <input type="text" name="emoji" maxlength="8" placeholder="Emoji (ex: 🚀)" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
+            <select name="icon" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
                 <option value="link">🔗 Lien</option>
                 <option value="youtube">▶️ YouTube</option>
                 <option value="discord">💬 Discord</option>
@@ -201,7 +247,11 @@ unset($_SESSION['admin_apps_flash']);
                 <option value="notion">🗂️ Notion</option>
                 <option value="figma">🎨 Figma</option>
             </select>
-            <button class="sm:col-span-5 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
+            <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="admin_only" value="1" class="accent-blue-500">
+                <span>Admins only</span>
+            </label>
+            <button class="sm:col-span-6 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
         </form>
 
         <div class="space-y-2">
@@ -210,17 +260,18 @@ unset($_SESSION['admin_apps_flash']);
                 $url = trim((string)($app['url'] ?? ''));
                 $icon = normalizeIcon((string)($app['icon'] ?? 'link'));
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
+                $adminOnly = !empty($app['admin_only']);
                 if (in_array(strtolower(trim((string)($app['icon'] ?? ''))), $workspaceIcons, true)) continue;
             ?>
             <div class="card rounded-lg bg-white/[0.03] border border-white/10 p-2">
-                <form method="post" class="grid sm:grid-cols-7 gap-2">
+                <form method="post" class="grid sm:grid-cols-9 gap-2">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="update_app">
                     <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars($name) ?>" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                    <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars($url) ?>" class="sm:col-span-2 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                    <input type="text" name="emoji" maxlength="8" value="<?= htmlspecialchars($emoji) ?>" placeholder="Emoji" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                    <select name="icon" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                    <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars($name) ?>" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
+                    <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars($url) ?>" class="input-dark sm:col-span-2 px-3 py-2 rounded-xl text-sm">
+                    <input type="text" name="emoji" maxlength="8" value="<?= htmlspecialchars($emoji) ?>" placeholder="Emoji" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
+                    <select name="icon" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
                         <option value="link" <?= $icon === 'link' ? 'selected' : '' ?>>🔗 Lien</option>
                         <option value="youtube" <?= $icon === 'youtube' ? 'selected' : '' ?>>▶️ YouTube</option>
                         <option value="discord" <?= $icon === 'discord' ? 'selected' : '' ?>>💬 Discord</option>
@@ -228,18 +279,28 @@ unset($_SESSION['admin_apps_flash']);
                         <option value="notion" <?= $icon === 'notion' ? 'selected' : '' ?>>🗂️ Notion</option>
                         <option value="figma" <?= $icon === 'figma' ? 'selected' : '' ?>>🎨 Figma</option>
                     </select>
+                    <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-xs flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="admin_only" value="1" <?= $adminOnly ? 'checked' : '' ?> class="accent-blue-500">
+                        <span>Admins only</span>
+                    </label>
                     <div class="sm:col-span-1 text-xs text-white/65 flex items-center justify-center rounded-xl bg-white/5 border border-white/10">
                         Affichage: <?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?>
                     </div>
-                    <div class="sm:col-span-1 flex items-center justify-end">
+                    <div class="sm:col-span-2 flex items-center justify-end gap-1.5">
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
+                        <button type="submit" formaction="/admin-apps.php" name="action" value="move_app" class="px-2 py-1 rounded-lg text-xs btn-soft">↑</button>
+                        <input type="hidden" name="direction" value="up">
                     </div>
                 </form>
-                <form method="post" class="mt-1 flex justify-end">
+                <form method="post" class="mt-1 flex justify-end gap-1.5">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                    <input type="hidden" name="action" value="move_app">
+                    <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                    <input type="hidden" name="direction" value="down">
+                    <button class="px-2 py-1 rounded-lg text-xs btn-soft">↓</button>
                     <input type="hidden" name="action" value="delete_app">
                     <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
+                    <button formaction="/admin-apps.php" name="action" value="delete_app" class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </form>
             </div>
             <?php endforeach; ?>
