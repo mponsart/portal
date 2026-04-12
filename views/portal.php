@@ -63,6 +63,9 @@ foreach ($apps as $app) {
 }
 
 $firstName = $user['firstName'] ?? explode(' ', $user['name'])[0];
+$workspaceCount = count($workspaceApps);
+$portalCount = count($portalApps);
+$hasActiveBanner = $activeBanner !== null;
 
 function appEmoji(string $icon): string {
     return match($icon) {
@@ -145,6 +148,7 @@ function appEmoji(string $icon): string {
                         background .14s ease,
                         box-shadow .14s ease;
             cursor: pointer;
+            min-height: clamp(108px, 12vw, 132px);
         }
         .app-card:hover {
             transform: translateY(-6px) scale(1.03);
@@ -185,6 +189,25 @@ function appEmoji(string $icon): string {
         /* ── divider ────────────────────────────────────────────────── */
         .divider { border-color: var(--border); }
 
+        .portal-shell { max-width: 1200px; }
+        .hero-grid { display:grid; grid-template-columns:1fr; gap:1rem; }
+        .hero-panel { min-height: clamp(230px, 26vw, 310px); }
+        .mini-kpi { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
+        .featured-grid { grid-template-columns:1fr; }
+        .app-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+        @media (min-width: 640px) {
+            .app-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
+        }
+        @media (min-width: 768px) {
+            .hero-grid { grid-template-columns:1.35fr .95fr; }
+            .featured-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+            .app-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
+        }
+        @media (min-width: 1024px) {
+            .featured-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
+            .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
+        }
+
         /* ── fade in cascade ────────────────────────────────────────── */
         @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
         .fade-up { animation: fadeUp .45s ease both; }
@@ -200,7 +223,7 @@ function appEmoji(string $icon): string {
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="page-stack relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
+<main class="page-stack portal-shell relative z-10 w-full mx-auto px-4 sm:px-6 py-7 sm:py-8">
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
@@ -219,8 +242,9 @@ function appEmoji(string $icon): string {
     <?php endif; ?>
 
     <!-- ══ HERO ═════════════════════════════════════════════════════════ -->
-    <section class="glass rounded-3xl p-6 sm:p-8 fade-up d1">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+    <section class="hero-grid fade-up d1">
+        <article class="glass hero-panel rounded-3xl p-5 sm:p-7">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
 
             <!-- Profil -->
             <div class="flex items-center gap-4">
@@ -232,7 +256,7 @@ function appEmoji(string $icon): string {
                     <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-[#06080f]"></span>
                 </div>
                 <?php endif; ?>
-                <div>
+                <div class="min-w-0">
                     <p class="text-white/40 text-xs font-medium mb-0.5">Bonjour,</p>
                     <h1 class="text-xl sm:text-2xl font-bold text-white leading-tight"><?= htmlspecialchars($firstName) ?> 👋</h1>
                     <p class="text-white/40 text-xs mt-0.5"><?= htmlspecialchars($user['email']) ?></p>
@@ -249,7 +273,7 @@ function appEmoji(string $icon): string {
         <hr class="divider my-5">
 
         <!-- Recherche -->
-        <form action="https://www.google.com/search" method="get" class="space-y-2.5">
+                <form action="https://www.google.com/search" method="get" class="space-y-2.5">
             <div class="search-shell flex items-center gap-2 pl-3 pr-2 py-2">
                 <span class="text-sm text-white/35 select-none">🔎</span>
                   <input type="text" name="q" placeholder="Rechercher sur Google..." autocomplete="off"
@@ -264,13 +288,39 @@ function appEmoji(string $icon): string {
                 </button>
             </div>
         </form>
+        </article>
+
+        <article class="glass rounded-3xl p-5 sm:p-6">
+            <p class="section-label">Vue instantanée</p>
+            <div class="mt-3 grid grid-cols-2 gap-2.5">
+                <div class="mini-kpi rounded-2xl p-3">
+                    <p class="text-[11px] uppercase tracking-wider text-blue-300">Actualités</p>
+                    <p class="text-2xl font-bold leading-none mt-1"><?= $total ?></p>
+                </div>
+                <div class="mini-kpi rounded-2xl p-3">
+                    <p class="text-[11px] uppercase tracking-wider text-emerald-300">Bannière</p>
+                    <p class="text-2xl font-bold leading-none mt-1"><?= $hasActiveBanner ? 'ON' : 'OFF' ?></p>
+                </div>
+                <div class="mini-kpi rounded-2xl p-3">
+                    <p class="text-[11px] uppercase tracking-wider text-cyan-300">Workspace</p>
+                    <p class="text-2xl font-bold leading-none mt-1"><?= $workspaceCount ?></p>
+                </div>
+                <div class="mini-kpi rounded-2xl p-3">
+                    <p class="text-[11px] uppercase tracking-wider text-amber-300">Applications</p>
+                    <p class="text-2xl font-bold leading-none mt-1"><?= $portalCount ?></p>
+                </div>
+            </div>
+            <?php if ($isAdmin): ?>
+            <a href="/admin.php" class="mt-4 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/15 border border-white/15">⚙️ Ouvrir l'admin</a>
+            <?php endif; ?>
+        </article>
     </section>
 
     <!-- ══ ANNONCES À LA UNE ═════════════════════════════════════════════ -->
     <?php if (!empty($featured)): ?>
     <section class="fade-up d2">
         <p class="section-label mb-3">📌 &nbsp;À la une</p>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="featured-grid grid gap-3">
             <?php foreach ($featured as $i => $ann):
                 $accentColor = htmlspecialchars($ann['color']    ?? '#3454d1');
                 $annTitle    = htmlspecialchars($ann['title']    ?? '');
@@ -281,7 +331,7 @@ function appEmoji(string $icon): string {
                 $catColors   = ['general'=>'#3454d1','urgent'=>'#ef4444','event'=>'#8b5cf6','info'=>'#0ea5e9'];
                 $dotColor    = $catColors[$annCat] ?? '#3454d1';
             ?>
-            <div class="glass rounded-2xl p-4 hover:border-white/20 transition"
+              <div class="glass rounded-2xl p-4 hover:border-white/20 transition min-h-[150px]"
                  style="border-left: 3px solid <?= $accentColor ?>;">
                 <div class="flex items-start gap-3">
                     <span class="text-lg select-none mt-0.5 flex-shrink-0"><?= $annEmoji ?></span>
@@ -306,7 +356,7 @@ function appEmoji(string $icon): string {
     <?php if (!empty($workspaceApps)): ?>
     <section class="fade-up d3">
         <p class="section-label mb-3">Suite Google Workspace</p>
-        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        <div class="app-grid grid gap-3">
             <?php foreach ($workspaceApps as $i => $app):
                 $appName = htmlspecialchars($app['name'] ?? '');
                 $appUrl  = htmlspecialchars($app['url']  ?? '#');
@@ -328,11 +378,11 @@ function appEmoji(string $icon): string {
 
     <!-- ══ APPLICATIONS ═════════════════════════════════════════════════ -->
     <section class="fade-up d4">
-        <p class="section-label mb-3">Applications (<?= count($portalApps) ?>)</p>
+        <p class="section-label mb-3">Applications (<?= $portalCount ?>)</p>
         <?php if (empty($portalApps)): ?>
         <div class="glass rounded-2xl p-4 text-sm text-white/50">Aucune application hors Google Workspace.</div>
         <?php else: ?>
-        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        <div class="app-grid grid gap-3">
             <?php foreach ($portalApps as $i => $app):
                 $offset = count($workspaceApps);
                 $index = $i + $offset;
