@@ -279,19 +279,16 @@ function appEmoji(string $icon): string {
         <hr class="divider my-3.5">
 
         <!-- Recherche -->
-        <form action="https://www.google.com/search" method="get" class="space-y-2.5">
+        <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener" class="space-y-2.5">
+            <input type="hidden" name="hl" value="fr">
             <div class="search-shell p-2.5 sm:p-3">
                 <div class="flex items-center gap-2.5">
-                    <span class="text-sm text-white/35 select-none">🔎</span>
-                    <input type="text" name="q" placeholder="Rechercher sur le web..." autocomplete="off"
+                    <span class="text-sm text-white/35 select-none">G</span>
+                    <input type="text" name="q" placeholder="Rechercher sur Google..." autocomplete="off"
                            class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
-                    <button type="button" onclick="this.closest('form').q.value=''; this.closest('form').q.focus();"
-                            class="px-2.5 py-1.5 rounded-lg text-xs text-white/45 hover:text-white hover:bg-white/10 transition">
-                        Effacer
-                    </button>
                     <button type="submit"
                             class="px-4 py-2 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-brand/20 whitespace-nowrap">
-                        Rechercher
+                        Google
                     </button>
                 </div>
             </div>
