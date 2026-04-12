@@ -20,6 +20,13 @@ return [
         'client_secret' => 'VOTRE_CLIENT_SECRET',
         'redirect_uri'  => 'https://portail.groupe-speed.cloud/callback.php',
     ],
+
+    // Version de la charte informatique.
+    // Incrémentez cette valeur (ex: 2026-05-01 ou v2) pour forcer une nouvelle validation.
+    'charter' => [
+        'version' => '2026-04-12',
+    ],
+
     // Emails autorisés à accéder à l'espace admin (admin.php)
     'admins' => [
         'admin@groupe-speed.cloud',

@@ -46,6 +46,7 @@ foreach ($channels as $key => $channelConfig) {
     <link rel="icon" type="image/png" href="https://sign.groupe-speed.cloud/assets/images/cloudy.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php include __DIR__ . '/_ui-tokens.php'; ?>
 </head>
 <body class="min-h-screen text-slate-100" style="font-family: 'Titillium Web', sans-serif; background: radial-gradient(circle at 10% 10%, #1d4ed8 0%, #0b132b 45%, #020617 100%);">
     <?php include __DIR__ . '/_nav.php'; ?>

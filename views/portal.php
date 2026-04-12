@@ -104,7 +104,8 @@ function appEmoji(string $icon): string {
     </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
         :root {
             --bg:          #06080f;
@@ -168,21 +169,6 @@ function appEmoji(string $icon): string {
             box-shadow: 0 0 0 3px rgba(52,84,209,.35);
         }
         .search-input:focus { outline: none; }
-        .quick-chip {
-            border: 1px solid rgba(255,255,255,.12);
-            background: rgba(255,255,255,.05);
-            border-radius: 10px;
-            padding: 6px 9px;
-            color: rgba(255,255,255,.65);
-            font-size: .72rem;
-            font-weight: 600;
-            transition: all .15s ease;
-        }
-        .quick-chip:hover {
-            color: #fff;
-            background: rgba(255,255,255,.12);
-            transform: translateY(-1px);
-        }
 
         /* ── horloge ────────────────────────────────────────────────── */
         #clock { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
@@ -214,7 +200,7 @@ function appEmoji(string $icon): string {
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+<main class="page-stack relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
@@ -266,7 +252,7 @@ function appEmoji(string $icon): string {
         <form action="https://www.google.com/search" method="get" class="space-y-2.5">
             <div class="search-shell flex items-center gap-2 pl-3 pr-2 py-2">
                 <span class="text-sm text-white/35 select-none">🔎</span>
-                <input type="text" name="q" placeholder="Recherche rapide web, docs, erreurs, tickets..." autocomplete="off"
+                  <input type="text" name="q" placeholder="Rechercher sur Google..." autocomplete="off"
                        class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
                 <button type="button" onclick="this.closest('form').q.value=''; this.closest('form').q.focus();"
                         class="px-2.5 py-1.5 rounded-lg text-xs text-white/45 hover:text-white hover:bg-white/10 transition">

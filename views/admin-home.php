@@ -33,7 +33,8 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
     <title>Admin - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
         body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
@@ -48,7 +49,7 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
 <div class="bg-ambient"></div>
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+<main class="page-stack relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
     <section class="glass rounded-3xl p-6 sm:p-7">
         <h1 class="text-2xl font-bold">⚙️ Administration</h1>
         <p class="text-white/45 text-sm mt-1">Espace admin réorganisé en plusieurs pages pour une interface plus propre.</p>
@@ -61,7 +62,7 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
         <div class="glass rounded-2xl p-4"><p class="text-red-300 text-xs uppercase tracking-wider">Bannières actives</p><p class="text-white text-2xl font-bold mt-1\"><?= $activeBanners ?></p></div>
     </section>
 
-    <section class="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <section class="grid md:grid-cols-2 xl:grid-cols-5 gap-4">
         <a href="/admin-news.php" class="admin-card glass rounded-3xl p-6 block border border-white/10">
             <p class="text-lg font-semibold">📰 Gérer les actualités</p>
             <p class="text-white/45 text-sm mt-1">Création, brouillons, publication, édition, tri et filtres.</p>
@@ -80,6 +81,11 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
         <a href="/admin-apps.php" class="admin-card glass rounded-3xl p-6 block border border-white/10">
             <p class="text-lg font-semibold">🧩 Gérer les applications</p>
             <p class="text-white/45 text-sm mt-1">Configuration des applications du portail.</p>
+            <p class="text-xs text-brand-lt mt-4">Ouvrir la page →</p>
+        </a>
+        <a href="/admin-users.php" class="admin-card glass rounded-3xl p-6 block border border-white/10">
+            <p class="text-lg font-semibold">👥 Gérer les utilisateurs</p>
+            <p class="text-white/45 text-sm mt-1">Suivi des validations de charte et connexions.</p>
             <p class="text-xs text-brand-lt mt-4">Ouvrir la page →</p>
         </a>
     </section>

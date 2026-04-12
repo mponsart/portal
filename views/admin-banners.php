@@ -25,7 +25,8 @@ $csrfToken = $_SESSION['csrf_token'];
     <title>Admin Bannières - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
         body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
@@ -48,7 +49,7 @@ $csrfToken = $_SESSION['csrf_token'];
 <div class="bg-ambient"></div>
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+<main class="page-stack relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
     <section class="glass rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">📣 Administration des bannières</h1>
@@ -61,6 +62,7 @@ $csrfToken = $_SESSION['csrf_token'];
             <a href="/admin-banners.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>
             <a href="/admin-status.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📡 Sites</a>
             <a href="/admin-apps.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🧩 Applications</a>
+            <a href="/admin-users.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">👥 Utilisateurs</a>
         </div>
     </section>
 

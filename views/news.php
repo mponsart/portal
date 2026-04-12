@@ -44,7 +44,8 @@ $catBadge  = [
         };
     </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body { font-family:'Titillium Web',sans-serif; background:#06080f; }
@@ -86,7 +87,7 @@ $catBadge  = [
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+<main class="page-stack relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';

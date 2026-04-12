@@ -46,7 +46,8 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         };
     </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Titillium Web', sans-serif; background: #06080f; color-scheme: dark; }

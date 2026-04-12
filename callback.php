@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/db.php';
 
 use Google\Client;
 use Google\Service\Oauth2;
@@ -48,6 +49,10 @@ try {
         'token' => $token,
         'token_created' => time(),
     ];
+
+    $pdo = db_connect();
+    $isAdmin = in_array($userInfo->email, $config['admins'] ?? [], true);
+    db_upsert_user_from_session($pdo, $_SESSION['user'], $isAdmin);
     
     header('Location: /');
     exit;
