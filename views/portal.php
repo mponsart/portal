@@ -27,7 +27,7 @@ if (file_exists($bannerFile)) {
 
 // Applications
 $appsFile = __DIR__ . '/../uploads/apps.json';
-$workspaceApps = [
+$workspaceDefaults = [
     ['name' => 'Gmail',       'url' => 'https://mail.google.com',     'icon' => 'gmail'],
     ['name' => 'Drive',       'url' => 'https://drive.google.com',    'icon' => 'drive'],
     ['name' => 'Agenda',      'url' => 'https://calendar.google.com', 'icon' => 'calendar'],
@@ -37,7 +37,7 @@ $workspaceApps = [
     ['name' => 'Slides',      'url' => 'https://slides.google.com',   'icon' => 'slides'],
 ];
 
-$defaultApps = $config['portal']['apps'] ?? [
+$portalDefaults = $config['portal']['apps'] ?? [
     ['name' => 'YouTube',     'url' => 'https://youtube.com',         'icon' => 'youtube'],
     ['name' => 'Discord',     'url' => 'https://discord.com',         'icon' => 'discord'],
     ['name' => 'GitHub',      'url' => 'https://github.com',          'icon' => 'github'],
@@ -45,7 +45,7 @@ $defaultApps = $config['portal']['apps'] ?? [
     ['name' => 'Figma',       'url' => 'https://figma.com',           'icon' => 'figma'],
 ];
 
-$apps = $defaultApps;
+$apps = array_merge($workspaceDefaults, $portalDefaults);
 if (file_exists($appsFile)) {
     $decoded = json_decode((string)file_get_contents($appsFile), true);
     if (is_array($decoded)) {
@@ -54,6 +54,7 @@ if (file_exists($appsFile)) {
 }
 
 $googleWorkspaceIcons = ['gmail', 'drive', 'calendar', 'meet', 'docs', 'sheets', 'slides'];
+$workspaceApps = [];
 $portalApps = [];
 foreach ($apps as $app) {
     $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
@@ -61,16 +62,16 @@ foreach ($apps as $app) {
     if ($adminOnly && !$isAdmin) {
         continue;
     }
-    if (!in_array($icon, $googleWorkspaceIcons, true)) {
-        $portalApps[] = $app;
+
+    if (in_array($icon, $googleWorkspaceIcons, true)) {
+        $workspaceApps[] = $app;
     } else {
-        foreach ($workspaceApps as $wIdx => $wApp) {
-            if (($wApp['url'] ?? '') === ($app['url'] ?? '') && ($wApp['icon'] ?? '') === $icon) {
-                $workspaceApps[$wIdx] = $app;
-                break;
-            }
-        }
+        $portalApps[] = $app;
     }
+}
+
+if (empty($workspaceApps)) {
+    $workspaceApps = $workspaceDefaults;
 }
 
 $firstName = $user['firstName'] ?? explode(' ', $user['name'])[0];

@@ -240,7 +240,7 @@ foreach ($apps as $idx => $app) {
             </select>
             <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" name="admin_only" value="1" class="accent-blue-500">
-                <span>Admins only</span>
+                <span>Admin uniquement</span>
             </label>
             <button class="sm:col-span-6 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter</button>
         </form>
@@ -274,7 +274,7 @@ foreach ($apps as $idx => $app) {
                     </select>
                     <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-xs flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="admin_only" value="1" <?= $adminOnly ? 'checked' : '' ?> class="accent-blue-500">
-                        <span>Admins only</span>
+                        <span>Admin uniquement</span>
                     </label>
                     <div class="sm:col-span-1 text-xs text-white/65 flex items-center justify-center rounded-xl bg-white/5 border border-white/10">
                         Affichage: <?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?>
@@ -283,27 +283,28 @@ foreach ($apps as $idx => $app) {
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
                     </div>
                 </form>
-                <form method="post" class="mt-1 flex justify-end gap-1.5">
+                <div class="mt-1 flex items-center justify-end gap-1.5">
+                <form method="post" class="inline-flex">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="move_workspace_app">
                     <input type="hidden" name="index" value="<?= $idx ?>">
                     <input type="hidden" name="direction" value="up">
                     <button class="px-2 py-1 rounded-lg text-xs btn-soft">↑</button>
                 </form>
-                <form method="post" class="mt-1 flex justify-end gap-1.5">
+                <form method="post" class="inline-flex">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="move_workspace_app">
                     <input type="hidden" name="index" value="<?= $idx ?>">
                     <input type="hidden" name="direction" value="down">
                     <button class="px-2 py-1 rounded-lg text-xs btn-soft">↓</button>
                 </form>
-                <form method="post" class="mt-1 flex justify-end">
+                <form method="post" class="inline-flex">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="delete_workspace_app">
                     <input type="hidden" name="index" value="<?= $idx ?>">
                     <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </form>
-            </div>
+                </div>
             <?php endforeach; ?>
         </div>
     </section>
