@@ -185,6 +185,17 @@ function appEmoji(string $icon): string {
             box-shadow: 0 0 0 3px rgba(52,84,209,.35);
         }
         .search-input:focus { outline: none; }
+        .google-logo {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: .01em;
+            line-height: 1;
+            user-select: none;
+        }
+        .google-logo .b { color:#4285F4; }
+        .google-logo .r { color:#DB4437; }
+        .google-logo .y { color:#F4B400; }
+        .google-logo .g { color:#0F9D58; }
 
         /* ── horloge ────────────────────────────────────────────────── */
         #clock { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
@@ -281,14 +292,17 @@ function appEmoji(string $icon): string {
         <!-- Recherche -->
         <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener" class="space-y-2.5">
             <input type="hidden" name="hl" value="fr">
+            <input type="hidden" name="source" value="hp">
             <div class="search-shell p-2.5 sm:p-3">
                 <div class="flex items-center gap-2.5">
-                    <span class="text-sm text-white/35 select-none">G</span>
+                    <span class="google-logo" aria-hidden="true">
+                        <span class="b">G</span><span class="r">o</span><span class="y">o</span><span class="b">g</span><span class="g">l</span><span class="r">e</span>
+                    </span>
                     <input type="text" name="q" placeholder="Rechercher sur Google..." autocomplete="off"
                            class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
                     <button type="submit"
                             class="px-4 py-2 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-brand/20 whitespace-nowrap">
-                        Google
+                        Recherche Google
                     </button>
                 </div>
             </div>
