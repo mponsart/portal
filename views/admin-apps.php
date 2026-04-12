@@ -220,6 +220,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => $ok, 'message' => $ok ? 'Enregistré.' : 'Échec de l\'enregistrement.']);
+        exit;
+    }
+
     $_SESSION['admin_apps_flash'] = [
         'type' => $ok ? 'success' : 'error',
         'message' => $ok ? 'Applications mises à jour.' : 'Action invalide ou enregistrement impossible.',
@@ -445,16 +451,10 @@ foreach ($apps as $idx => $app) {
 </main>
 <script>
 (() => {
-    const list = document.getElementById('customAppsList');
-    const saveBtn = document.getElementById('saveAppsOrderBtn');
+    // ── Ordre ────────────────────────────────────────────────────────────
+    const list      = document.getElementById('customAppsList');
+    const saveBtn   = document.getElementById('saveAppsOrderBtn');
     const orderInput = document.getElementById('appsOrderInput');
-    if (!list || !saveBtn || !orderInput) return;
-
-    Array.from(list.querySelectorAll('.order-input')).forEach((input) => {
-        input.addEventListener('input', () => {
-            saveBtn.disabled = false;
-        });
-    });
 
     function currentOrderFromNumbers() {
         return Array.from(list.querySelectorAll('.app-sort-item'))
@@ -462,20 +462,79 @@ foreach ($apps as $idx => $app) {
                 const input = el.querySelector('.order-input');
                 const parsed = parseInt(input?.value ?? '', 10);
                 const order = Number.isFinite(parsed) && parsed > 0 ? parsed : position + 1;
-                return {
-                    index: el.getAttribute('data-index') || '',
-                    order,
-                    position,
-                };
+                return { index: el.getAttribute('data-index') || '', order, position };
             })
             .sort((a, b) => (a.order - b.order) || (a.position - b.position))
-            .map((item) => item.index)
+            .map(item => item.index)
             .filter(Boolean)
             .join(',');
     }
 
-    document.getElementById('reorderAppsForm')?.addEventListener('submit', () => {
-        orderInput.value = currentOrderFromNumbers();
+    list?.querySelectorAll('.order-input').forEach(input => {
+        input.addEventListener('input', () => { if (saveBtn) saveBtn.disabled = false; });
+    });
+
+    document.getElementById('reorderAppsForm')?.addEventListener('submit', e => {
+        if (orderInput) orderInput.value = currentOrderFromNumbers();
+    });
+
+    // ── Feedback inline ──────────────────────────────────────────────────
+    function showFeedback(btn, ok, msg) {
+        const orig = btn.textContent;
+        btn.textContent = ok ? '✓ ' + msg : '✗ ' + msg;
+        btn.classList.add(ok ? 'bg-emerald-600' : 'bg-red-600');
+        btn.classList.remove('bg-blue-600', 'bg-blue-700', 'bg-emerald-600/70');
+        btn.disabled = true;
+        setTimeout(() => {
+            btn.textContent = orig;
+            btn.classList.remove('bg-emerald-600', 'bg-red-600');
+            btn.classList.add(orig.includes('Enregistrer') ? 'bg-blue-600' : 'bg-emerald-600/70');
+            btn.disabled = false;
+        }, 2200);
+    }
+
+    // ── AJAX générique ───────────────────────────────────────────────────
+    async function submitAjax(form, btn) {
+        const body = new FormData(form);
+        btn.disabled = true;
+        try {
+            const res  = await fetch(form.action || window.location.href, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body,
+            });
+            const json = await res.json();
+            showFeedback(btn, json.ok, json.message);
+
+            // Si suppression réussie → retirer la carte du DOM
+            if (json.ok && (body.get('action') === 'delete_app')) {
+                const card = btn.closest('.app-sort-item');
+                card?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 }).finished.then(() => card.remove());
+            }
+
+            // Si ajout réussi → recharger la liste silencieusement
+            if (json.ok && body.get('action') === 'add_app') {
+                setTimeout(() => window.location.reload(), 800);
+            }
+        } catch {
+            showFeedback(btn, false, 'Erreur réseau');
+        }
+    }
+
+    // ── Intercepter tous les formulaires ─────────────────────────────────
+    document.addEventListener('submit', e => {
+        const form = e.target;
+        if (!form.matches('form[method="post"]')) return;
+
+        const action = form.querySelector('[name="action"]')?.value ?? '';
+        // Le formulaire de réordonnancement peut rester synchrone
+        if (action === 'reorder_apps') return;
+
+        e.preventDefault();
+
+        // Trouver le bouton submit qui a déclenché l'envoi
+        const btn = form.querySelector('button[type="submit"], button:not([type])') ?? e.submitter;
+        if (btn) submitAjax(form, btn);
     });
 })();
 </script>
