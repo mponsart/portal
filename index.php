@@ -6,9 +6,9 @@ use Google\Client;
 
 $config = require __DIR__ . '/config.php';
 
-// Si déjà connecté, afficher le générateur
+// Si déjà connecté, afficher le portail
 if (isset($_SESSION['user'])) {
-    include __DIR__ . '/views/announcements.php';
+    include __DIR__ . '/views/portal.php';
     exit;
 }
 

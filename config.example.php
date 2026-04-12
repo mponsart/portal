@@ -18,9 +18,22 @@ return [
     'google' => [
         'client_id' => 'VOTRE_CLIENT_ID.apps.googleusercontent.com',
         'client_secret' => 'VOTRE_CLIENT_SECRET',
-        'redirect_uri' => 'https://sign.groupe-speed.cloud/callback.php',
+        'redirect_uri' => 'https://portail.groupe-speed.cloud/callback.php',
         'hosted_domain' => 'groupe-speed.cloud',
     ],
+    // Emails autorisés à accéder à l'espace admin (admin.php)
+    'admins' => [
+        'admin@groupe-speed.cloud',
+    ],
+
+    // Applications affichées sur le portail (optionnel — des valeurs par défaut sont utilisées si absent)
+    // 'portal' => [
+    //     'apps' => [
+    //         ['name' => 'Gmail',        'url' => 'https://mail.google.com', 'emoji' => '📧', 'bg' => 'from-red-500 to-rose-700'],
+    //         ['name' => 'Google Drive', 'url' => 'https://drive.google.com','emoji' => '💾', 'bg' => 'from-yellow-400 to-orange-500'],
+    //     ],
+    // ],
+
     // Webhooks Discord. Ne jamais exposer ces URLs côté client.
     'discord' => [
         'channels' => [
