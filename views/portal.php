@@ -56,13 +56,18 @@ if (file_exists($appsFile)) {
 $googleWorkspaceIcons = ['gmail', 'drive', 'calendar', 'meet', 'docs', 'sheets', 'slides'];
 $workspaceApps = [];
 $portalApps = [];
+$unavailableApps = [];
 foreach ($apps as $app) {
     $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
     $adminOnly = !empty($app['admin_only']);
     if ($adminOnly && !$isAdmin) {
         continue;
     }
-
+    $appStatus = $app['status'] ?? 'active';
+    if (in_array($appStatus, ['maintenance', 'disabled'], true)) {
+        $unavailableApps[] = $app;
+        continue;
+    }
     if (in_array($icon, $googleWorkspaceIcons, true)) {
         $workspaceApps[] = $app;
     } else {
@@ -218,6 +223,7 @@ function appEmoji(string $icon): string {
         .mini-kpi { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
         .featured-grid { grid-template-columns:1fr; }
         .app-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+        .apps-widget-grid { display:grid; grid-template-columns:1fr; gap:.75rem; align-items:start; }
         .panel-stack { display:flex; flex-direction:column; gap:.75rem; }
         @media (min-width: 640px) {
             .app-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
@@ -230,6 +236,7 @@ function appEmoji(string $icon): string {
         @media (min-width: 1024px) {
             .featured-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
             .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
+            .apps-widget-grid { grid-template-columns:1fr 220px; }
         }
 
     </style>
@@ -347,89 +354,83 @@ function appEmoji(string $icon): string {
     </section>
     <?php endif; ?>
 
-    <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════════ -->
-    <?php if (!empty($workspaceApps)): ?>
-    <section>
-        <p class="section-label mb-3">Suite Google Workspace</p>
-        <div class="app-grid grid gap-3">
-            <?php foreach ($workspaceApps as $i => $app):
-                $appName = htmlspecialchars($app['name'] ?? '');
-                $appUrl  = htmlspecialchars($app['url']  ?? '#');
-                $appIcon = $app['icon'] ?? 'default';
-                $appEmojiValue = trim((string)($app['emoji'] ?? ''));
-                $appStatus = $app['status'] ?? 'active';
-                $isUnavailable = in_array($appStatus, ['maintenance', 'disabled'], true);
-                $delay   = 'd' . min($i + 1, 12);
-            ?>
-            <?php if ($isUnavailable): ?>
-            <div class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5 relative opacity-50 cursor-not-allowed select-none"
-                 title="<?= $appStatus === 'maintenance' ? 'En maintenance' : 'Désactivé' ?>">
-                <div class="relative w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] leading-none
-                        <?= $appStatus === 'maintenance' ? 'bg-amber-400 text-black' : 'bg-white/25 text-white' ?>">
-                        <?= $appStatus === 'maintenance' ? '🔧' : '✕' ?>
-                    </span>
-                </div>
-                <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-            </div>
-            <?php else: ?>
-            <a href="<?= $appUrl ?>"
-               class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
-                <div class="w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
-                </div>
-                <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-            </a>
-            <?php endif; ?>
-            <?php endforeach; ?>
-        </div>
-    </section>
-    <?php endif; ?>
+    <!-- ══ APPS + WIDGET INDISPONIBLES ═══════════════════════════════ -->
+    <div class="apps-widget-grid">
+        <div class="panel-stack">
 
-    <!-- ══ APPLICATIONS ═════════════════════════════════════════════════ -->
-    <section>
-        <p class="section-label mb-3">Applications (<?= $portalCount ?>)</p>
-        <?php if (empty($portalApps)): ?>
-        <div class="glass rounded-2xl p-4 text-sm text-white/50">Aucune application hors Google Workspace.</div>
-        <?php else: ?>
-        <div class="app-grid grid gap-3">
-            <?php foreach ($portalApps as $i => $app):
-                $offset = count($workspaceApps);
-                $index = $i + $offset;
-                $appName = htmlspecialchars($app['name'] ?? '');
-                $appUrl  = htmlspecialchars($app['url']  ?? '#');
-                $appIcon = $app['icon'] ?? 'default';
-                $appEmojiValue = trim((string)($app['emoji'] ?? ''));
-                $appStatus = $app['status'] ?? 'active';
-                $isUnavailable = in_array($appStatus, ['maintenance', 'disabled'], true);
-                $delay   = 'd' . min($index + 1, 12);
-            ?>
-            <?php if ($isUnavailable): ?>
-            <div class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5 relative opacity-50 cursor-not-allowed select-none"
-                 title="<?= $appStatus === 'maintenance' ? 'En maintenance' : 'Désactivé' ?>">
-                <div class="relative w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] leading-none
-                        <?= $appStatus === 'maintenance' ? 'bg-amber-400 text-black' : 'bg-white/25 text-white' ?>">
-                        <?= $appStatus === 'maintenance' ? '🔧' : '✕' ?>
-                    </span>
-                </div>
-                <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
+        <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════ -->
+        <?php if (!empty($workspaceApps)): ?>
+        <section>
+            <p class="section-label mb-3">Suite Google Workspace</p>
+            <div class="app-grid grid gap-3">
+                <?php foreach ($workspaceApps as $i => $app):
+                    $appName = htmlspecialchars($app['name'] ?? '');
+                    $appUrl  = htmlspecialchars($app['url']  ?? '#');
+                    $appIcon = $app['icon'] ?? 'default';
+                    $appEmojiValue = trim((string)($app['emoji'] ?? ''));
+                ?>
+                <a href="<?= $appUrl ?>" class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
+                    <div class="w-10 h-10 flex items-center justify-center">
+                        <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+                    </div>
+                    <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
+                </a>
+                <?php endforeach; ?>
             </div>
-            <?php else: ?>
-            <a href="<?= $appUrl ?>"
-               class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
-                <div class="w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
-                </div>
-                <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-            </a>
-            <?php endif; ?>
-            <?php endforeach; ?>
-        </div>
+        </section>
         <?php endif; ?>
-    </section>
+
+        <!-- ══ APPLICATIONS ════════════════════════════════════════════ -->
+        <section>
+            <p class="section-label mb-3">Applications (<?= $portalCount ?>)</p>
+            <?php if (empty($portalApps)): ?>
+            <div class="glass rounded-2xl p-4 text-sm text-white/50">Aucune application hors Google Workspace.</div>
+            <?php else: ?>
+            <div class="app-grid grid gap-3">
+                <?php foreach ($portalApps as $i => $app):
+                    $appName = htmlspecialchars($app['name'] ?? '');
+                    $appUrl  = htmlspecialchars($app['url']  ?? '#');
+                    $appIcon = $app['icon'] ?? 'default';
+                    $appEmojiValue = trim((string)($app['emoji'] ?? ''));
+                ?>
+                <a href="<?= $appUrl ?>" class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
+                    <div class="w-10 h-10 flex items-center justify-center">
+                        <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+                    </div>
+                    <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
+                </a>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </section>
+
+        </div><!-- /panel-stack -->
+
+        <!-- ══ WIDGET INDISPONIBLES ════════════════════════════════════ -->
+        <?php if (!empty($unavailableApps)): ?>
+        <aside class="glass rounded-2xl p-4 self-start">
+            <p class="section-label mb-3">Indisponibles</p>
+            <ul class="space-y-2">
+                <?php foreach ($unavailableApps as $ua):
+                    $uaName   = htmlspecialchars($ua['name'] ?? '');
+                    $uaIcon   = strtolower(trim((string)($ua['icon'] ?? 'link')));
+                    $uaEmoji  = trim((string)($ua['emoji'] ?? ''));
+                    $uaStatus = $ua['status'] ?? 'disabled';
+                ?>
+                <li class="flex items-center gap-2.5">
+                    <span class="text-xl leading-none select-none flex-shrink-0"><?= $uaEmoji !== '' ? htmlspecialchars($uaEmoji) : appEmoji($uaIcon) ?></span>
+                    <span class="flex-1 text-xs text-white/70 truncate"><?= $uaName ?></span>
+                    <span class="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full
+                        <?= $uaStatus === 'maintenance' ? 'bg-amber-500/25 text-amber-300 border border-amber-500/35' : 'bg-white/8 text-white/35 border border-white/12' ?>">
+                        <?= $uaStatus === 'maintenance' ? '🔧 Maintenance' : 'Désactivé' ?>
+                    </span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </aside>
+        <?php endif; ?>
+
+    </div><!-- /apps-widget-grid -->
     </div>
 
 </main>
