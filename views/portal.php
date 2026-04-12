@@ -50,6 +50,18 @@ if (file_exists($appsFile)) {
     }
 }
 
+$googleWorkspaceIcons = ['gmail', 'drive', 'calendar', 'meet', 'docs', 'sheets', 'slides'];
+$workspaceApps = [];
+$portalApps = [];
+foreach ($apps as $app) {
+    $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
+    if (in_array($icon, $googleWorkspaceIcons, true)) {
+        $workspaceApps[] = $app;
+    } else {
+        $portalApps[] = $app;
+    }
+}
+
 $firstName = $user['firstName'] ?? explode(' ', $user['name'])[0];
 
 function appEmoji(string $icon): string {
@@ -310,11 +322,12 @@ function appEmoji(string $icon): string {
     </section>
     <?php endif; ?>
 
-    <!-- ══ APPLICATIONS ═════════════════════════════════════════════════ -->
+    <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════════ -->
+    <?php if (!empty($workspaceApps)): ?>
     <section class="fade-up d3">
-        <p class="section-label mb-3">Applications</p>
+        <p class="section-label mb-3">Suite Google Workspace</p>
         <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            <?php foreach ($apps as $i => $app):
+            <?php foreach ($workspaceApps as $i => $app):
                 $appName = htmlspecialchars($app['name'] ?? '');
                 $appUrl  = htmlspecialchars($app['url']  ?? '#');
                 $appIcon = $app['icon'] ?? 'default';
@@ -329,6 +342,34 @@ function appEmoji(string $icon): string {
             </a>
             <?php endforeach; ?>
         </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- ══ APPLICATIONS ═════════════════════════════════════════════════ -->
+    <section class="fade-up d4">
+        <p class="section-label mb-3">Applications (<?= count($portalApps) ?>)</p>
+        <?php if (empty($portalApps)): ?>
+        <div class="glass rounded-2xl p-4 text-sm text-white/50">Aucune application hors Google Workspace.</div>
+        <?php else: ?>
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            <?php foreach ($portalApps as $i => $app):
+                $offset = count($workspaceApps);
+                $index = $i + $offset;
+                $appName = htmlspecialchars($app['name'] ?? '');
+                $appUrl  = htmlspecialchars($app['url']  ?? '#');
+                $appIcon = $app['icon'] ?? 'default';
+                $delay   = 'd' . min($index + 1, 12);
+            ?>
+            <a href="<?= $appUrl ?>"
+               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-4 flex flex-col items-center gap-2.5">
+                <div class="w-10 h-10 flex items-center justify-center">
+                    <span class="text-3xl leading-none select-none"><?= appEmoji($appIcon) ?></span>
+                </div>
+                <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </section>
 
 </main>
