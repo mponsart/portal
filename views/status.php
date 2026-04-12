@@ -6,6 +6,8 @@ $isAdmin = in_array($user['email'], $config['admins'] ?? []);
 $currentPage = 'status';
 $sitesFile = __DIR__ . '/../uploads/status-sites.json';
 $appsFile = __DIR__ . '/../uploads/apps.json';
+$pingCacheFile = __DIR__ . '/../uploads/ping-cache-status.json';
+$pingCacheTtl = 45;
 
 $defaultSites = $config['status_sites'] ?? [
     ['name' => 'Portail', 'url' => 'https://portail.groupe-speed.cloud'],
@@ -76,6 +78,126 @@ function appEmoji(string $icon): string {
     };
 }
 
+function singlePing(string $url): array {
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
+    }
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 6,
+            CURLOPT_NOBODY => false,
+            CURLOPT_HTTPGET => true,
+            CURLOPT_RANGE => '0-0',
+            CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
+        ]);
+
+        $result = curl_exec($ch);
+        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
+        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        return [
+            'ok' => $result !== false && $code >= 200 && $code < 500,
+            'code' => $code,
+            'ms' => $ms,
+            'error' => $result === false ? ($err ?: 'Echec ping') : '',
+        ];
+    }
+
+    $start = microtime(true);
+    $headers = @get_headers($url);
+    $ms = (int)round((microtime(true) - $start) * 1000);
+    if (!is_array($headers) || !isset($headers[0])) {
+        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de reponse'];
+    }
+
+    preg_match('/\s(\d{3})\s/', $headers[0], $m);
+    $code = isset($m[1]) ? (int)$m[1] : 0;
+    return ['ok' => $code >= 200 && $code < 500, 'code' => $code, 'ms' => $ms, 'error' => ''];
+}
+
+function batchPing(array $urls): array {
+    $results = [];
+    if (!function_exists('curl_multi_init') || !function_exists('curl_init')) {
+        foreach ($urls as $idx => $url) {
+            $results[$idx] = singlePing((string)$url);
+        }
+        return $results;
+    }
+
+    $mh = curl_multi_init();
+    $handles = [];
+    foreach ($urls as $idx => $url) {
+        $url = (string)$url;
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            $results[$idx] = ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
+            continue;
+        }
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 6,
+            CURLOPT_NOBODY => false,
+            CURLOPT_HTTPGET => true,
+            CURLOPT_RANGE => '0-0',
+            CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
+        ]);
+        $handles[$idx] = $ch;
+        curl_multi_add_handle($mh, $ch);
+    }
+
+    do {
+        $status = curl_multi_exec($mh, $active);
+        if ($active) {
+            curl_multi_select($mh, 1.0);
+        }
+    } while ($active && $status === CURLM_OK);
+
+    foreach ($handles as $idx => $ch) {
+        $raw = curl_multi_getcontent($ch);
+        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
+        $err = curl_error($ch);
+
+        $results[$idx] = [
+            'ok' => $raw !== false && $code >= 200 && $code < 500,
+            'code' => $code,
+            'ms' => $ms,
+            'error' => $raw === false ? ($err ?: 'Echec ping') : '',
+        ];
+
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+
+    ksort($results);
+    return $results;
+}
+
+function readPingCache(string $path): array {
+    if (!file_exists($path)) return [];
+    $decoded = json_decode((string)file_get_contents($path), true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function savePingCache(string $path, array $payload): void {
+    $dir = dirname($path);
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+    @file_put_contents($path, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+}
+
 $sites = readJsonArray($sitesFile, $defaultSites);
 $apps = readJsonArray($appsFile, $defaultApps);
 
@@ -94,33 +216,6 @@ if ($isAdmin) {
 
         $action = trim((string)($_POST['action'] ?? ''));
         $ok = false;
-
-        if ($action === 'add_site') {
-            $name = normalizeName((string)($_POST['name'] ?? ''));
-            $url = normalizeUrl((string)($_POST['url'] ?? ''));
-            if ($name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-                $sites[] = ['name' => $name, 'url' => $url];
-                $ok = saveJsonArray($sitesFile, $sites);
-            }
-        }
-
-        if ($action === 'delete_site') {
-            $idx = (int)($_POST['index'] ?? -1);
-            if (isset($sites[$idx])) {
-                unset($sites[$idx]);
-                $ok = saveJsonArray($sitesFile, $sites);
-            }
-        }
-
-        if ($action === 'update_site') {
-            $idx = (int)($_POST['index'] ?? -1);
-            $name = normalizeName((string)($_POST['name'] ?? ''));
-            $url = normalizeUrl((string)($_POST['url'] ?? ''));
-            if (isset($sites[$idx]) && $name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-                $sites[$idx] = ['name' => $name, 'url' => $url];
-                $ok = saveJsonArray($sitesFile, $sites);
-            }
-        }
 
         if ($action === 'add_app') {
             $name = normalizeName((string)($_POST['name'] ?? ''));
@@ -174,65 +269,52 @@ if (file_exists($bannerFile)) {
     }
 }
 
-function pingSite(string $url): array {
-    if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        return ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
+$targets = [];
+foreach ($sites as $i => $site) {
+    $targets[] = ['kind' => 'site', 'index' => $i, 'url' => trim((string)($site['url'] ?? ''))];
+}
+foreach ($apps as $i => $app) {
+    $targets[] = ['kind' => 'app', 'index' => $i, 'url' => trim((string)($app['url'] ?? ''))];
+}
+
+$signature = hash('sha256', json_encode(array_column($targets, 'url')) ?: '');
+$cache = readPingCache($pingCacheFile);
+$useCache = isset($cache['signature'], $cache['created_at'], $cache['data'])
+    && $cache['signature'] === $signature
+    && (time() - (int)$cache['created_at']) <= $pingCacheTtl
+    && is_array($cache['data']);
+
+$pingData = [];
+if ($useCache) {
+    $pingData = $cache['data'];
+} else {
+    $urls = array_map(fn($t) => (string)$t['url'], $targets);
+    $raw = batchPing($urls);
+    foreach ($targets as $idx => $t) {
+        $key = $t['kind'] . ':' . (int)$t['index'];
+        $pingData[$key] = $raw[$idx] ?? ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'Ping indisponible'];
     }
-
-    if (function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_NOBODY => false,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_RANGE => '0-0',
-            CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
-        ]);
-
-        $result = curl_exec($ch);
-        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
-        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        return [
-            'ok' => $result !== false && $code >= 200 && $code < 500,
-            'code' => $code,
-            'ms' => $ms,
-            'error' => $result === false ? ($err ?: 'Echec ping') : '',
-        ];
-    }
-
-    $start = microtime(true);
-    $headers = @get_headers($url);
-    $ms = (int)round((microtime(true) - $start) * 1000);
-    if (!is_array($headers) || !isset($headers[0])) {
-        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de reponse'];
-    }
-
-    preg_match('/\s(\d{3})\s/', $headers[0], $m);
-    $code = isset($m[1]) ? (int)$m[1] : 0;
-    return ['ok' => $code >= 200 && $code < 500, 'code' => $code, 'ms' => $ms, 'error' => ''];
+    savePingCache($pingCacheFile, [
+        'created_at' => time(),
+        'signature' => $signature,
+        'data' => $pingData,
+    ]);
 }
 
 $results = [];
-foreach ($sites as $site) {
+foreach ($sites as $i => $site) {
     $name = trim((string)($site['name'] ?? 'Site'));
     $url = trim((string)($site['url'] ?? ''));
-    $ping = pingSite($url);
+    $ping = $pingData['site:' . $i] ?? singlePing($url);
     $results[] = ['name' => $name, 'url' => $url, 'ping' => $ping];
 }
 
 $appResults = [];
-foreach ($apps as $app) {
+foreach ($apps as $i => $app) {
     $name = trim((string)($app['name'] ?? 'Application'));
     $url = trim((string)($app['url'] ?? ''));
     $icon = trim((string)($app['icon'] ?? 'link'));
-    $ping = pingSite($url);
+    $ping = $pingData['app:' . $i] ?? singlePing($url);
     $appResults[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'ping' => $ping];
 }
 
@@ -369,44 +451,9 @@ $totalApps = count($appResults);
     <?php if ($isAdmin): ?>
     <section class="glass rounded-3xl p-5">
         <h2 class="text-lg font-bold mb-1">⚙️ Gestion directe dans Status</h2>
-        <p class="text-white/45 text-sm mb-4">Ajoute ou supprime les applications et sites monitorés sans passer par un autre écran.</p>
+        <p class="text-white/45 text-sm mb-4">Ajoute, modifie ou supprime les applications monitorées. Les sites se gèrent dans l'admin.</p>
 
-        <div class="grid lg:grid-cols-2 gap-4">
-            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
-                <p class="font-semibold">🌐 Gérer les sites</p>
-                <form method="post" class="grid gap-2">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <input type="hidden" name="action" value="add_site">
-                    <input type="text" name="name" maxlength="80" required placeholder="Nom du site" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                    <input type="text" name="url" maxlength="220" required placeholder="https://..." class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                    <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter le site</button>
-                </form>
-
-                <div class="space-y-1.5 pt-1">
-                    <?php foreach ($sites as $idx => $site): ?>
-                    <div class="rounded-lg bg-white/[0.03] border border-white/10 p-2">
-                        <form method="post" class="grid gap-2">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                            <input type="hidden" name="action" value="update_site">
-                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                            <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars((string)($site['name'] ?? 'Site')) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                            <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars((string)($site['url'] ?? '')) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                            <div class="flex items-center justify-end gap-2">
-                                <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
-                            </div>
-                        </form>
-
-                        <form method="post" class="mt-1 flex justify-end">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                            <input type="hidden" name="action" value="delete_site">
-                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                            <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
-                        </form>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
+        <div class="grid lg:grid-cols-1 gap-4">
             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
                 <p class="font-semibold">🧩 Gérer les applications</p>
                 <form method="post" class="grid gap-2">

@@ -77,50 +77,6 @@ function appEmoji(string $icon): string {
     };
 }
 
-function pingSite(string $url): array {
-    if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        return ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
-    }
-
-    if (function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_NOBODY => false,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_RANGE => '0-0',
-            CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
-        ]);
-
-        $result = curl_exec($ch);
-        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
-        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        return [
-            'ok' => $result !== false && $code >= 200 && $code < 500,
-            'code' => $code,
-            'ms' => $ms,
-            'error' => $result === false ? ($err ?: 'Echec ping') : '',
-        ];
-    }
-
-    $start = microtime(true);
-    $headers = @get_headers($url);
-    $ms = (int)round((microtime(true) - $start) * 1000);
-    if (!is_array($headers) || !isset($headers[0])) {
-        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de reponse'];
-    }
-
-    preg_match('/\s(\d{3})\s/', $headers[0], $m);
-    $code = isset($m[1]) ? (int)$m[1] : 0;
-    return ['ok' => $code >= 200 && $code < 500, 'code' => $code, 'ms' => $ms, 'error' => ''];
-}
 
 $sites = readJsonArray($sitesFile, $defaultSites);
 $apps = readJsonArray($appsFile, $defaultApps);
@@ -208,27 +164,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $flash = $_SESSION['admin_status_flash'] ?? null;
 unset($_SESSION['admin_status_flash']);
 
-$siteResults = [];
-foreach ($sites as $site) {
-    $name = trim((string)($site['name'] ?? 'Site'));
-    $url = trim((string)($site['url'] ?? ''));
-    $ping = pingSite($url);
-    $siteResults[] = ['name' => $name, 'url' => $url, 'ping' => $ping];
-}
-
-$appResults = [];
-foreach ($apps as $app) {
-    $name = trim((string)($app['name'] ?? 'Application'));
-    $url = trim((string)($app['url'] ?? ''));
-    $icon = normalizeIcon((string)($app['icon'] ?? 'link'));
-    $ping = pingSite($url);
-    $appResults[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'ping' => $ping];
-}
-
-$upSites = count(array_filter($siteResults, fn($r) => $r['ping']['ok']));
-$totalSites = count($siteResults);
-$upApps = count(array_filter($appResults, fn($r) => $r['ping']['ok']));
-$totalApps = count($appResults);
+$totalSites = count($sites);
+$totalApps = count($apps);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -261,7 +198,7 @@ $totalApps = count($appResults);
     <section class="glass rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">📡 Administration des statuts</h1>
-            <p class="text-white/45 text-sm">Gestion des sites/apps monitorés avec ping HTTP côté serveur.</p>
+            <p class="text-white/45 text-sm">Gestion des sites/apps monitorés (enregistrement uniquement, sans ping).</p>
             <p class="crumb mt-1">Admin / Statuts</p>
         </div>
         <div class="flex items-center gap-2">
@@ -274,9 +211,9 @@ $totalApps = count($appResults);
 
     <section class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="glass rounded-2xl p-4"><p class="text-blue-300 text-xl font-bold"><?= $totalSites ?></p><p class="text-white/45 text-xs">Total sites</p></div>
-        <div class="glass rounded-2xl p-4"><p class="text-emerald-300 text-xl font-bold"><?= $upSites ?></p><p class="text-white/45 text-xs">Sites en ligne</p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-white text-xl font-bold">—</p><p class="text-white/45 text-xs">Sites en ligne</p></div>
         <div class="glass rounded-2xl p-4"><p class="text-cyan-300 text-xl font-bold"><?= $totalApps ?></p><p class="text-white/45 text-xs">Total applications</p></div>
-        <div class="glass rounded-2xl p-4"><p class="text-emerald-300 text-xl font-bold"><?= $upApps ?></p><p class="text-white/45 text-xs">Apps en ligne</p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-white text-xl font-bold">—</p><p class="text-white/45 text-xs">Apps en ligne</p></div>
     </section>
 
     <?php if ($flash && is_array($flash)): ?>
@@ -299,8 +236,6 @@ $totalApps = count($appResults);
             <?php foreach ($sites as $idx => $site):
                 $name = trim((string)($site['name'] ?? 'Site'));
                 $url = trim((string)($site['url'] ?? ''));
-                $ping = pingSite($url);
-                $ok = $ping['ok'];
             ?>
             <div class="status-card rounded-lg bg-white/[0.03] border border-white/10 p-2">
                 <form method="post" class="grid gap-2">
@@ -310,7 +245,7 @@ $totalApps = count($appResults);
                     <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars($name) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                     <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars($url) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                     <div class="flex items-center justify-between text-xs text-white/60">
-                        <span class="<?= $ok ? 'text-emerald-300' : 'text-red-300' ?>"><?= $ok ? '🟢 En ligne' : '🔴 Hors ligne' ?> · <?= (int)$ping['ms'] ?> ms <?= (int)$ping['code'] ? ('· HTTP ' . (int)$ping['code']) : '' ?></span>
+                        <span>Entrée de configuration</span>
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
                     </div>
                 </form>
@@ -353,8 +288,6 @@ $totalApps = count($appResults);
                 $name = trim((string)($app['name'] ?? 'Application'));
                 $url = trim((string)($app['url'] ?? ''));
                 $icon = normalizeIcon((string)($app['icon'] ?? 'link'));
-                $ping = pingSite($url);
-                $ok = $ping['ok'];
             ?>
             <div class="status-card rounded-lg bg-white/[0.03] border border-white/10 p-2">
                 <form method="post" class="grid gap-2">
@@ -384,7 +317,7 @@ $totalApps = count($appResults);
                         </div>
                     </div>
                     <div class="flex items-center justify-between text-xs text-white/60">
-                        <span class="<?= $ok ? 'text-emerald-300' : 'text-red-300' ?>"><?= $ok ? '🟢 En ligne' : '🔴 Hors ligne' ?> · <?= (int)$ping['ms'] ?> ms <?= (int)$ping['code'] ? ('· HTTP ' . (int)$ping['code']) : '' ?></span>
+                        <span>Entrée de configuration</span>
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
                     </div>
                 </form>
