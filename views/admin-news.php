@@ -50,6 +50,17 @@ $csrfToken = $_SESSION['csrf_token'];
         .ql-container { background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.12)!important;border-top:none!important;border-radius:0 0 12px 12px!important;min-height:140px; }
         .ql-editor { color:#e2e8f0!important;min-height:120px; }
         .ql-editor.ql-blank::before { color:rgba(255,255,255,.25)!important;font-style:normal!important; }
+        .ql-snow .ql-stroke { stroke:#cbd5e1!important; }
+        .ql-snow .ql-fill { fill:#cbd5e1!important; }
+        .ql-snow .ql-picker { color:#cbd5e1!important; }
+        .ql-snow .ql-picker-options { background:#0f172a!important; border:1px solid rgba(255,255,255,.16)!important; }
+        .ql-snow .ql-tooltip { background:#0f172a!important; color:#e2e8f0!important; border:1px solid rgba(255,255,255,.16)!important; box-shadow:none!important; }
+        .ql-snow .ql-tooltip input[type=text] { color:#e2e8f0!important; border:1px solid rgba(255,255,255,.16)!important; background:rgba(255,255,255,.06)!important; }
+        .ql-editor p, .ql-editor ul, .ql-editor ol, .ql-editor blockquote, .ql-editor pre { margin-bottom:.55rem; }
+        .ql-editor h1, .ql-editor h2, .ql-editor h3 { font-weight:700; margin:.4rem 0 .65rem; }
+        .ql-editor a { color:#7dd3fc; text-decoration:underline; }
+        .ql-editor blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; }
+        .ql-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; }
         .news-card { transition:transform .15s,border-color .15s; }
         .news-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.24); }
     </style>
@@ -150,8 +161,22 @@ const ANN_DATA = <?= json_encode(array_values($featured), JSON_HEX_TAG | JSON_HE
 const quillEdit = new Quill('#editEditor', {
     theme: 'snow',
     placeholder: 'Modifiez le contenu...',
-    modules: { toolbar: [[{ header: [2,3,false] }], ['bold','italic','underline','strike'], [{ list:'ordered' },{ list:'bullet' }], ['blockquote'], ['clean']] }
+    modules: {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ list:'ordered' }, { list:'bullet' }, { indent:'-1' }, { indent:'+1' }],
+            ['blockquote', 'code-block', 'link'],
+            ['clean']
+        ],
+        history: { delay: 500, maxStack: 100, userOnly: true }
+    }
 });
+
+function getEditorHtml(editor) {
+    const html = editor.root.innerHTML || '';
+    return html.replace(/<p><br><\/p>/g, '').trim();
+}
 
 function esc(s) {
     return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -249,6 +274,7 @@ function editAnn(id) {
     document.getElementById('editStatusType').value = ann.status || 'published';
     document.getElementById('editColor').value = ann.color || '#3454d1';
     quillEdit.root.innerHTML = ann.html_content || '';
+    quillEdit.focus();
     document.getElementById('editStatus').classList.add('hidden');
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -263,7 +289,8 @@ async function submitEdit() {
     const statusEl = document.getElementById('editStatus');
     const btn = document.getElementById('editSubmitBtn');
     const id = document.getElementById('editId').value;
-    if (quillEdit.getText().trim() === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const htmlContent = getEditorHtml(quillEdit);
+    if (quillEdit.getText().trim() === '' || htmlContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
 
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
@@ -275,7 +302,7 @@ async function submitEdit() {
             category:document.getElementById('editCategory').value,
             status:document.getElementById('editStatusType').value,
             color:document.getElementById('editColor').value,
-            html_content:quillEdit.root.innerHTML,
+            html_content:htmlContent,
         });
         const idx = ANN_DATA.findIndex(a => a.id === id);
         if (idx >= 0) ANN_DATA[idx] = data.announcement;

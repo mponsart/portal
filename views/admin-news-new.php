@@ -43,6 +43,17 @@ $csrfToken = $_SESSION['csrf_token'];
         .ql-container { background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.12)!important;border-top:none!important;border-radius:0 0 12px 12px!important;min-height:140px; }
         .ql-editor { color:#e2e8f0!important;min-height:120px; }
         .ql-editor.ql-blank::before { color:rgba(255,255,255,.25)!important;font-style:normal!important; }
+        .ql-snow .ql-stroke { stroke:#cbd5e1!important; }
+        .ql-snow .ql-fill { fill:#cbd5e1!important; }
+        .ql-snow .ql-picker { color:#cbd5e1!important; }
+        .ql-snow .ql-picker-options { background:#0f172a!important; border:1px solid rgba(255,255,255,.16)!important; }
+        .ql-snow .ql-tooltip { background:#0f172a!important; color:#e2e8f0!important; border:1px solid rgba(255,255,255,.16)!important; box-shadow:none!important; }
+        .ql-snow .ql-tooltip input[type=text] { color:#e2e8f0!important; border:1px solid rgba(255,255,255,.16)!important; background:rgba(255,255,255,.06)!important; }
+        .ql-editor p, .ql-editor ul, .ql-editor ol, .ql-editor blockquote, .ql-editor pre { margin-bottom:.55rem; }
+        .ql-editor h1, .ql-editor h2, .ql-editor h3 { font-weight:700; margin:.4rem 0 .65rem; }
+        .ql-editor a { color:#7dd3fc; text-decoration:underline; }
+        .ql-editor blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; }
+        .ql-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; }
         .preview-box { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
     </style>
 </head>
@@ -114,8 +125,22 @@ const CSRF = <?= json_encode($csrfToken) ?>;
 const quillAdd = new Quill('#addEditor', {
     theme: 'snow',
     placeholder: 'Redigez votre actualite...',
-    modules: { toolbar: [[{ header: [2,3,false] }], ['bold','italic','underline','strike'], [{ list:'ordered' },{ list:'bullet' }], ['blockquote'], ['clean']] }
+    modules: {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ list:'ordered' }, { list:'bullet' }, { indent:'-1' }, { indent:'+1' }],
+            ['blockquote', 'code-block', 'link'],
+            ['clean']
+        ],
+        history: { delay: 500, maxStack: 100, userOnly: true }
+    }
 });
+
+function getEditorHtml(editor) {
+    const html = editor.root.innerHTML || '';
+    return html.replace(/<p><br><\/p>/g, '').trim();
+}
 
 function showStatus(el, msg, type) {
     el.textContent = msg;
@@ -131,7 +156,7 @@ function updateAddPreview() {
     document.getElementById('addPrevEmoji').textContent = emoji;
     document.getElementById('addPrevTitle').textContent = title;
     document.getElementById('addPrevMeta').textContent = status;
-    document.getElementById('addPrevBody').innerHTML = quillAdd.root.innerHTML;
+    document.getElementById('addPrevBody').innerHTML = getEditorHtml(quillAdd);
 }
 
 async function apiFeatured(payload) {
@@ -147,7 +172,8 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const statusEl = document.getElementById('addStatus');
     const btn = e.target.querySelector('button[type="submit"]');
-    if (quillAdd.getText().trim() === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const htmlContent = getEditorHtml(quillAdd);
+    if (quillAdd.getText().trim() === '' || htmlContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
 
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
@@ -159,7 +185,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
             category:document.getElementById('addCategory').value,
             status:document.getElementById('addStatusType').value,
             color:document.getElementById('addColor').value,
-            html_content:quillAdd.root.innerHTML,
+            html_content:htmlContent,
         });
         showStatus(statusEl, data.announcement.status === 'draft' ? 'Brouillon enregistre.' : 'Actualite publiee.', 'success');
         e.target.reset();

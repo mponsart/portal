@@ -58,11 +58,49 @@ function saveFile(string $path, array $data): void {
 }
 
 function sanitizeHtml(string $html): string {
-    // Balises autorisées pour le texte riche
-    $allowed = '<p><br><strong><em><u><s><ul><ol><li><h2><h3><blockquote><a><span>';
+    // Balises autorisées pour le texte riche (Quill)
+    $allowed = '<p><br><strong><em><u><s><ul><ol><li><h1><h2><h3><blockquote><a><pre><code><span>';
     $clean = strip_tags($html, $allowed);
-    // Sécuriser les href (pas de javascript:)
-    $clean = preg_replace('/href\s*=\s*["\']?javascript:[^"\'>\s]*/i', 'href="#"', $clean);
+
+    // Supprimer les attributs inline dangereux
+    $clean = preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean);
+    $clean = preg_replace('/\s+style\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean);
+
+    // Sécuriser les href des liens
+    $clean = preg_replace_callback(
+        '/<a\b([^>]*)>/i',
+        static function (array $matches): string {
+            $attrs = $matches[1] ?? '';
+            if (!preg_match('/href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $attrs, $hrefMatch)) {
+                return '<a>';
+            }
+
+            $href = $hrefMatch[2] ?: ($hrefMatch[3] ?: ($hrefMatch[4] ?? ''));
+            $href = trim($href);
+            if ($href === '') {
+                return '<a>';
+            }
+
+            $lowerHref = strtolower($href);
+            $allowedSchemes = ['http://', 'https://', 'mailto:', '/', '#'];
+            $isAllowed = false;
+            foreach ($allowedSchemes as $scheme) {
+                if (str_starts_with($lowerHref, $scheme)) {
+                    $isAllowed = true;
+                    break;
+                }
+            }
+
+            if (!$isAllowed) {
+                return '<a>';
+            }
+
+            $safeHref = htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            return '<a href="' . $safeHref . '" target="_blank" rel="noopener noreferrer">';
+        },
+        $clean
+    );
+
     return $clean;
 }
 
