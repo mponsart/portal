@@ -49,7 +49,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #06080f; }
+        body { font-family: 'Inter', sans-serif; background: #06080f; color-scheme: dark; }
         .bg-ambient { position:fixed;inset:0;pointer-events:none;z-index:0;
             background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
                         radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
@@ -85,8 +85,29 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         .article-preview ol { list-style:decimal;padding-left:1.2rem;color:rgba(255,255,255,.72);font-size:.84rem; }
         .article-preview blockquote { border-left:3px solid #3454d1;padding:.35rem .7rem;background:rgba(52,84,209,.10);border-radius:0 8px 8px 0;color:rgba(255,255,255,.66);margin:.4rem 0; }
         .article-preview a { color:#6b8fff;text-decoration:underline; }
-        input, select, textarea { color: #e5e7eb; }
-        select option { background: #111827; color: #e5e7eb; }
+        /* Forcer un style dark stable sur tous les navigateurs */
+        input[type="text"], input[type="color"], select, textarea {
+            background: rgba(255,255,255,.08) !important;
+            border: 1px solid rgba(255,255,255,.12) !important;
+            color: #e5e7eb !important;
+            -webkit-text-fill-color: #e5e7eb !important;
+            opacity: 1 !important;
+        }
+        input::placeholder, textarea::placeholder { color: rgba(229,231,235,.42) !important; }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image:
+                linear-gradient(45deg, transparent 50%, rgba(229,231,235,.7) 50%),
+                linear-gradient(135deg, rgba(229,231,235,.7) 50%, transparent 50%);
+            background-position:
+                calc(100% - 16px) calc(50% - 1px),
+                calc(100% - 11px) calc(50% - 1px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            padding-right: 2.1rem !important;
+        }
+        select option { background: #111827 !important; color: #e5e7eb !important; }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
@@ -96,6 +117,14 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
             -webkit-box-shadow: 0 0 0px 1000px #1a1f2d inset;
             transition: background-color 5000s ease-in-out 0s;
         }
+        .glass input:focus,
+        .glass select:focus,
+        .glass textarea:focus {
+            outline: none !important;
+            border-color: rgba(107,143,255,.65) !important;
+            box-shadow: 0 0 0 2px rgba(52,84,209,.35) !important;
+        }
+        #editModal .glass { border-color: rgba(255,255,255,.18); }
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
         .fade-up { animation: fadeUp .35s ease both; }
     </style>

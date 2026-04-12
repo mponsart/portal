@@ -7,4 +7,4 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-include __DIR__ . '/views/admin-home.php';
+include __DIR__ . '/views/admin-banners.php';
