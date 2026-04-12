@@ -16,8 +16,19 @@ $isAdmin = $isAdmin ?? false;
             <span class="text-white font-semibold text-sm hidden sm:block">Groupe Speed Cloud</span>
         </a>
 
-        <!-- Droite : admin + profil + déco -->
-        <div class="flex items-center gap-2">
+        <!-- Liens -->
+            <div class="flex items-center gap-2">
+                <a href="/news.php"
+                   class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                          <?= $currentPage === 'news'
+                                ? 'bg-white/15 text-white border border-white/20'
+                                : 'text-white/55 hover:bg-white/10 hover:text-white' ?>">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2zM14 4v6h6M9 13h6M9 17h4"/>
+                    </svg>
+                    <span class="hidden sm:inline">Actualités</span>
+                </a>
             <?php if ($isAdmin): ?>
             <a href="/admin.php"
                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition

@@ -67,8 +67,7 @@ function appIcon(string $icon): string {
                         'brand-dk':  '#2440a8',
                         'brand-lt':  '#6b8fff',
                         'accent':    '#0ea5e9',
-                    },
-                },
+                    },                },
             },
         };
     </script>
@@ -215,22 +214,26 @@ function appIcon(string $icon): string {
             <?php foreach ($featured as $i => $ann):
                 $accentColor = htmlspecialchars($ann['color']    ?? '#3454d1');
                 $annTitle    = htmlspecialchars($ann['title']    ?? '');
-                $annContent  = htmlspecialchars($ann['content']  ?? '');
+                $annHtml     = $ann['html_content'] ?? nl2br(htmlspecialchars($ann['content'] ?? ''));
                 $annEmoji    = htmlspecialchars($ann['emoji']    ?? '📢');
-                $annDate     = htmlspecialchars($ann['pinned_at'] ?? '');
+                $annDate     = htmlspecialchars($ann['created_at'] ?? ($ann['pinned_at'] ?? ''));
+                $annCat      = $ann['category'] ?? 'general';
+                $catColors   = ['general'=>'#3454d1','urgent'=>'#ef4444','event'=>'#8b5cf6','info'=>'#0ea5e9'];
+                $dotColor    = $catColors[$annCat] ?? '#3454d1';
             ?>
             <div class="glass rounded-2xl p-4 hover:border-white/20 transition"
                  style="border-left: 3px solid <?= $accentColor ?>;">
                 <div class="flex items-start gap-3">
                     <span class="text-lg select-none mt-0.5 flex-shrink-0"><?= $annEmoji ?></span>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                         <?php if ($annTitle): ?>
                         <p class="font-semibold text-sm text-white mb-1 leading-snug"><?= $annTitle ?></p>
                         <?php endif; ?>
-                        <p class="text-white/55 text-xs leading-relaxed"><?= nl2br($annContent) ?></p>
-                        <?php if ($annDate): ?>
-                        <p class="text-white/25 text-xs mt-2"><?= $annDate ?></p>
-                        <?php endif; ?>
+                        <div class="text-white/55 text-xs leading-relaxed line-clamp-3"><?= strip_tags($annHtml) ?></div>
+                        <div class="flex items-center justify-between mt-2">
+                            <?php if ($annDate): ?><p class="text-white/25 text-xs"><?= $annDate ?></p><?php endif; ?>
+                            <a href="/news.php" class="text-xs text-brand-lt hover:underline ml-auto">Lire &rarr;</a>
+                        </div>
                     </div>
                 </div>
             </div>

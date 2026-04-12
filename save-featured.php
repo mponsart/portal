@@ -1,14 +1,12 @@
 <?php
 /**
- * Endpoint AJAX — gestion des annonces mises en avant (featured)
- * Actions : add | delete
- * Protégé par : session utilisateur + rôle admin + token CSRF
+ * Endpoint AJAX — gestion des actualités/annonces épinglées
+ * Actions : add | update | delete | reorder
  */
 
 session_start();
 header('Content-Type: application/json');
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function jsonError(string $msg, int $code = 400): never {
     http_response_code($code);
     echo json_encode(['error' => $msg]);
@@ -29,95 +27,129 @@ if (!isset($_SESSION['user'])) {
 require_once __DIR__ . '/vendor/autoload.php';
 $config  = require __DIR__ . '/config.php';
 $user    = $_SESSION['user'];
-$admins  = $config['admins'] ?? [];
 
-if (!in_array($user['email'], $admins)) {
+if (!in_array($user['email'], $config['admins'] ?? [])) {
     jsonError('Accès non autorisé.', 403);
 }
 
-// ── Lecture du body JSON ──────────────────────────────────────────────────────
-$raw  = file_get_contents('php://input');
-$body = json_decode($raw, true);
-
-if (!is_array($body)) {
-    jsonError('Corps de requête invalide.');
-}
+// ── Body JSON ──────────────────────────────────────────────────────────────────
+$body = json_decode(file_get_contents('php://input'), true);
+if (!is_array($body)) jsonError('Corps de requête invalide.');
 
 // ── CSRF ──────────────────────────────────────────────────────────────────────
 $clientToken = $body['csrf_token'] ?? '';
 $serverToken = $_SESSION['csrf_token'] ?? '';
-
 if (!$serverToken || !hash_equals($serverToken, $clientToken)) {
     jsonError('Token CSRF invalide.', 403);
 }
 
 // ── Fichier de stockage ───────────────────────────────────────────────────────
 $featuredFile = __DIR__ . '/uploads/featured.json';
-
 $featured = [];
 if (file_exists($featuredFile)) {
     $decoded  = json_decode(file_get_contents($featuredFile), true);
     $featured = is_array($decoded) ? $decoded : [];
 }
 
+function saveFile(string $path, array $data): void {
+    if (file_put_contents($path, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) === false) {
+        jsonError('Impossible d\'écrire le fichier de données.', 500);
+    }
+}
+
+function sanitizeHtml(string $html): string {
+    // Balises autorisées pour le texte riche
+    $allowed = '<p><br><strong><em><u><s><ul><ol><li><h2><h3><blockquote><a><span>';
+    $clean = strip_tags($html, $allowed);
+    // Sécuriser les href (pas de javascript:)
+    $clean = preg_replace('/href\s*=\s*["\']?javascript:[^"\'>\s]*/i', 'href="#"', $clean);
+    return $clean;
+}
+
 $action = $body['action'] ?? '';
 
-// ── Action : add ──────────────────────────────────────────────────────────────
+// ── ADD ───────────────────────────────────────────────────────────────────────
 if ($action === 'add') {
-    $content = trim((string) ($body['content'] ?? ''));
-    if ($content === '') {
-        jsonError('Le contenu est obligatoire.');
-    }
+    $htmlContent = trim((string)($body['html_content'] ?? ''));
+    $plainText   = trim(strip_tags($htmlContent));
+    if ($plainText === '') jsonError('Le contenu est obligatoire.');
 
-    $title = mb_substr(trim((string) ($body['title'] ?? '')), 0, 200);
-    $emoji = mb_substr(trim((string) ($body['emoji'] ?? '📢')), 0, 4);
-    $color = trim((string) ($body['color'] ?? '#3454d1'));
+    $title    = mb_substr(trim((string)($body['title']    ?? '')), 0, 200);
+    $emoji    = mb_substr(trim((string)($body['emoji']    ?? '📢')), 0, 4);
+    $color    = trim((string)($body['color']   ?? '#3454d1'));
+    $category = trim((string)($body['category'] ?? 'general'));
+    $pinned   = (bool)($body['pinned'] ?? true);
 
-    // Valider la couleur CSS hex
-    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-        $color = '#3454d1';
-    }
+    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $color = '#3454d1';
+    $allowedCats = ['general', 'event', 'urgent', 'info'];
+    if (!in_array($category, $allowedCats)) $category = 'general';
 
     $now = (new DateTimeImmutable('now', new DateTimeZone('Europe/Paris')))->format('d/m/Y à H:i');
 
     $announcement = [
-        'id'        => bin2hex(random_bytes(8)),
-        'emoji'     => $emoji ?: '📢',
-        'title'     => $title,
-        'content'   => mb_substr($content, 0, 2000),
-        'color'     => $color,
-        'pinned_at' => $now,
-        'pinned_by' => $user['email'],
+        'id'           => bin2hex(random_bytes(8)),
+        'emoji'        => $emoji ?: '📢',
+        'title'        => $title,
+        'html_content' => sanitizeHtml($htmlContent),
+        'color'        => $color,
+        'category'     => $category,
+        'pinned'       => $pinned,
+        'created_at'   => $now,
+        'updated_at'   => $now,
+        'pinned_by'    => $user['email'],
     ];
 
     $featured[] = $announcement;
-
-    if (file_put_contents($featuredFile, json_encode($featured, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) === false) {
-        jsonError('Impossible d\'écrire le fichier de données.', 500);
-    }
-
+    saveFile($featuredFile, $featured);
     jsonOk(['announcement' => $announcement]);
 }
 
-// ── Action : delete ───────────────────────────────────────────────────────────
-if ($action === 'delete') {
-    $id = trim((string) ($body['id'] ?? ''));
+// ── UPDATE ────────────────────────────────────────────────────────────────────
+if ($action === 'update') {
+    $id = trim((string)($body['id'] ?? ''));
+    if (!preg_match('/^[0-9a-f]{16}$/', $id)) jsonError('Identifiant invalide.');
 
-    if ($id === '' || !preg_match('/^[0-9a-f]{16}$/', $id)) {
-        jsonError('Identifiant invalide.');
+    $idx = null;
+    foreach ($featured as $i => $a) {
+        if (($a['id'] ?? '') === $id) { $idx = $i; break; }
     }
+    if ($idx === null) jsonError('Annonce introuvable.', 404);
+
+    $htmlContent = trim((string)($body['html_content'] ?? ''));
+    $plainText   = trim(strip_tags($htmlContent));
+    if ($plainText === '') jsonError('Le contenu est obligatoire.');
+
+    $now = (new DateTimeImmutable('now', new DateTimeZone('Europe/Paris')))->format('d/m/Y à H:i');
+    $color = trim((string)($body['color'] ?? $featured[$idx]['color'] ?? '#3454d1'));
+    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $color = '#3454d1';
+    $category = trim((string)($body['category'] ?? $featured[$idx]['category'] ?? 'general'));
+    $allowedCats = ['general', 'event', 'urgent', 'info'];
+    if (!in_array($category, $allowedCats)) $category = 'general';
+
+    $featured[$idx] = array_merge($featured[$idx], [
+        'emoji'        => mb_substr(trim((string)($body['emoji'] ?? $featured[$idx]['emoji'] ?? '📢')), 0, 4),
+        'title'        => mb_substr(trim((string)($body['title'] ?? $featured[$idx]['title'] ?? '')), 0, 200),
+        'html_content' => sanitizeHtml($htmlContent),
+        'color'        => $color,
+        'category'     => $category,
+        'pinned'       => (bool)($body['pinned'] ?? $featured[$idx]['pinned'] ?? true),
+        'updated_at'   => $now,
+    ]);
+
+    saveFile($featuredFile, $featured);
+    jsonOk(['announcement' => $featured[$idx]]);
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+if ($action === 'delete') {
+    $id = trim((string)($body['id'] ?? ''));
+    if (!preg_match('/^[0-9a-f]{16}$/', $id)) jsonError('Identifiant invalide.');
 
     $before   = count($featured);
     $featured = array_values(array_filter($featured, fn($a) => ($a['id'] ?? '') !== $id));
+    if (count($featured) === $before) jsonError('Annonce introuvable.', 404);
 
-    if (count($featured) === $before) {
-        jsonError('Annonce introuvable.', 404);
-    }
-
-    if (file_put_contents($featuredFile, json_encode($featured, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) === false) {
-        jsonError('Impossible d\'écrire le fichier de données.', 500);
-    }
-
+    saveFile($featuredFile, $featured);
     jsonOk(['deleted' => $id]);
 }
 
