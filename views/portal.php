@@ -124,7 +124,33 @@ function appEmoji(string $icon): string {
         }
 
         /* ── search ─────────────────────────────────────────────────── */
-        .search-input:focus { box-shadow: 0 0 0 3px rgba(52,84,209,.45); }
+        .search-shell {
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.04);
+            border-radius: 14px;
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+        .search-shell:focus-within {
+            border-color: rgba(107,143,255,.55);
+            background: rgba(255,255,255,.07);
+            box-shadow: 0 0 0 3px rgba(52,84,209,.35);
+        }
+        .search-input:focus { outline: none; }
+        .quick-chip {
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.05);
+            border-radius: 10px;
+            padding: 6px 9px;
+            color: rgba(255,255,255,.65);
+            font-size: .72rem;
+            font-weight: 600;
+            transition: all .15s ease;
+        }
+        .quick-chip:hover {
+            color: #fff;
+            background: rgba(255,255,255,.12);
+            transform: translateY(-1px);
+        }
 
         /* ── horloge ────────────────────────────────────────────────── */
         #clock { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
@@ -189,17 +215,26 @@ function appEmoji(string $icon): string {
         <hr class="divider my-5">
 
         <!-- Recherche -->
-        <form action="https://www.google.com/search" method="get" class="flex gap-2.5">
-            <div class="relative flex-1">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-white/35 select-none">🔎</span>
-                <input type="text" name="q" placeholder="Rechercher sur Google…" autocomplete="off"
-                       class="search-input w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/8 border border-white/12
-                              text-white placeholder-white/30 text-sm focus:outline-none transition">
+        <form action="https://www.google.com/search" method="get" class="space-y-2.5">
+            <div class="search-shell flex items-center gap-2 pl-3 pr-2 py-2">
+                <span class="text-sm text-white/35 select-none">🔎</span>
+                <input type="text" name="q" placeholder="Recherche rapide web, docs, erreurs, tickets..." autocomplete="off"
+                       class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
+                <button type="button" onclick="this.closest('form').q.value=''; this.closest('form').q.focus();"
+                        class="px-2.5 py-1.5 rounded-lg text-xs text-white/45 hover:text-white hover:bg-white/10 transition">
+                    Effacer
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-brand/20 whitespace-nowrap">
+                    Rechercher
+                </button>
             </div>
-            <button type="submit"
-                    class="px-5 py-2.5 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-brand/20 whitespace-nowrap">
-                Rechercher
-            </button>
+            <div class="flex flex-wrap gap-1.5">
+                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='groupe speed cloud';f.submit();">🏠 Groupe</button>
+                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='incident status';f.submit();">📡 Incident</button>
+                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='documentation interne';f.submit();">📚 Docs</button>
+                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='oauth error';f.submit();">🛠️ Support</button>
+            </div>
         </form>
     </section>
 

@@ -68,6 +68,9 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         .form-box { border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03); border-radius:14px; padding:12px; }
         .emoji-chip { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); border-radius:10px; padding:5px 8px; font-size:16px; line-height:1; transition:all .15s; }
         .emoji-chip:hover { background:rgba(255,255,255,.14); transform:translateY(-1px); }
+        .preview-card { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); border-radius:14px; padding:12px; }
+        .preview-title { color:#fff; font-size:.88rem; font-weight:600; line-height:1.4; }
+        .preview-body { color:rgba(255,255,255,.52); font-size:.76rem; line-height:1.5; }
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
         .fade-up { animation: fadeUp .35s ease both; }
     </style>
@@ -131,7 +134,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                     </div>
                     <div class="flex flex-wrap gap-1.5">
                         <?php foreach (['📢','📰','🚨','🎉','📣','⚠️','✅','🛠️'] as $e): ?>
-                        <button type="button" onclick="document.getElementById('addEmoji').value='<?= $e ?>'" class="emoji-chip" title="Choisir <?= $e ?>"><?= $e ?></button>
+                        <button type="button" onclick="document.getElementById('addEmoji').value='<?= $e ?>'; updateAddPreview();" class="emoji-chip" title="Choisir <?= $e ?>"><?= $e ?></button>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -168,6 +171,17 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                 <div>
                     <label class="text-white/50 text-xs mb-1.5 block">Contenu <span class="text-red-400">*</span></label>
                     <div id="addEditor"></div>
+                </div>
+
+                <div class="preview-card space-y-2">
+                    <p class="text-white/45 text-[11px] uppercase tracking-[.14em]">Aperçu de la carte</p>
+                    <div class="flex items-start gap-2.5">
+                        <span id="addPreviewEmoji" class="text-lg leading-none select-none">📢</span>
+                        <div class="min-w-0">
+                            <p id="addPreviewTitle" class="preview-title">Titre de l'actualité</p>
+                            <p id="addPreviewBody" class="preview-body line-clamp-2">Votre contenu s'affichera ici...</p>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit"
@@ -266,7 +280,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         </select>
         <div class="flex flex-wrap gap-1.5">
             <?php foreach (['📢','📰','🚨','🎉','📣','⚠️','✅','🛠️'] as $e): ?>
-            <button type="button" onclick="document.getElementById('editEmoji').value='<?= $e ?>'" class="emoji-chip" title="Choisir <?= $e ?>"><?= $e ?></button>
+            <button type="button" onclick="document.getElementById('editEmoji').value='<?= $e ?>'; updateEditPreview();" class="emoji-chip" title="Choisir <?= $e ?>"><?= $e ?></button>
             <?php endforeach; ?>
         </div>
         <div class="flex items-center gap-3">
@@ -285,7 +299,17 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
             <label class="text-white/50 text-xs mb-1.5 block">Contenu <span class="text-red-400">*</span></label>
             <div id="editEditor"></div>
         </div>
-        <button onclick="submitEdit()"
+        <div class="preview-card space-y-2">
+            <p class="text-white/45 text-[11px] uppercase tracking-[.14em]">Aperçu modification</p>
+            <div class="flex items-start gap-2.5">
+                <span id="editPreviewEmoji" class="text-lg leading-none select-none">📢</span>
+                <div class="min-w-0">
+                    <p id="editPreviewTitle" class="preview-title">Titre de l'actualité</p>
+                    <p id="editPreviewBody" class="preview-body line-clamp-2">Le contenu modifié apparaîtra ici...</p>
+                </div>
+            </div>
+        </div>
+        <button id="editSubmitBtn" onclick="submitEdit()"
                 class="w-full py-2.5 bg-brand hover:bg-brand-dk text-white font-semibold rounded-xl transition text-sm">
             Enregistrer les modifications
         </button>
@@ -314,6 +338,14 @@ const quillEdit = new Quill('#editEditor', {
                           [{ list:'ordered' },{ list:'bullet' }], ['blockquote'], ['clean']] }
 });
 
+quillAdd.on('text-change', updateAddPreview);
+quillEdit.on('text-change', updateEditPreview);
+document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
+document.getElementById('addTitle').addEventListener('input', updateAddPreview);
+document.getElementById('editEmoji').addEventListener('input', updateEditPreview);
+document.getElementById('editTitle').addEventListener('input', updateEditPreview);
+updateAddPreview();
+
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function showStatus(el, msg, type) {
     el.textContent = msg;
@@ -321,6 +353,28 @@ function showStatus(el, msg, type) {
         ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300');
     el.classList.remove('hidden');
     if (type === 'success') setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
+function stripHtml(html) {
+    return String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function updateAddPreview() {
+    const emoji = document.getElementById('addEmoji').value.trim() || '📢';
+    const title = document.getElementById('addTitle').value.trim() || 'Titre de l\'actualité';
+    const body = stripHtml(quillAdd.root.innerHTML) || 'Votre contenu s\'affichera ici...';
+    document.getElementById('addPreviewEmoji').textContent = emoji;
+    document.getElementById('addPreviewTitle').textContent = title;
+    document.getElementById('addPreviewBody').textContent = body.length > 140 ? body.slice(0, 140) + '…' : body;
+}
+
+function updateEditPreview() {
+    const emoji = document.getElementById('editEmoji').value.trim() || '📢';
+    const title = document.getElementById('editTitle').value.trim() || 'Titre de l\'actualité';
+    const body = stripHtml(quillEdit.root.innerHTML) || 'Le contenu modifié apparaîtra ici...';
+    document.getElementById('editPreviewEmoji').textContent = emoji;
+    document.getElementById('editPreviewTitle').textContent = title;
+    document.getElementById('editPreviewBody').textContent = body.length > 140 ? body.slice(0, 140) + '…' : body;
 }
 
 function esc(s) {
@@ -402,6 +456,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
         e.target.reset();
         document.getElementById('addEmoji').value = '📢';
         document.getElementById('addColor').value = '#3454d1';
+        updateAddPreview();
         // Mettre à jour le compteur
         document.querySelector('#annList').previousElementSibling.querySelector('span').textContent =
             document.querySelectorAll('#annList > div').length + ' entrée(s)';
@@ -418,6 +473,7 @@ function editAnn(id) {
     document.getElementById('editCategory').value = ann.category || 'general';
     document.getElementById('editColor').value    = ann.color    || '#3454d1';
     quillEdit.root.innerHTML = ann.html_content || '';
+    updateEditPreview();
     document.getElementById('editStatus').classList.add('hidden');
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -431,7 +487,7 @@ function closeEdit() {
 async function submitEdit() {
     const id      = document.getElementById('editId').value;
     const statusEl = document.getElementById('editStatus');
-    const btn     = document.querySelector('#editModal button:last-child');
+    const btn     = document.getElementById('editSubmitBtn');
     const html    = quillEdit.root.innerHTML;
     if (quillEdit.getText().trim() === '') {
         showStatus(statusEl, 'Le contenu est obligatoire.', 'error'); return;
