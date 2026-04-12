@@ -82,6 +82,39 @@ function moveWithinFiltered(array &$apps, int $idx, string $direction, callable 
     return true;
 }
 
+function reorderFilteredByIndexes(array &$apps, array $orderedIndexes, callable $predicate): bool {
+    $currentIndexes = [];
+    foreach ($apps as $i => $app) {
+        if ($predicate($app)) $currentIndexes[] = $i;
+    }
+
+    $orderedIndexes = array_values(array_unique(array_map('intval', $orderedIndexes)));
+
+    $sortedCurrent = $currentIndexes;
+    $sortedPosted = $orderedIndexes;
+    sort($sortedCurrent);
+    sort($sortedPosted);
+    if ($sortedCurrent !== $sortedPosted) {
+        return false;
+    }
+
+    $reorderedItems = [];
+    foreach ($orderedIndexes as $idx) {
+        if (!isset($apps[$idx])) return false;
+        $reorderedItems[] = $apps[$idx];
+    }
+
+    $cursor = 0;
+    foreach ($apps as $i => $app) {
+        if ($predicate($app)) {
+            $apps[$i] = $reorderedItems[$cursor] ?? $apps[$i];
+            $cursor++;
+        }
+    }
+
+    return true;
+}
+
 function appEmoji(string $icon): string {
     return match($icon) {
         'gmail' => '📧',
@@ -165,6 +198,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'reorder_apps') {
+        $rawOrder = trim((string)($_POST['order'] ?? ''));
+        if ($rawOrder !== '') {
+            $orderedIndexes = array_filter(
+                array_map('intval', explode(',', $rawOrder)),
+                static fn(int $v): bool => $v >= 0
+            );
+            $ok = reorderFilteredByIndexes(
+                $apps,
+                $orderedIndexes,
+                static fn(array $app): bool => !isWorkspaceIcon(strtolower(trim((string)($app['icon'] ?? 'link'))))
+            );
+            if ($ok) $ok = saveJsonArray($appsFile, $apps);
+        }
+    }
+
     $_SESSION['admin_apps_flash'] = [
         'type' => $ok ? 'success' : 'error',
         'message' => $ok ? 'Applications mises à jour.' : 'Action invalide ou enregistrement impossible.',
@@ -175,6 +224,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $flash = $_SESSION['admin_apps_flash'] ?? null;
 unset($_SESSION['admin_apps_flash']);
+
+$customApps = [];
+foreach ($apps as $idx => $app) {
+    if (!isWorkspaceIcon(strtolower(trim((string)($app['icon'] ?? 'link'))))) {
+        $customApps[] = ['index' => $idx, 'app' => $app];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -254,16 +310,27 @@ unset($_SESSION['admin_apps_flash']);
             <button class="sm:col-span-6 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
         </form>
 
-        <div class="space-y-2">
-            <?php foreach ($apps as $idx => $app):
+        <div class="flex items-center justify-between gap-2">
+            <p class="text-xs text-white/60">Glissez-déposez les cartes pour réorganiser l'ordre.</p>
+            <form id="reorderAppsForm" method="post" class="flex items-center gap-2">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                <input type="hidden" name="action" value="reorder_apps">
+                <input id="appsOrderInput" type="hidden" name="order" value="">
+                <button id="saveAppsOrderBtn" type="submit" disabled class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/70 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-emerald-600">Enregistrer l'ordre</button>
+            </form>
+        </div>
+
+        <div id="customAppsList" class="space-y-2">
+            <?php foreach ($customApps as $row):
+                $idx = (int)$row['index'];
+                $app = $row['app'];
                 $name = trim((string)($app['name'] ?? 'Application'));
                 $url = trim((string)($app['url'] ?? ''));
                 $icon = normalizeIcon((string)($app['icon'] ?? 'link'));
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
                 $adminOnly = !empty($app['admin_only']);
-                if (in_array(strtolower(trim((string)($app['icon'] ?? ''))), $workspaceIcons, true)) continue;
             ?>
-            <div class="card rounded-lg bg-white/[0.03] border border-white/10 p-2">
+            <div class="card app-sort-item rounded-lg bg-white/[0.03] border border-white/10 p-2" draggable="true" data-index="<?= $idx ?>">
                 <form method="post" class="grid sm:grid-cols-9 gap-2">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="update_app">
@@ -287,24 +354,11 @@ unset($_SESSION['admin_apps_flash']);
                         Affichage: <?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?>
                     </div>
                     <div class="sm:col-span-2 flex items-center justify-end gap-1.5">
+                        <span class="text-xs text-white/45 cursor-move select-none" title="Déplacer">↕</span>
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
                     </div>
                 </form>
-                <div class="mt-1 flex items-center justify-end gap-1.5">
-                <form method="post" class="inline-flex">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <input type="hidden" name="action" value="move_app">
-                    <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <input type="hidden" name="direction" value="up">
-                    <button class="px-2 py-1 rounded-lg text-xs btn-soft">↑</button>
-                </form>
-                <form method="post" class="inline-flex">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <input type="hidden" name="action" value="move_app">
-                    <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <input type="hidden" name="direction" value="down">
-                    <button class="px-2 py-1 rounded-lg text-xs btn-soft">↓</button>
-                </form>
+                <div class="mt-1 flex items-center justify-end">
                 <form method="post" class="inline-flex">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="delete_app">
@@ -316,5 +370,59 @@ unset($_SESSION['admin_apps_flash']);
         </div>
     </section>
 </main>
+<script>
+(() => {
+    const list = document.getElementById('customAppsList');
+    const saveBtn = document.getElementById('saveAppsOrderBtn');
+    const orderInput = document.getElementById('appsOrderInput');
+    if (!list || !saveBtn || !orderInput) return;
+
+    let dragEl = null;
+    let changed = false;
+
+    function markChanged() {
+        changed = true;
+        saveBtn.disabled = false;
+    }
+
+    function currentOrder() {
+        return Array.from(list.querySelectorAll('.app-sort-item'))
+            .map((el) => el.getAttribute('data-index'))
+            .filter(Boolean)
+            .join(',');
+    }
+
+    function setupItem(item) {
+        item.addEventListener('dragstart', () => {
+            dragEl = item;
+            item.classList.add('opacity-50');
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('opacity-50');
+            dragEl = null;
+        });
+
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!dragEl || dragEl === item) return;
+
+            const rect = item.getBoundingClientRect();
+            const isAfter = (e.clientY - rect.top) > (rect.height / 2);
+            const anchor = isAfter ? item.nextElementSibling : item;
+            if (anchor !== dragEl) {
+                list.insertBefore(dragEl, anchor);
+                markChanged();
+            }
+        });
+    }
+
+    Array.from(list.querySelectorAll('.app-sort-item')).forEach(setupItem);
+
+    document.getElementById('reorderAppsForm')?.addEventListener('submit', () => {
+        orderInput.value = currentOrder();
+    });
+})();
+</script>
 </body>
 </html>
