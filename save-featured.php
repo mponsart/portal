@@ -78,11 +78,14 @@ if ($action === 'add') {
     $emoji    = mb_substr(trim((string)($body['emoji']    ?? '📢')), 0, 4);
     $color    = trim((string)($body['color']   ?? '#3454d1'));
     $category = trim((string)($body['category'] ?? 'general'));
+    $status   = trim((string)($body['status'] ?? 'published'));
     $pinned   = (bool)($body['pinned'] ?? true);
 
     if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $color = '#3454d1';
     $allowedCats = ['general', 'event', 'urgent', 'info'];
     if (!in_array($category, $allowedCats)) $category = 'general';
+    $allowedStatus = ['published', 'draft'];
+    if (!in_array($status, $allowedStatus, true)) $status = 'published';
 
     $now = (new DateTimeImmutable('now', new DateTimeZone('Europe/Paris')))->format('d/m/Y à H:i');
 
@@ -93,6 +96,7 @@ if ($action === 'add') {
         'html_content' => sanitizeHtml($htmlContent),
         'color'        => $color,
         'category'     => $category,
+        'status'       => $status,
         'pinned'       => $pinned,
         'created_at'   => $now,
         'updated_at'   => $now,
@@ -125,6 +129,9 @@ if ($action === 'update') {
     $category = trim((string)($body['category'] ?? $featured[$idx]['category'] ?? 'general'));
     $allowedCats = ['general', 'event', 'urgent', 'info'];
     if (!in_array($category, $allowedCats)) $category = 'general';
+    $status = trim((string)($body['status'] ?? $featured[$idx]['status'] ?? 'published'));
+    $allowedStatus = ['published', 'draft'];
+    if (!in_array($status, $allowedStatus, true)) $status = 'published';
 
     $featured[$idx] = array_merge($featured[$idx], [
         'emoji'        => mb_substr(trim((string)($body['emoji'] ?? $featured[$idx]['emoji'] ?? '📢')), 0, 4),
@@ -132,6 +139,7 @@ if ($action === 'update') {
         'html_content' => sanitizeHtml($htmlContent),
         'color'        => $color,
         'category'     => $category,
+        'status'       => $status,
         'pinned'       => (bool)($body['pinned'] ?? $featured[$idx]['pinned'] ?? true),
         'updated_at'   => $now,
     ]);

@@ -13,6 +13,17 @@ if (file_exists($featuredFile)) {
     $decoded = json_decode($raw, true);
     $featured = is_array($decoded) ? $decoded : [];
 }
+$featured = array_values(array_filter($featured, fn($a) => ($a['status'] ?? 'published') === 'published'));
+
+$bannerFile = __DIR__ . '/../uploads/banners.json';
+$activeBanner = null;
+if (file_exists($bannerFile)) {
+    $decoded = json_decode(file_get_contents($bannerFile), true);
+    $banners = is_array($decoded) ? $decoded : [];
+    foreach (array_reverse($banners) as $b) {
+        if (!empty($b['active'])) { $activeBanner = $b; break; }
+    }
+}
 
 // Applications
 $apps = $config['portal']['apps'] ?? [
@@ -183,6 +194,22 @@ function appEmoji(string $icon): string {
 <?php include __DIR__ . '/_nav.php'; ?>
 
 <main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+    <?php if ($activeBanner):
+        $tone = $activeBanner['style'] ?? 'danger';
+        $toneCls = [
+            'danger' => 'bg-red-500/20 border-red-500/35 text-red-100',
+            'warning' => 'bg-amber-500/20 border-amber-500/35 text-amber-100',
+            'success' => 'bg-emerald-500/20 border-emerald-500/35 text-emerald-100',
+            'info' => 'bg-cyan-500/20 border-cyan-500/35 text-cyan-100',
+        ][$tone] ?? 'bg-red-500/20 border-red-500/35 text-red-100';
+        $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
+    ?>
+    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?> fade-up d1">
+        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce importante') ?></p>
+        <p class="text-sm opacity-90 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+    </section>
+    <?php endif; ?>
 
     <!-- ══ HERO ═════════════════════════════════════════════════════════ -->
     <section class="glass rounded-3xl p-6 sm:p-8 fade-up d1">

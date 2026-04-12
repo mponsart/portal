@@ -7,11 +7,18 @@ if (!$isAdmin) { http_response_code(403); exit('Accès non autorisé.'); }
 
 $currentPage  = 'admin';
 $featuredFile = __DIR__ . '/../uploads/featured.json';
+$bannerFile   = __DIR__ . '/../uploads/banners.json';
 
 $featured = [];
 if (file_exists($featuredFile)) {
     $decoded  = json_decode(file_get_contents($featuredFile), true);
     $featured = is_array($decoded) ? $decoded : [];
+}
+
+$banners = [];
+if (file_exists($bannerFile)) {
+    $decoded = json_decode(file_get_contents($bannerFile), true);
+    $banners = is_array($decoded) ? $decoded : [];
 }
 
 if (empty($_SESSION['csrf_token'])) {
@@ -71,6 +78,24 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         .preview-card { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); border-radius:14px; padding:12px; }
         .preview-title { color:#fff; font-size:.88rem; font-weight:600; line-height:1.4; }
         .preview-body { color:rgba(255,255,255,.52); font-size:.76rem; line-height:1.5; }
+        .article-preview h2 { font-size:1.05rem;font-weight:700;color:#fff;margin:.75rem 0 .35rem; }
+        .article-preview h3 { font-size:.92rem;font-weight:600;color:#e2e8f0;margin:.65rem 0 .3rem; }
+        .article-preview p  { color:rgba(255,255,255,.72);font-size:.84rem;line-height:1.65;margin:.3rem 0; }
+        .article-preview ul { list-style:disc;padding-left:1.2rem;color:rgba(255,255,255,.72);font-size:.84rem; }
+        .article-preview ol { list-style:decimal;padding-left:1.2rem;color:rgba(255,255,255,.72);font-size:.84rem; }
+        .article-preview blockquote { border-left:3px solid #3454d1;padding:.35rem .7rem;background:rgba(52,84,209,.10);border-radius:0 8px 8px 0;color:rgba(255,255,255,.66);margin:.4rem 0; }
+        .article-preview a { color:#6b8fff;text-decoration:underline; }
+        input, select, textarea { color: #e5e7eb; }
+        select option { background: #111827; color: #e5e7eb; }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        textarea:-webkit-autofill,
+        select:-webkit-autofill {
+            -webkit-text-fill-color: #e5e7eb;
+            -webkit-box-shadow: 0 0 0px 1000px #1a1f2d inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
         .fade-up { animation: fadeUp .35s ease both; }
     </style>
@@ -94,11 +119,12 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         $total   = count($featured);
         $urgent  = count(array_filter($featured, fn($a) => ($a['category'] ?? '') === 'urgent'));
         $events  = count(array_filter($featured, fn($a) => ($a['category'] ?? '') === 'event'));
+        $drafts  = count(array_filter($featured, fn($a) => ($a['status'] ?? 'published') === 'draft'));
         $lastDate = !empty($featured) ? end($featured)['created_at'] ?? '—' : '—';
         $stats = [
             ['label' => 'Actualités', 'value' => $total,    'icon' => '📰', 'color' => 'text-blue-400'],
             ['label' => 'Urgentes',   'value' => $urgent,   'icon' => '🚨', 'color' => 'text-red-400'],
-            ['label' => 'Événements', 'value' => $events,   'icon' => '🎉', 'color' => 'text-violet-400'],
+            ['label' => 'Brouillons', 'value' => $drafts,   'icon' => '📝', 'color' => 'text-amber-400'],
             ['label' => 'Dernière',   'value' => $lastDate, 'icon' => '🕐', 'color' => 'text-cyan-400'],
         ];
         foreach ($stats as $s): ?>
@@ -149,6 +175,11 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                         <option value="event"    class="bg-gray-900">Événement</option>
                         <option value="urgent"   class="bg-gray-900">🚨 Urgent</option>
                     </select>
+                    <select id="addStatusType"
+                            class="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand transition cursor-pointer">
+                        <option value="published" class="bg-gray-900">✅ Publier maintenant</option>
+                        <option value="draft" class="bg-gray-900">📝 Enregistrer en brouillon</option>
+                    </select>
                 </div>
 
                 <!-- Couleur -->
@@ -179,7 +210,8 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                         <span id="addPreviewEmoji" class="text-lg leading-none select-none">📢</span>
                         <div class="min-w-0">
                             <p id="addPreviewTitle" class="preview-title">Titre de l'actualité</p>
-                            <p id="addPreviewBody" class="preview-body line-clamp-2">Votre contenu s'affichera ici...</p>
+                            <p id="addPreviewMeta" class="preview-body">Publie · apercu instantane</p>
+                            <div id="addPreviewArticle" class="preview-body article-preview mt-1">Votre contenu s'affichera ici...</div>
                         </div>
                     </div>
                 </div>
@@ -195,7 +227,29 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         <section class="lg:col-span-3 space-y-3 fade-up" style="animation-delay:.20s">
             <div class="flex items-center justify-between mb-1">
                 <h2 class="font-semibold text-white">📋 Actualités publiées</h2>
-                <span class="text-white/35 text-xs"><?= $total ?> entrée<?= $total > 1 ? 's' : '' ?></span>
+                <span id="annCount" class="text-white/35 text-xs"><?= $total ?> entrée<?= $total > 1 ? 's' : '' ?></span>
+            </div>
+
+            <div class="glass rounded-xl p-2.5 flex flex-wrap items-center gap-2">
+                <span class="text-white/55 text-xs">Tri</span>
+                <select id="sortMode" class="px-2.5 py-1.5 rounded-lg bg-white/8 border border-white/12 text-white text-xs">
+                    <option value="recent" class="bg-gray-900">Récent</option>
+                    <option value="urgent" class="bg-gray-900">Urgent d'abord</option>
+                    <option value="category" class="bg-gray-900">Catégorie</option>
+                </select>
+                <span class="text-white/55 text-xs">Filtre</span>
+                <select id="filterStatus" class="px-2.5 py-1.5 rounded-lg bg-white/8 border border-white/12 text-white text-xs">
+                    <option value="all" class="bg-gray-900">Tous</option>
+                    <option value="published" class="bg-gray-900">Publie</option>
+                    <option value="draft" class="bg-gray-900">Brouillon</option>
+                </select>
+                <select id="filterCategory" class="px-2.5 py-1.5 rounded-lg bg-white/8 border border-white/12 text-white text-xs">
+                    <option value="all" class="bg-gray-900">Toutes categories</option>
+                    <option value="urgent" class="bg-gray-900">Urgent</option>
+                    <option value="event" class="bg-gray-900">Evenement</option>
+                    <option value="info" class="bg-gray-900">Info</option>
+                    <option value="general" class="bg-gray-900">General</option>
+                </select>
             </div>
 
             <div id="annList" class="space-y-3">
@@ -209,12 +263,20 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                     $annHtml    = $ann['html_content'] ?? htmlspecialchars($ann['content'] ?? '');
                     $annColor   = htmlspecialchars($ann['color']          ?? '#3454d1');
                     $annCat     = $ann['category'] ?? 'general';
+                    $annStatus  = $ann['status'] ?? 'published';
                     $annDate    = htmlspecialchars($ann['created_at'] ?? ($ann['pinned_at'] ?? ''));
                     $annUpdated = htmlspecialchars($ann['updated_at']     ?? '');
                     $badgeCls   = $catBadge[$annCat] ?? $catBadge['general'];
                     $catLabel   = $catLabels[$annCat] ?? 'Général';
+                    $statusLabel = $annStatus === 'draft' ? 'Brouillon' : 'Publie';
+                    $statusCls = $annStatus === 'draft' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300';
                 ?>
-                <div id="ann-<?= $annId ?>" class="ann-card glass rounded-2xl p-4 group" style="border-left: 3px solid <?= $annColor ?>;">
+                <div id="ann-<?= $annId ?>"
+                     class="ann-card glass rounded-2xl p-4 group"
+                     data-status="<?= htmlspecialchars($annStatus) ?>"
+                     data-category="<?= htmlspecialchars($annCat) ?>"
+                     data-sort-date="<?= htmlspecialchars($annUpdated ?: $annDate) ?>"
+                     style="border-left: 3px solid <?= $annColor ?>;">
                     <div class="flex items-start justify-between gap-3">
                         <div class="flex items-start gap-3 min-w-0 flex-1">
                             <span class="text-lg select-none mt-0.5 flex-shrink-0"><?= $annEmoji ?></span>
@@ -224,6 +286,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                                     <p class="font-semibold text-sm text-white leading-snug"><?= $annTitle ?></p>
                                     <?php endif; ?>
                                     <span class="text-xs px-2 py-0.5 rounded-full font-medium <?= $badgeCls ?>"><?= $catLabel ?></span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium <?= $statusCls ?>"><?= $statusLabel ?></span>
                                 </div>
                                 <div class="news-content text-white/50 text-xs leading-relaxed line-clamp-2">
                                     <?= strip_tags($annHtml) ?>
@@ -251,6 +314,25 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
             </div>
         </section>
     </div>
+
+    <section class="glass rounded-3xl p-6 space-y-4 fade-up" style="animation-delay:.24s">
+        <h2 class="font-semibold text-white">📣 Bannières importantes</h2>
+        <div id="bannerStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
+        <form id="bannerForm" class="grid lg:grid-cols-5 gap-2.5">
+            <input id="bannerTitle" type="text" maxlength="150" placeholder="Titre bannière"
+                   class="lg:col-span-1 px-3 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm">
+            <input id="bannerMessage" type="text" maxlength="600" placeholder="Message important"
+                   class="lg:col-span-2 px-3 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm">
+            <select id="bannerStyle" class="lg:col-span-1 px-3 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm">
+                <option value="danger" class="bg-gray-900">🚨 Critique</option>
+                <option value="warning" class="bg-gray-900">⚠️ Alerte</option>
+                <option value="info" class="bg-gray-900">ℹ️ Info</option>
+                <option value="success" class="bg-gray-900">✅ Succès</option>
+            </select>
+            <button class="lg:col-span-1 py-2.5 bg-brand hover:bg-brand-dk text-white rounded-xl text-sm font-semibold">Ajouter</button>
+        </form>
+        <div id="bannerList" class="space-y-2"></div>
+    </section>
 </main>
 
 <!-- ── Modal d'édition ──────────────────────────────────────────────────────── -->
@@ -277,6 +359,11 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
             <option value="info"    class="bg-gray-900">Info</option>
             <option value="event"   class="bg-gray-900">Événement</option>
             <option value="urgent"  class="bg-gray-900">🚨 Urgent</option>
+        </select>
+        <select id="editStatusType"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand transition cursor-pointer">
+            <option value="published" class="bg-gray-900">✅ Publie</option>
+            <option value="draft" class="bg-gray-900">📝 Brouillon</option>
         </select>
         <div class="flex flex-wrap gap-1.5">
             <?php foreach (['📢','📰','🚨','🎉','📣','⚠️','✅','🛠️'] as $e): ?>
@@ -305,7 +392,8 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                 <span id="editPreviewEmoji" class="text-lg leading-none select-none">📢</span>
                 <div class="min-w-0">
                     <p id="editPreviewTitle" class="preview-title">Titre de l'actualité</p>
-                    <p id="editPreviewBody" class="preview-body line-clamp-2">Le contenu modifié apparaîtra ici...</p>
+                    <p id="editPreviewMeta" class="preview-body">Publie · apercu instantane</p>
+                    <div id="editPreviewArticle" class="preview-body article-preview mt-1">Le contenu modifié apparaîtra ici...</div>
                 </div>
             </div>
         </div>
@@ -321,6 +409,7 @@ const CSRF = <?= json_encode($csrfToken) ?>;
 
 // Données des annonces pour l'édition
 const ANN_DATA = <?= json_encode(array_column($featured, null, 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
+const BANNER_DATA = <?= json_encode(array_values($banners), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
 
 // ── Quill : éditeur d'ajout ───────────────────────────────────────────────────
 const quillAdd = new Quill('#addEditor', {
@@ -342,8 +431,10 @@ quillAdd.on('text-change', updateAddPreview);
 quillEdit.on('text-change', updateEditPreview);
 document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
 document.getElementById('addTitle').addEventListener('input', updateAddPreview);
+document.getElementById('addStatusType').addEventListener('change', updateAddPreview);
 document.getElementById('editEmoji').addEventListener('input', updateEditPreview);
 document.getElementById('editTitle').addEventListener('input', updateEditPreview);
+document.getElementById('editStatusType').addEventListener('change', updateEditPreview);
 updateAddPreview();
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -362,19 +453,93 @@ function stripHtml(html) {
 function updateAddPreview() {
     const emoji = document.getElementById('addEmoji').value.trim() || '📢';
     const title = document.getElementById('addTitle').value.trim() || 'Titre de l\'actualité';
-    const body = stripHtml(quillAdd.root.innerHTML) || 'Votre contenu s\'affichera ici...';
+    const status = document.getElementById('addStatusType').value === 'draft' ? 'Brouillon' : 'Publie';
+    const html = quillAdd.root.innerHTML;
     document.getElementById('addPreviewEmoji').textContent = emoji;
     document.getElementById('addPreviewTitle').textContent = title;
-    document.getElementById('addPreviewBody').textContent = body.length > 140 ? body.slice(0, 140) + '…' : body;
+    document.getElementById('addPreviewMeta').textContent = status + ' · apercu instantane';
+    document.getElementById('addPreviewArticle').innerHTML = stripHtml(html) ? html : 'Votre contenu s\'affichera ici...';
 }
 
 function updateEditPreview() {
     const emoji = document.getElementById('editEmoji').value.trim() || '📢';
     const title = document.getElementById('editTitle').value.trim() || 'Titre de l\'actualité';
-    const body = stripHtml(quillEdit.root.innerHTML) || 'Le contenu modifié apparaîtra ici...';
+    const status = document.getElementById('editStatusType').value === 'draft' ? 'Brouillon' : 'Publie';
+    const html = quillEdit.root.innerHTML;
     document.getElementById('editPreviewEmoji').textContent = emoji;
     document.getElementById('editPreviewTitle').textContent = title;
-    document.getElementById('editPreviewBody').textContent = body.length > 140 ? body.slice(0, 140) + '…' : body;
+    document.getElementById('editPreviewMeta').textContent = status + ' · apercu instantane';
+    document.getElementById('editPreviewArticle').innerHTML = stripHtml(html) ? html : 'Le contenu modifié apparaîtra ici...';
+}
+
+function applyListSortAndFilter() {
+    const sortMode = document.getElementById('sortMode').value;
+    const filterStatus = document.getElementById('filterStatus').value;
+    const filterCategory = document.getElementById('filterCategory').value;
+    const list = document.getElementById('annList');
+    const cards = Array.from(list.querySelectorAll('.ann-card'));
+
+    cards.forEach(card => {
+        const okStatus = filterStatus === 'all' || card.dataset.status === filterStatus;
+        const okCat = filterCategory === 'all' || card.dataset.category === filterCategory;
+        card.style.display = okStatus && okCat ? '' : 'none';
+    });
+
+    const parseFrDate = (value) => {
+        const m = String(value || '').match(/(\d{2})\/(\d{2})\/(\d{4})\s+à\s+(\d{2}):(\d{2})/);
+        if (!m) return 0;
+        return Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4]), Number(m[5]));
+    };
+
+    cards.sort((a, b) => {
+        if (sortMode === 'urgent') {
+            const av = a.dataset.category === 'urgent' ? 0 : 1;
+            const bv = b.dataset.category === 'urgent' ? 0 : 1;
+            if (av !== bv) return av - bv;
+        }
+        if (sortMode === 'category') {
+            return (a.dataset.category || '').localeCompare(b.dataset.category || '');
+        }
+        return parseFrDate(b.dataset.sortDate) - parseFrDate(a.dataset.sortDate);
+    });
+
+    cards.forEach(card => list.appendChild(card));
+
+    const visible = cards.filter(c => c.style.display !== 'none').length;
+    const annCount = document.getElementById('annCount');
+    if (annCount) annCount.textContent = `${visible} entrée${visible > 1 ? 's' : ''}`;
+}
+
+function bannerTone(style) {
+    if (style === 'danger') return { cls: 'bg-red-500/20 text-red-200 border-red-500/35', icon: '🚨' };
+    if (style === 'warning') return { cls: 'bg-amber-500/20 text-amber-200 border-amber-500/35', icon: '⚠️' };
+    if (style === 'success') return { cls: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/35', icon: '✅' };
+    return { cls: 'bg-cyan-500/20 text-cyan-200 border-cyan-500/35', icon: 'ℹ️' };
+}
+
+function renderBannerList() {
+    const list = document.getElementById('bannerList');
+    if (!BANNER_DATA.length) {
+        list.innerHTML = '<p class="text-white/35 text-sm italic">Aucune bannière pour le moment.</p>';
+        return;
+    }
+    const ordered = BANNER_DATA.slice().sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')));
+    list.innerHTML = ordered.map(b => {
+        const tone = bannerTone(b.style || 'danger');
+        return `<div class="glass rounded-xl p-3 border ${tone.cls}">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <p class="font-semibold text-sm">${tone.icon} ${esc(b.title || '')}</p>
+                    <p class="text-sm opacity-90 mt-0.5">${esc(b.message || '')}</p>
+                    <p class="text-xs opacity-70 mt-1">${b.active ? 'Active' : 'Inactive'} · ${esc(b.updated_at || b.created_at || '')}</p>
+                </div>
+                <div class="flex gap-1.5">
+                    <button onclick="toggleBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg bg-white/15 hover:bg-white/25">${b.active ? 'Desactiver' : 'Activer'}</button>
+                    <button onclick="deleteBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function esc(s) {
@@ -392,7 +557,11 @@ function buildCard(ann) {
     const label  = CAT_LABEL[ann.category] ?? 'Général';
     const titleH = ann.title ? `<p class="font-semibold text-sm text-white leading-snug">${esc(ann.title)}</p>` : '';
     return `
-    <div id="ann-${esc(ann.id)}" class="ann-card glass rounded-2xl p-4 group fade-up" style="border-left:3px solid ${esc(ann.color)};">
+    <div id="ann-${esc(ann.id)}" class="ann-card glass rounded-2xl p-4 group fade-up"
+         data-status="${esc(ann.status || 'published')}"
+         data-category="${esc(ann.category || 'general')}"
+         data-sort-date="${esc(ann.updated_at || ann.created_at || '')}"
+         style="border-left:3px solid ${esc(ann.color)};">
         <div class="flex items-start justify-between gap-3">
             <div class="flex items-start gap-3 min-w-0 flex-1">
                 <span class="text-lg select-none mt-0.5 flex-shrink-0">${esc(ann.emoji)}</span>
@@ -400,6 +569,7 @@ function buildCard(ann) {
                     <div class="flex items-center gap-2 flex-wrap mb-1">
                         ${titleH}
                         <span class="text-xs px-2 py-0.5 rounded-full font-medium ${badge}">${label}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium ${(ann.status === 'draft') ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}">${(ann.status === 'draft') ? 'Brouillon' : 'Publie'}</span>
                     </div>
                     <div class="text-white/50 text-xs leading-relaxed line-clamp-2">
                         ${esc(ann.html_content.replace(/<[^>]+>/g,''))}
@@ -439,6 +609,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
                 emoji:    document.getElementById('addEmoji').value.trim() || '📢',
                 title:    document.getElementById('addTitle').value.trim(),
                 category: document.getElementById('addCategory').value,
+                status:   document.getElementById('addStatusType').value,
                 color:    document.getElementById('addColor').value,
                 html_content: html,
             }),
@@ -457,9 +628,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
         document.getElementById('addEmoji').value = '📢';
         document.getElementById('addColor').value = '#3454d1';
         updateAddPreview();
-        // Mettre à jour le compteur
-        document.querySelector('#annList').previousElementSibling.querySelector('span').textContent =
-            document.querySelectorAll('#annList > div').length + ' entrée(s)';
+        applyListSortAndFilter();
     } catch(err) { showStatus(statusEl, err.message, 'error'); }
     finally { btn.disabled = false; btn.textContent = 'Publier l\'actualité'; }
 });
@@ -471,6 +640,7 @@ function editAnn(id) {
     document.getElementById('editEmoji').value    = ann.emoji    || '📢';
     document.getElementById('editTitle').value    = ann.title    || '';
     document.getElementById('editCategory').value = ann.category || 'general';
+    document.getElementById('editStatusType').value = ann.status || 'published';
     document.getElementById('editColor').value    = ann.color    || '#3454d1';
     quillEdit.root.innerHTML = ann.html_content || '';
     updateEditPreview();
@@ -501,6 +671,7 @@ async function submitEdit() {
                 emoji:    document.getElementById('editEmoji').value.trim() || '📢',
                 title:    document.getElementById('editTitle').value.trim(),
                 category: document.getElementById('editCategory').value,
+                status:   document.getElementById('editStatusType').value,
                 color:    document.getElementById('editColor').value,
                 html_content: html,
             }),
@@ -511,6 +682,7 @@ async function submitEdit() {
         ANN_DATA[id] = data.announcement;
         const old = document.getElementById('ann-' + id);
         if (old) old.outerHTML = buildCard(data.announcement);
+        applyListSortAndFilter();
         showStatus(statusEl, 'Modifications enregistrées.', 'success');
         setTimeout(closeEdit, 1200);
     } catch(err) { showStatus(statusEl, err.message, 'error'); }
@@ -533,8 +705,64 @@ async function deleteAnn(id) {
         const list = document.getElementById('annList');
         if (!list.children.length)
             list.innerHTML = '<p class="text-white/30 italic text-sm" id="emptyMsg">Aucune actualité publiée.</p>';
+        applyListSortAndFilter();
     } catch(err) { alert(err.message); }
 }
+
+async function bannerApi(payload) {
+    const res = await fetch('/save-banner.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur.');
+    return data;
+}
+
+document.getElementById('bannerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const statusEl = document.getElementById('bannerStatus');
+    const title = document.getElementById('bannerTitle').value.trim();
+    const message = document.getElementById('bannerMessage').value.trim();
+    const style = document.getElementById('bannerStyle').value;
+    if (!title || !message) return showStatus(statusEl, 'Titre et message obligatoires.', 'error');
+    try {
+        const data = await bannerApi({ action:'add', csrf_token:CSRF, title, message, style, active:true });
+        BANNER_DATA.push(data.banner);
+        renderBannerList();
+        e.target.reset();
+        document.getElementById('bannerStyle').value = 'danger';
+        showStatus(statusEl, 'Bannière ajoutée.', 'success');
+    } catch (err) { showStatus(statusEl, err.message, 'error'); }
+});
+
+async function toggleBanner(id) {
+    const statusEl = document.getElementById('bannerStatus');
+    try {
+        const data = await bannerApi({ action:'toggle', csrf_token:CSRF, id });
+        const idx = BANNER_DATA.findIndex(b => b.id === id);
+        if (idx >= 0) BANNER_DATA[idx] = data.banner;
+        renderBannerList();
+        showStatus(statusEl, data.banner.active ? 'Bannière activée.' : 'Bannière désactivée.', 'success');
+    } catch (err) { showStatus(statusEl, err.message, 'error'); }
+}
+
+async function deleteBanner(id) {
+    if (!confirm('Supprimer cette bannière ?')) return;
+    const statusEl = document.getElementById('bannerStatus');
+    try {
+        await bannerApi({ action:'delete', csrf_token:CSRF, id });
+        const idx = BANNER_DATA.findIndex(b => b.id === id);
+        if (idx >= 0) BANNER_DATA.splice(idx, 1);
+        renderBannerList();
+        showStatus(statusEl, 'Bannière supprimée.', 'success');
+    } catch (err) { showStatus(statusEl, err.message, 'error'); }
+}
+
+document.getElementById('sortMode').addEventListener('change', applyListSortAndFilter);
+document.getElementById('filterStatus').addEventListener('change', applyListSortAndFilter);
+document.getElementById('filterCategory').addEventListener('change', applyListSortAndFilter);
+applyListSortAndFilter();
+renderBannerList();
 
 // Fermer modal avec Échap
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });

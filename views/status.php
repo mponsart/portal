@@ -10,6 +10,16 @@ $sites = $config['status_sites'] ?? [
     ['name' => 'Site Groupe', 'url' => 'https://groupe-speed.cloud'],
 ];
 
+$bannerFile = __DIR__ . '/../uploads/banners.json';
+$activeBanner = null;
+if (file_exists($bannerFile)) {
+    $decoded = json_decode(file_get_contents($bannerFile), true);
+    $banners = is_array($decoded) ? $decoded : [];
+    foreach (array_reverse($banners) as $b) {
+        if (!empty($b['active'])) { $activeBanner = $b; break; }
+    }
+}
+
 function pingSite(string $url): array {
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
         return ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
@@ -92,6 +102,22 @@ $totalCount = count($results);
 <?php include __DIR__ . '/_nav.php'; ?>
 
 <main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <?php if ($activeBanner):
+        $tone = $activeBanner['style'] ?? 'danger';
+        $toneCls = [
+            'danger' => 'bg-red-500/20 border-red-500/35 text-red-100',
+            'warning' => 'bg-amber-500/20 border-amber-500/35 text-amber-100',
+            'success' => 'bg-emerald-500/20 border-emerald-500/35 text-emerald-100',
+            'info' => 'bg-cyan-500/20 border-cyan-500/35 text-cyan-100',
+        ][$tone] ?? 'bg-red-500/20 border-red-500/35 text-red-100';
+        $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
+    ?>
+    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?>">
+        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce importante') ?></p>
+        <p class="text-sm opacity-90 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+    </section>
+    <?php endif; ?>
+
     <header class="glass rounded-3xl p-6">
         <h1 class="text-2xl font-bold mb-1">📡 Statuts des sites</h1>
         <p class="text-white/45 text-sm">Verification en direct des services web du Groupe Speed Cloud.</p>
