@@ -219,11 +219,6 @@ function appEmoji(string $icon): string {
         @media (min-width: 1024px) {
             .featured-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
             .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
-            .no-scroll-desktop { height:calc(100vh - 64px); overflow:hidden; }
-            .compact-desktop { padding-top:.8rem; padding-bottom:.8rem; }
-            .portal-scroll-region { min-height:0; overflow:auto; padding-right:.25rem; }
-            .portal-scroll-region::-webkit-scrollbar { width:8px; }
-            .portal-scroll-region::-webkit-scrollbar-thumb { background:rgba(148,163,184,.35); border-radius:999px; }
         }
 
         /* ── fade in cascade ────────────────────────────────────────── */
@@ -241,7 +236,7 @@ function appEmoji(string $icon): string {
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="page-stack portal-shell no-scroll-desktop compact-desktop relative z-10 w-full mx-auto px-4 sm:px-6 py-5 sm:py-6">
+<main class="page-stack portal-shell relative z-10 w-full mx-auto px-4 sm:px-6 py-6 sm:py-7">
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
@@ -291,19 +286,26 @@ function appEmoji(string $icon): string {
         <hr class="divider my-3.5">
 
         <!-- Recherche -->
-                <form action="https://www.google.com/search" method="get" class="space-y-2.5">
-            <div class="search-shell flex items-center gap-2 pl-3 pr-2 py-2">
-                <span class="text-sm text-white/35 select-none">🔎</span>
-                  <input type="text" name="q" placeholder="Rechercher sur Google..." autocomplete="off"
-                       class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
-                <button type="button" onclick="this.closest('form').q.value=''; this.closest('form').q.focus();"
-                        class="px-2.5 py-1.5 rounded-lg text-xs text-white/45 hover:text-white hover:bg-white/10 transition">
-                    Effacer
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-brand/20 whitespace-nowrap">
-                    Rechercher
-                </button>
+        <form action="https://www.google.com/search" method="get" class="space-y-2.5">
+            <div class="search-shell p-2.5 sm:p-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-sm text-white/35 select-none">🔎</span>
+                    <input type="text" name="q" placeholder="Rechercher sur le web..." autocomplete="off"
+                           class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
+                    <button type="button" onclick="this.closest('form').q.value=''; this.closest('form').q.focus();"
+                            class="px-2.5 py-1.5 rounded-lg text-xs text-white/45 hover:text-white hover:bg-white/10 transition">
+                        Effacer
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-brand/20 whitespace-nowrap">
+                        Rechercher
+                    </button>
+                </div>
+                <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                    <button type="button" onclick="applyQuickSearch('site:github.com ')" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80">GitHub</button>
+                    <button type="button" onclick="applyQuickSearch('site:youtube.com ')" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80">YouTube</button>
+                    <button type="button" onclick="applyQuickSearch('site:discord.com ')" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80">Discord</button>
+                </div>
             </div>
         </form>
         </article>
@@ -335,7 +337,7 @@ function appEmoji(string $icon): string {
     </section>
 
     <!-- ══ ANNONCES À LA UNE ═════════════════════════════════════════════ -->
-    <div class="portal-scroll-region panel-stack">
+    <div class="panel-stack">
     <?php if (!empty($featured)): ?>
     <section class="fade-up d2">
         <p class="section-label mb-3">📌 &nbsp;À la une</p>
@@ -427,6 +429,15 @@ function appEmoji(string $icon): string {
 </main>
 
 <script>
+    function applyQuickSearch(prefix) {
+        const input = document.querySelector('input[name="q"]');
+        if (!input) return;
+        if (!input.value.startsWith(prefix)) {
+            input.value = prefix + input.value.replace(/^site:[^\s]+\s*/i, '');
+        }
+        input.focus();
+    }
+
     const clockEl = document.getElementById('clock');
     const dateEl  = document.getElementById('date-display');
     const JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
