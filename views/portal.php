@@ -362,15 +362,16 @@ function appEmoji(string $icon): string {
                 $delay   = 'd' . min($i + 1, 12);
             ?>
             <?php if ($isUnavailable): ?>
-            <div class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5 relative opacity-50 cursor-not-allowed select-none">
-                <div class="w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+            <div class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5 relative opacity-50 cursor-not-allowed select-none"
+                 title="<?= $appStatus === 'maintenance' ? 'En maintenance' : 'Désactivé' ?>">
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <span class="text-3xl leading-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] leading-none
+                        <?= $appStatus === 'maintenance' ? 'bg-amber-400 text-black' : 'bg-white/25 text-white' ?>">
+                        <?= $appStatus === 'maintenance' ? '🔧' : '✕' ?>
+                    </span>
                 </div>
                 <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-                <span class="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none
-                    <?= $appStatus === 'maintenance' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40' : 'bg-white/10 text-white/40 border border-white/15' ?>">
-                    <?= $appStatus === 'maintenance' ? '🔧 Maintenance' : '⛔ Désactivé' ?>
-                </span>
             </div>
             <?php else: ?>
             <a href="<?= $appUrl ?>"
@@ -405,15 +406,16 @@ function appEmoji(string $icon): string {
                 $delay   = 'd' . min($index + 1, 12);
             ?>
             <?php if ($isUnavailable): ?>
-            <div class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5 relative opacity-50 cursor-not-allowed select-none">
-                <div class="w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+            <div class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5 relative opacity-50 cursor-not-allowed select-none"
+                 title="<?= $appStatus === 'maintenance' ? 'En maintenance' : 'Désactivé' ?>">
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <span class="text-3xl leading-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] leading-none
+                        <?= $appStatus === 'maintenance' ? 'bg-amber-400 text-black' : 'bg-white/25 text-white' ?>">
+                        <?= $appStatus === 'maintenance' ? '🔧' : '✕' ?>
+                    </span>
                 </div>
                 <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-                <span class="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none
-                    <?= $appStatus === 'maintenance' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40' : 'bg-white/10 text-white/40 border border-white/15' ?>">
-                    <?= $appStatus === 'maintenance' ? '🔧 Maintenance' : '⛔ Désactivé' ?>
-                </span>
             </div>
             <?php else: ?>
             <a href="<?= $appUrl ?>"
