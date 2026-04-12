@@ -160,22 +160,22 @@ function appEmoji(string $icon): string {
                         background .14s ease,
                         box-shadow .14s ease;
             cursor: pointer;
-            min-height: clamp(108px, 12vw, 132px);
+            min-height: 104px;
         }
         .app-card:hover {
-            transform: translateY(-6px) scale(1.03);
+            transform: translateY(-2px);
             background: var(--surface-hov);
             border-color: var(--border-hov);
-            box-shadow: 0 16px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08);
+            box-shadow: 0 8px 20px rgba(0,0,0,.22);
         }
         .app-card:active {
-            transform: translateY(-2px) scale(1.01);
+            transform: translateY(-1px);
         }
 
         /* ── search ─────────────────────────────────────────────────── */
         .search-shell {
             border: 1px solid rgba(255,255,255,.12);
-            background: rgba(255,255,255,.04);
+            background: rgba(255,255,255,.03);
             border-radius: 14px;
             transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
         }
@@ -193,21 +193,21 @@ function appEmoji(string $icon): string {
         .section-label {
             font-size: .7rem;
             font-weight: 600;
-            letter-spacing: .12em;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            color: rgba(255,255,255,.35);
+            color: rgba(255,255,255,.45);
         }
 
         /* ── divider ────────────────────────────────────────────────── */
         .divider { border-color: var(--border); }
 
         .portal-shell { max-width: 1200px; }
-        .hero-grid { display:grid; grid-template-columns:1fr; gap:1rem; }
+        .hero-grid { display:grid; grid-template-columns:1fr; gap:.8rem; }
         .hero-panel { min-height: clamp(190px, 22vw, 260px); }
         .mini-kpi { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
         .featured-grid { grid-template-columns:1fr; }
         .app-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
-        .panel-stack { display:flex; flex-direction:column; gap:.9rem; }
+        .panel-stack { display:flex; flex-direction:column; gap:.75rem; }
         @media (min-width: 640px) {
             .app-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
         }
@@ -221,13 +221,6 @@ function appEmoji(string $icon): string {
             .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
         }
 
-        /* ── fade in cascade ────────────────────────────────────────── */
-        @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
-        .fade-up { animation: fadeUp .45s ease both; }
-        .d1 { animation-delay: .05s } .d2 { animation-delay:.12s } .d3 { animation-delay:.20s }
-        .d4 { animation-delay: .28s } .d5 { animation-delay:.36s } .d6 { animation-delay:.44s }
-        .d7 { animation-delay: .52s } .d8 { animation-delay:.60s } .d9 { animation-delay:.68s }
-        .d10{ animation-delay: .76s } .d11{ animation-delay:.84s } .d12{ animation-delay:.92s }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -248,15 +241,15 @@ function appEmoji(string $icon): string {
         ][$tone] ?? 'bg-red-500/20 border-red-500/35 text-red-100';
         $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
     ?>
-    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?> fade-up d1">
+    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?>">
         <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce importante') ?></p>
         <p class="text-sm opacity-90 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
     </section>
     <?php endif; ?>
 
     <!-- ══ HERO ═════════════════════════════════════════════════════════ -->
-    <section class="hero-grid fade-up d1">
-        <article class="glass hero-panel rounded-3xl p-4 sm:p-5">
+    <section class="hero-grid">
+        <article class="glass rounded-3xl p-4 sm:p-5">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
 
             <!-- Profil -->
@@ -270,9 +263,9 @@ function appEmoji(string $icon): string {
                 </div>
                 <?php endif; ?>
                 <div class="min-w-0">
-                    <p class="text-white/40 text-xs font-medium mb-0.5">Bonjour,</p>
+                    <p class="text-white/40 text-xs font-medium mb-0.5">Bienvenue,</p>
                     <h1 class="text-lg sm:text-2xl font-bold text-white leading-tight"><?= htmlspecialchars($firstName) ?> 👋</h1>
-                    <p class="text-white/40 text-xs mt-0.5"><?= htmlspecialchars($user['email']) ?></p>
+                    <p class="text-white/40 text-xs mt-0.5">Accès rapide à vos applications.</p>
                 </div>
             </div>
 
@@ -301,46 +294,16 @@ function appEmoji(string $icon): string {
                         Rechercher
                     </button>
                 </div>
-                <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                    <button type="button" onclick="applyQuickSearch('site:github.com ')" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80">GitHub</button>
-                    <button type="button" onclick="applyQuickSearch('site:youtube.com ')" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80">YouTube</button>
-                    <button type="button" onclick="applyQuickSearch('site:discord.com ')" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80">Discord</button>
-                </div>
             </div>
         </form>
-        </article>
-
-        <article class="glass rounded-3xl p-4 sm:p-5">
-            <p class="section-label">Vue instantanée</p>
-            <div class="mt-2.5 grid grid-cols-2 gap-2">
-                <div class="mini-kpi rounded-2xl p-2.5">
-                    <p class="text-[11px] uppercase tracking-wider text-blue-300">Actualités</p>
-                    <p class="text-2xl font-bold leading-none mt-1"><?= $total ?></p>
-                </div>
-                <div class="mini-kpi rounded-2xl p-2.5">
-                    <p class="text-[11px] uppercase tracking-wider text-emerald-300">Bannière</p>
-                    <p class="text-2xl font-bold leading-none mt-1"><?= $hasActiveBanner ? 'ON' : 'OFF' ?></p>
-                </div>
-                <div class="mini-kpi rounded-2xl p-2.5">
-                    <p class="text-[11px] uppercase tracking-wider text-cyan-300">Workspace</p>
-                    <p class="text-2xl font-bold leading-none mt-1"><?= $workspaceCount ?></p>
-                </div>
-                <div class="mini-kpi rounded-2xl p-2.5">
-                    <p class="text-[11px] uppercase tracking-wider text-amber-300">Applications</p>
-                    <p class="text-2xl font-bold leading-none mt-1"><?= $portalCount ?></p>
-                </div>
-            </div>
-            <?php if ($isAdmin): ?>
-            <a href="/admin.php" class="mt-4 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/15 border border-white/15">⚙️ Ouvrir l'admin</a>
-            <?php endif; ?>
         </article>
     </section>
 
     <!-- ══ ANNONCES À LA UNE ═════════════════════════════════════════════ -->
     <div class="panel-stack">
     <?php if (!empty($featured)): ?>
-    <section class="fade-up d2">
-        <p class="section-label mb-3">📌 &nbsp;À la une</p>
+    <section>
+        <p class="section-label mb-2">A la une</p>
         <div class="featured-grid grid gap-3">
             <?php foreach ($featured as $i => $ann):
                 $accentColor = htmlspecialchars($ann['color']    ?? '#3454d1');
@@ -375,7 +338,7 @@ function appEmoji(string $icon): string {
 
     <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════════ -->
     <?php if (!empty($workspaceApps)): ?>
-    <section class="fade-up d3">
+    <section>
         <p class="section-label mb-3">Suite Google Workspace</p>
         <div class="app-grid grid gap-3">
             <?php foreach ($workspaceApps as $i => $app):
@@ -386,7 +349,7 @@ function appEmoji(string $icon): string {
                 $delay   = 'd' . min($i + 1, 12);
             ?>
             <a href="<?= $appUrl ?>"
-               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-3 flex flex-col items-center gap-1.5">
+               class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
                 <div class="w-10 h-10 flex items-center justify-center">
                     <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
@@ -398,7 +361,7 @@ function appEmoji(string $icon): string {
     <?php endif; ?>
 
     <!-- ══ APPLICATIONS ═════════════════════════════════════════════════ -->
-    <section class="fade-up d4">
+    <section>
         <p class="section-label mb-3">Applications (<?= $portalCount ?>)</p>
         <?php if (empty($portalApps)): ?>
         <div class="glass rounded-2xl p-4 text-sm text-white/50">Aucune application hors Google Workspace.</div>
@@ -414,7 +377,7 @@ function appEmoji(string $icon): string {
                 $delay   = 'd' . min($index + 1, 12);
             ?>
             <a href="<?= $appUrl ?>"
-               class="app-card glass fade-up <?= $delay ?> rounded-2xl p-3 flex flex-col items-center gap-1.5">
+               class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
                 <div class="w-10 h-10 flex items-center justify-center">
                     <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
@@ -429,15 +392,6 @@ function appEmoji(string $icon): string {
 </main>
 
 <script>
-    function applyQuickSearch(prefix) {
-        const input = document.querySelector('input[name="q"]');
-        if (!input) return;
-        if (!input.value.startsWith(prefix)) {
-            input.value = prefix + input.value.replace(/^site:[^\s]+\s*/i, '');
-        }
-        input.focus();
-    }
-
     const clockEl = document.getElementById('clock');
     const dateEl  = document.getElementById('date-display');
     const JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
