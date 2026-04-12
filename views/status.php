@@ -4,11 +4,165 @@ $config  = require __DIR__ . '/../config.php';
 $isAdmin = in_array($user['email'], $config['admins'] ?? []);
 
 $currentPage = 'status';
-$sites = $config['status_sites'] ?? [
+$sitesFile = __DIR__ . '/../uploads/status-sites.json';
+$appsFile = __DIR__ . '/../uploads/apps.json';
+
+$defaultSites = $config['status_sites'] ?? [
     ['name' => 'Portail', 'url' => 'https://portail.groupe-speed.cloud'],
     ['name' => 'SSO', 'url' => 'https://sign.groupe-speed.cloud'],
     ['name' => 'Site Groupe', 'url' => 'https://groupe-speed.cloud'],
 ];
+
+$defaultApps = $config['portal']['apps'] ?? [
+    ['name' => 'Gmail',       'url' => 'https://mail.google.com',     'icon' => 'gmail'],
+    ['name' => 'Drive',       'url' => 'https://drive.google.com',    'icon' => 'drive'],
+    ['name' => 'Agenda',      'url' => 'https://calendar.google.com', 'icon' => 'calendar'],
+    ['name' => 'Meet',        'url' => 'https://meet.google.com',     'icon' => 'meet'],
+    ['name' => 'Docs',        'url' => 'https://docs.google.com',     'icon' => 'docs'],
+    ['name' => 'Sheets',      'url' => 'https://sheets.google.com',   'icon' => 'sheets'],
+    ['name' => 'Slides',      'url' => 'https://slides.google.com',   'icon' => 'slides'],
+    ['name' => 'YouTube',     'url' => 'https://youtube.com',         'icon' => 'youtube'],
+    ['name' => 'Discord',     'url' => 'https://discord.com',         'icon' => 'discord'],
+    ['name' => 'GitHub',      'url' => 'https://github.com',          'icon' => 'github'],
+    ['name' => 'Notion',      'url' => 'https://notion.so',           'icon' => 'notion'],
+    ['name' => 'Figma',       'url' => 'https://figma.com',           'icon' => 'figma'],
+];
+
+function readJsonArray(string $path, array $fallback): array {
+    if (!file_exists($path)) return $fallback;
+    $decoded = json_decode((string)file_get_contents($path), true);
+    return is_array($decoded) ? $decoded : $fallback;
+}
+
+function saveJsonArray(string $path, array $data): bool {
+    $dir = dirname($path);
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+    return file_put_contents($path, json_encode(array_values($data), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) !== false;
+}
+
+function normalizeName(string $name): string {
+    return mb_substr(trim($name), 0, 80);
+}
+
+function normalizeUrl(string $url): string {
+    $url = trim($url);
+    if ($url !== '' && !preg_match('~^https?://~i', $url)) {
+        $url = 'https://' . $url;
+    }
+    return $url;
+}
+
+function normalizeIcon(string $icon): string {
+    $icon = trim($icon);
+    $allowed = ['gmail','drive','calendar','meet','docs','sheets','slides','youtube','discord','github','notion','figma','link'];
+    return in_array($icon, $allowed, true) ? $icon : 'link';
+}
+
+function appEmoji(string $icon): string {
+    return match($icon) {
+        'gmail' => '📧',
+        'drive' => '💾',
+        'calendar' => '📅',
+        'meet' => '🎥',
+        'docs' => '📄',
+        'sheets' => '📊',
+        'slides' => '🖼️',
+        'youtube' => '▶️',
+        'discord' => '💬',
+        'github' => '🐙',
+        'notion' => '🗂️',
+        'figma' => '🎨',
+        default  => '🔗',
+    };
+}
+
+$sites = readJsonArray($sitesFile, $defaultSites);
+$apps = readJsonArray($appsFile, $defaultApps);
+
+if ($isAdmin) {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $postedToken = $_POST['csrf_token'] ?? '';
+        if (!hash_equals($_SESSION['csrf_token'], (string)$postedToken)) {
+            $_SESSION['status_flash'] = ['type' => 'error', 'message' => 'Token CSRF invalide.'];
+            header('Location: /status.php');
+            exit;
+        }
+
+        $action = trim((string)($_POST['action'] ?? ''));
+        $ok = false;
+
+        if ($action === 'add_site') {
+            $name = normalizeName((string)($_POST['name'] ?? ''));
+            $url = normalizeUrl((string)($_POST['url'] ?? ''));
+            if ($name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+                $sites[] = ['name' => $name, 'url' => $url];
+                $ok = saveJsonArray($sitesFile, $sites);
+            }
+        }
+
+        if ($action === 'delete_site') {
+            $idx = (int)($_POST['index'] ?? -1);
+            if (isset($sites[$idx])) {
+                unset($sites[$idx]);
+                $ok = saveJsonArray($sitesFile, $sites);
+            }
+        }
+
+        if ($action === 'update_site') {
+            $idx = (int)($_POST['index'] ?? -1);
+            $name = normalizeName((string)($_POST['name'] ?? ''));
+            $url = normalizeUrl((string)($_POST['url'] ?? ''));
+            if (isset($sites[$idx]) && $name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+                $sites[$idx] = ['name' => $name, 'url' => $url];
+                $ok = saveJsonArray($sitesFile, $sites);
+            }
+        }
+
+        if ($action === 'add_app') {
+            $name = normalizeName((string)($_POST['name'] ?? ''));
+            $url = normalizeUrl((string)($_POST['url'] ?? ''));
+            $icon = normalizeIcon((string)($_POST['icon'] ?? 'link'));
+
+            if ($name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+                $apps[] = ['name' => $name, 'url' => $url, 'icon' => $icon];
+                $ok = saveJsonArray($appsFile, $apps);
+            }
+        }
+
+        if ($action === 'delete_app') {
+            $idx = (int)($_POST['index'] ?? -1);
+            if (isset($apps[$idx])) {
+                unset($apps[$idx]);
+                $ok = saveJsonArray($appsFile, $apps);
+            }
+        }
+
+        if ($action === 'update_app') {
+            $idx = (int)($_POST['index'] ?? -1);
+            $name = normalizeName((string)($_POST['name'] ?? ''));
+            $url = normalizeUrl((string)($_POST['url'] ?? ''));
+            $icon = normalizeIcon((string)($_POST['icon'] ?? 'link'));
+            if (isset($apps[$idx]) && $name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+                $apps[$idx] = ['name' => $name, 'url' => $url, 'icon' => $icon];
+                $ok = saveJsonArray($appsFile, $apps);
+            }
+        }
+
+        $_SESSION['status_flash'] = [
+            'type' => $ok ? 'success' : 'error',
+            'message' => $ok ? 'Mise à jour enregistrée.' : 'Action invalide ou enregistrement impossible.',
+        ];
+        header('Location: /status.php');
+        exit;
+    }
+}
+
+$flash = $_SESSION['status_flash'] ?? null;
+unset($_SESSION['status_flash']);
 
 $bannerFile = __DIR__ . '/../uploads/banners.json';
 $activeBanner = null;
@@ -31,21 +185,22 @@ function pingSite(string $url): array {
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_CONNECTTIMEOUT => 4,
-            CURLOPT_TIMEOUT => 8,
-            CURLOPT_NOBODY => true,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_NOBODY => false,
+            CURLOPT_HTTPGET => true,
+            CURLOPT_RANGE => '0-0',
             CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
         ]);
 
-        $start = microtime(true);
         $result = curl_exec($ch);
-        $ms = (int)round((microtime(true) - $start) * 1000);
+        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
         $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);
         curl_close($ch);
 
         return [
-            'ok' => $result !== false && $code >= 200 && $code < 400,
+            'ok' => $result !== false && $code >= 200 && $code < 500,
             'code' => $code,
             'ms' => $ms,
             'error' => $result === false ? ($err ?: 'Echec ping') : '',
@@ -61,7 +216,7 @@ function pingSite(string $url): array {
 
     preg_match('/\s(\d{3})\s/', $headers[0], $m);
     $code = isset($m[1]) ? (int)$m[1] : 0;
-    return ['ok' => $code >= 200 && $code < 400, 'code' => $code, 'ms' => $ms, 'error' => ''];
+    return ['ok' => $code >= 200 && $code < 500, 'code' => $code, 'ms' => $ms, 'error' => ''];
 }
 
 $results = [];
@@ -72,8 +227,19 @@ foreach ($sites as $site) {
     $results[] = ['name' => $name, 'url' => $url, 'ping' => $ping];
 }
 
+$appResults = [];
+foreach ($apps as $app) {
+    $name = trim((string)($app['name'] ?? 'Application'));
+    $url = trim((string)($app['url'] ?? ''));
+    $icon = trim((string)($app['icon'] ?? 'link'));
+    $ping = pingSite($url);
+    $appResults[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'ping' => $ping];
+}
+
 $upCount = count(array_filter($results, fn($r) => $r['ping']['ok']));
 $totalCount = count($results);
+$upApps = count(array_filter($appResults, fn($r) => $r['ping']['ok']));
+$totalApps = count($appResults);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -83,10 +249,10 @@ $totalCount = count($results);
     <title>Statuts - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family:'Inter',sans-serif; background:#06080f; }
+        body { font-family:'Titillium Web',sans-serif; background:#06080f; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
             background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
                         radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
@@ -120,12 +286,22 @@ $totalCount = count($results);
 
     <header class="glass rounded-3xl p-6">
         <h1 class="text-2xl font-bold mb-1">📡 Statuts des sites</h1>
-        <p class="text-white/45 text-sm">Verification en direct des services web du Groupe Speed Cloud.</p>
+        <p class="text-white/45 text-sm">Ping HTTP effectué depuis le serveur pour des mesures réelles côté hébergement.</p>
         <div class="mt-3 inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-white/15 bg-white/5">
             <span><?= $upCount === $totalCount ? '✅' : '⚠️' ?></span>
             <span><?= $upCount ?> / <?= $totalCount ?> services operationnels</span>
         </div>
+        <div class="mt-2 inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-white/15 bg-white/5">
+            <span><?= $upApps === $totalApps ? '✅' : '⚠️' ?></span>
+            <span><?= $upApps ?> / <?= $totalApps ?> applications operationnelles</span>
+        </div>
     </header>
+
+    <?php if ($flash && is_array($flash)): ?>
+    <section class="rounded-2xl border px-4 py-2.5 text-sm <?= ($flash['type'] ?? '') === 'success' ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-100' : 'bg-red-500/20 border-red-500/35 text-red-100' ?>">
+        <?= htmlspecialchars((string)($flash['message'] ?? '')) ?>
+    </section>
+    <?php endif; ?>
 
     <section class="space-y-3">
         <?php foreach ($results as $item):
@@ -157,6 +333,153 @@ $totalCount = count($results);
         </article>
         <?php endforeach; ?>
     </section>
+
+    <section class="glass rounded-3xl p-5 space-y-3">
+        <h2 class="text-lg font-bold">🧩 Statut des applications</h2>
+        <?php foreach ($appResults as $item):
+            $ok = $item['ping']['ok'];
+            $code = (int)$item['ping']['code'];
+            $ms = (int)$item['ping']['ms'];
+            $err = $item['ping']['error'];
+        ?>
+        <article class="status-card rounded-2xl p-4 border border-white/10 bg-white/[0.03]">
+            <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-white font-semibold"><?= appEmoji((string)$item['icon']) ?> <?= htmlspecialchars($item['name']) ?></p>
+                    <a href="<?= htmlspecialchars($item['url']) ?>" class="text-xs text-white/50 hover:text-white/80" rel="noopener noreferrer">
+                        <?= htmlspecialchars($item['url']) ?>
+                    </a>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
+                        <?= $ok ? '🟢 En ligne' : '🔴 Hors ligne' ?>
+                    </p>
+                    <p class="text-xs text-white/45 mt-0.5">
+                        <?= $code ? ('HTTP ' . $code) : 'Aucun code' ?> · <?= $ms ?> ms
+                    </p>
+                </div>
+            </div>
+            <?php if (!$ok && $err !== ''): ?>
+            <p class="text-xs text-red-300/90 mt-2">Erreur: <?= htmlspecialchars($err) ?></p>
+            <?php endif; ?>
+        </article>
+        <?php endforeach; ?>
+    </section>
+
+    <?php if ($isAdmin): ?>
+    <section class="glass rounded-3xl p-5">
+        <h2 class="text-lg font-bold mb-1">⚙️ Gestion directe dans Status</h2>
+        <p class="text-white/45 text-sm mb-4">Ajoute ou supprime les applications et sites monitorés sans passer par un autre écran.</p>
+
+        <div class="grid lg:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+                <p class="font-semibold">🌐 Gérer les sites</p>
+                <form method="post" class="grid gap-2">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                    <input type="hidden" name="action" value="add_site">
+                    <input type="text" name="name" maxlength="80" required placeholder="Nom du site" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                    <input type="text" name="url" maxlength="220" required placeholder="https://..." class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                    <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter le site</button>
+                </form>
+
+                <div class="space-y-1.5 pt-1">
+                    <?php foreach ($sites as $idx => $site): ?>
+                    <div class="rounded-lg bg-white/[0.03] border border-white/10 p-2">
+                        <form method="post" class="grid gap-2">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="action" value="update_site">
+                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                            <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars((string)($site['name'] ?? 'Site')) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                            <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars((string)($site['url'] ?? '')) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                            <div class="flex items-center justify-end gap-2">
+                                <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
+                            </div>
+                        </form>
+
+                        <form method="post" class="mt-1 flex justify-end">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="action" value="delete_site">
+                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                            <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
+                        </form>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+                <p class="font-semibold">🧩 Gérer les applications</p>
+                <form method="post" class="grid gap-2">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                    <input type="hidden" name="action" value="add_app">
+                    <input type="text" name="name" maxlength="80" required placeholder="Nom de l'app" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                    <input type="text" name="url" maxlength="220" required placeholder="https://..." class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                    <select name="icon" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                        <option value="link">🔗 Lien</option>
+                        <option value="gmail">📧 Gmail</option>
+                        <option value="drive">💾 Drive</option>
+                        <option value="calendar">📅 Agenda</option>
+                        <option value="meet">🎥 Meet</option>
+                        <option value="docs">📄 Docs</option>
+                        <option value="sheets">📊 Sheets</option>
+                        <option value="slides">🖼️ Slides</option>
+                        <option value="youtube">▶️ YouTube</option>
+                        <option value="discord">💬 Discord</option>
+                        <option value="github">🐙 GitHub</option>
+                        <option value="notion">🗂️ Notion</option>
+                        <option value="figma">🎨 Figma</option>
+                    </select>
+                    <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
+                </form>
+
+                <div class="space-y-1.5 pt-1">
+                    <?php foreach ($apps as $idx => $app): ?>
+                    <div class="rounded-lg bg-white/[0.03] border border-white/10 p-2">
+                        <form method="post" class="grid gap-2">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="action" value="update_app">
+                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                            <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars((string)($app['name'] ?? 'Application')) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                            <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars((string)($app['url'] ?? '')) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                            <div class="grid grid-cols-2 gap-2">
+                                <select name="icon" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
+                                    <?php $currentIcon = normalizeIcon((string)($app['icon'] ?? 'link')); ?>
+                                    <option value="link" <?= $currentIcon === 'link' ? 'selected' : '' ?>>🔗 Lien</option>
+                                    <option value="gmail" <?= $currentIcon === 'gmail' ? 'selected' : '' ?>>📧 Gmail</option>
+                                    <option value="drive" <?= $currentIcon === 'drive' ? 'selected' : '' ?>>💾 Drive</option>
+                                    <option value="calendar" <?= $currentIcon === 'calendar' ? 'selected' : '' ?>>📅 Agenda</option>
+                                    <option value="meet" <?= $currentIcon === 'meet' ? 'selected' : '' ?>>🎥 Meet</option>
+                                    <option value="docs" <?= $currentIcon === 'docs' ? 'selected' : '' ?>>📄 Docs</option>
+                                    <option value="sheets" <?= $currentIcon === 'sheets' ? 'selected' : '' ?>>📊 Sheets</option>
+                                    <option value="slides" <?= $currentIcon === 'slides' ? 'selected' : '' ?>>🖼️ Slides</option>
+                                    <option value="youtube" <?= $currentIcon === 'youtube' ? 'selected' : '' ?>>▶️ YouTube</option>
+                                    <option value="discord" <?= $currentIcon === 'discord' ? 'selected' : '' ?>>💬 Discord</option>
+                                    <option value="github" <?= $currentIcon === 'github' ? 'selected' : '' ?>>🐙 GitHub</option>
+                                    <option value="notion" <?= $currentIcon === 'notion' ? 'selected' : '' ?>>🗂️ Notion</option>
+                                    <option value="figma" <?= $currentIcon === 'figma' ? 'selected' : '' ?>>🎨 Figma</option>
+                                </select>
+                                <div class="text-xs text-white/65 flex items-center justify-center rounded-xl bg-white/5 border border-white/10">
+                                    Icône: <?= appEmoji($currentIcon) ?>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-end gap-2">
+                                <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
+                            </div>
+                        </form>
+
+                        <form method="post" class="mt-1 flex justify-end">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="action" value="delete_app">
+                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                            <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
+                        </form>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 </main>
 </body>
 </html>

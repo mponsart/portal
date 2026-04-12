@@ -25,15 +25,21 @@ $csrfToken = $_SESSION['csrf_token'];
     <title>Admin Bannières - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family:'Inter',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
             background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
                         radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
         .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
         .admin-tab { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
         .admin-tab.active { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.35); color:#fcd34d; }
+        .panel { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); border-radius:1rem; }
+        .btn-primary { background:#3454d1; color:#fff; border:1px solid rgba(255,255,255,.10); }
+        .btn-primary:hover { background:#2440a8; }
+        .btn-ghost { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14); color:#e5e7eb; }
+        .btn-ghost:hover { background:rgba(255,255,255,.18); }
+        .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
         .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
     </style>
@@ -47,6 +53,7 @@ $csrfToken = $_SESSION['csrf_token'];
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">📣 Administration des bannières</h1>
             <p class="text-white/45 text-sm">Messages prioritaires affichés sur tout le portail.</p>
+            <p class="crumb mt-1">Admin / Bannières</p>
         </div>
         <div class="flex items-center gap-2">
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
@@ -55,7 +62,7 @@ $csrfToken = $_SESSION['csrf_token'];
         </div>
     </section>
 
-    <section class="glass rounded-3xl p-5 space-y-4">
+    <section class="panel p-5 space-y-4">
         <div id="bannerStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
         <form id="bannerForm" class="grid lg:grid-cols-5 gap-2.5">
             <input id="bannerTitle" type="text" maxlength="150" placeholder="Titre bannière" class="input-dark lg:col-span-1 px-3 py-2.5 rounded-xl text-sm">
@@ -66,7 +73,7 @@ $csrfToken = $_SESSION['csrf_token'];
                 <option value="info">ℹ️ Info</option>
                 <option value="success">✅ Succès</option>
             </select>
-            <button class="lg:col-span-1 py-2.5 bg-brand hover:bg-brand-dk rounded-xl text-sm font-semibold">Ajouter</button>
+            <button class="lg:col-span-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Ajouter</button>
         </form>
         <div id="bannerList" class="space-y-2"></div>
     </section>
@@ -110,9 +117,10 @@ function renderBanners() {
                     <p class="font-semibold text-sm">${t.icon} ${esc(b.title || '')}</p>
                     <p class="text-sm opacity-90 mt-0.5">${esc(b.message || '')}</p>
                     <p class="text-xs opacity-70 mt-1">${b.active ? 'Active' : 'Inactive'} · ${esc(b.updated_at || b.created_at || '')}</p>
+                    <p class="text-xs opacity-70 mt-0.5">Auteur: ${esc(b.created_by || 'Inconnu')}</p>
                 </div>
                 <div class="flex gap-1.5">
-                    <button onclick="toggleBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg bg-white/15 hover:bg-white/25">${b.active ? 'Désactiver' : 'Activer'}</button>
+                    <button onclick="toggleBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg btn-ghost">${b.active ? 'Désactiver' : 'Activer'}</button>
                     <button onclick="deleteBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </div>
             </div>

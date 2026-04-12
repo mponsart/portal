@@ -26,7 +26,8 @@ if (file_exists($bannerFile)) {
 }
 
 // Applications
-$apps = $config['portal']['apps'] ?? [
+$appsFile = __DIR__ . '/../uploads/apps.json';
+$defaultApps = $config['portal']['apps'] ?? [
     ['name' => 'Gmail',       'url' => 'https://mail.google.com',     'icon' => 'gmail'],
     ['name' => 'Drive',       'url' => 'https://drive.google.com',    'icon' => 'drive'],
     ['name' => 'Agenda',      'url' => 'https://calendar.google.com', 'icon' => 'calendar'],
@@ -40,6 +41,14 @@ $apps = $config['portal']['apps'] ?? [
     ['name' => 'Notion',      'url' => 'https://notion.so',           'icon' => 'notion'],
     ['name' => 'Figma',       'url' => 'https://figma.com',           'icon' => 'figma'],
 ];
+
+$apps = $defaultApps;
+if (file_exists($appsFile)) {
+    $decoded = json_decode((string)file_get_contents($appsFile), true);
+    if (is_array($decoded)) {
+        $apps = $decoded;
+    }
+}
 
 $firstName = $user['firstName'] ?? explode(' ', $user['name'])[0];
 
@@ -83,7 +92,7 @@ function appEmoji(string $icon): string {
     </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg:          #06080f;
@@ -95,7 +104,7 @@ function appEmoji(string $icon): string {
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Titillium Web', sans-serif;
             background: var(--bg);
             overflow-x: hidden;
         }

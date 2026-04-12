@@ -33,9 +33,9 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
     <title>Admin - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family:'Inter',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
             background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
                         radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }

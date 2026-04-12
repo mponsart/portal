@@ -28,15 +28,21 @@ $csrfToken = $_SESSION['csrf_token'];
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family:'Inter',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
             background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
                         radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
         .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
         .admin-tab { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
         .admin-tab.active { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.35); color:#fcd34d; }
+        .panel { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); border-radius:1rem; }
+        .btn-primary { background:#3454d1; color:#fff; border:1px solid rgba(255,255,255,.10); }
+        .btn-primary:hover { background:#2440a8; }
+        .btn-ghost { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14); color:#e5e7eb; }
+        .btn-ghost:hover { background:rgba(255,255,255,.18); }
+        .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
         .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
         .ql-toolbar { background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:12px 12px 0 0!important; }
@@ -57,6 +63,7 @@ $csrfToken = $_SESSION['csrf_token'];
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">📰 Administration des actualités</h1>
             <p class="text-white/45 text-sm">Page dédiée à la création, l'édition et la publication.</p>
+            <p class="crumb mt-1">Admin / Actualités</p>
         </div>
         <div class="flex items-center gap-2">
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
@@ -66,7 +73,7 @@ $csrfToken = $_SESSION['csrf_token'];
     </section>
 
     <div class="grid lg:grid-cols-5 gap-5">
-        <section class="lg:col-span-2 glass rounded-3xl p-5 space-y-3">
+        <section class="lg:col-span-2 panel p-5 space-y-3">
             <h2 class="font-semibold">➕ Nouvelle actualité</h2>
             <div id="addStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
 
@@ -108,12 +115,12 @@ $csrfToken = $_SESSION['csrf_token'];
                     <div id="addPrevBody" class="text-white/70 text-sm mt-2"></div>
                 </div>
 
-                <button class="w-full py-2.5 bg-brand hover:bg-brand-dk rounded-xl text-sm font-semibold">Enregistrer</button>
+                <button class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
             </form>
         </section>
 
         <section class="lg:col-span-3 space-y-3">
-            <div class="glass rounded-xl p-2.5 flex flex-wrap items-center gap-2">
+            <div class="panel p-2.5 flex flex-wrap items-center gap-2">
                 <span class="text-white/55 text-xs">Tri</span>
                 <select id="sortMode" class="input-dark px-2.5 py-1.5 rounded-lg text-xs">
                     <option value="recent">Récent</option>
@@ -142,10 +149,10 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEdit()"></div>
-    <div class="relative glass rounded-3xl p-5 w-full max-w-xl space-y-3 z-10">
+    <div class="relative panel p-5 w-full max-w-xl space-y-3 z-10">
         <div class="flex items-center justify-between">
             <h3 class="font-semibold">✏️ Modifier</h3>
-            <button onclick="closeEdit()" class="px-2 py-1 rounded-lg hover:bg-white/10">✖️</button>
+            <button onclick="closeEdit()" class="px-2 py-1 rounded-lg btn-ghost">✖️</button>
         </div>
         <div id="editStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
         <input id="editId" type="hidden">
@@ -170,7 +177,7 @@ $csrfToken = $_SESSION['csrf_token'];
             <input id="editColor" type="color" class="w-8 h-8 rounded border border-white/20 bg-transparent">
         </div>
         <div id="editEditor"></div>
-        <button id="editSubmitBtn" onclick="submitEdit()" class="w-full py-2.5 bg-brand hover:bg-brand-dk rounded-xl text-sm font-semibold">Enregistrer</button>
+        <button id="editSubmitBtn" onclick="submitEdit()" class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
     </div>
 </div>
 

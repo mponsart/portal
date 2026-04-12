@@ -45,18 +45,13 @@ $isAdmin = $isAdmin ?? false;
             </a>
             <?php endif; ?>
 
-            <!-- Avatar + déconnexion -->
+            <!-- Avatar -->
             <div class="flex items-center gap-2 pl-2" style="border-left:1px solid rgba(255,255,255,.1);">
                 <?php if (!empty($user['picture'])): ?>
                 <img src="<?= htmlspecialchars($user['picture']) ?>" alt=""
                      class="w-7 h-7 rounded-full border border-white/15 flex-shrink-0">
                 <?php endif; ?>
                 <span class="hidden md:block text-white/60 text-xs"><?= htmlspecialchars($user['name']) ?></span>
-                <a href="/logout.php"
-                   class="p-1.5 text-white/35 hover:text-white hover:bg-white/10 rounded-lg transition"
-                   title="Déconnexion">
-                    <span class="text-sm">🚪</span>
-                </a>
             </div>
         </div>
 
