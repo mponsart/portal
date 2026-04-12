@@ -52,7 +52,6 @@ $csrfToken = $_SESSION['csrf_token'];
         .ql-editor.ql-blank::before { color:rgba(255,255,255,.25)!important;font-style:normal!important; }
         .news-card { transition:transform .15s,border-color .15s; }
         .news-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.24); }
-        .preview-box { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -63,12 +62,13 @@ $csrfToken = $_SESSION['csrf_token'];
     <section class="glass rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">📰 Administration des actualités</h1>
-            <p class="text-white/45 text-sm">Page dédiée à la création, l'édition et la publication.</p>
+            <p class="text-white/45 text-sm">Page dédiée à l'édition et à la publication.</p>
             <p class="crumb mt-1">Admin / Actualités</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
             <a href="/admin-news.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Actualités</a>
+            <a href="/admin-news-new.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">➕ Nouvelle actualité</a>
             <a href="/admin-banners.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>
             <a href="/admin-status.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📡 Sites</a>
             <a href="/admin-apps.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🧩 Applications</a>
@@ -76,54 +76,12 @@ $csrfToken = $_SESSION['csrf_token'];
         </div>
     </section>
 
-    <div class="grid lg:grid-cols-5 gap-5">
-        <section class="lg:col-span-2 panel p-5 space-y-3">
-            <h2 class="font-semibold">➕ Nouvelle actualité</h2>
-            <div id="addStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
-
-            <form id="addForm" class="space-y-3" novalidate>
-                <div class="flex gap-2">
-                    <input id="addEmoji" type="text" maxlength="4" value="📢" class="input-dark w-14 px-2 py-2.5 rounded-xl text-center text-xl">
-                    <input id="addTitle" type="text" placeholder="Titre (optionnel)" class="input-dark flex-1 px-4 py-2.5 rounded-xl text-sm">
-                </div>
-
-                <div class="grid sm:grid-cols-2 gap-2">
-                    <select id="addCategory" class="input-dark w-full px-3 py-2.5 rounded-xl text-sm">
-                        <option value="general">Général</option>
-                        <option value="info">Info</option>
-                        <option value="event">Événement</option>
-                        <option value="urgent">Urgent</option>
-                    </select>
-                    <select id="addStatusType" class="input-dark w-full px-3 py-2.5 rounded-xl text-sm">
-                        <option value="published">Publier maintenant</option>
-                        <option value="draft">Enregistrer brouillon</option>
-                    </select>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <label class="text-white/50 text-xs">Couleur</label>
-                    <input id="addColor" type="color" value="#3454d1" class="w-8 h-8 rounded border border-white/20 bg-transparent">
-                    <div class="flex gap-1.5">
-                        <?php foreach (['#3454d1','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
-                        <button type="button" onclick="document.getElementById('addColor').value='<?= $c ?>'" class="w-5 h-5 rounded-full border border-white/20" style="background:<?= $c ?>"></button>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div id="addEditor"></div>
-
-                <div class="preview-box rounded-2xl p-3">
-                    <p class="text-white/45 text-[11px] uppercase tracking-[.14em] mb-2">Aperçu article</p>
-                    <p class="text-sm font-semibold"><span id="addPrevEmoji">📢</span> <span id="addPrevTitle">Titre</span></p>
-                    <p class="text-white/35 text-xs" id="addPrevMeta">Publie</p>
-                    <div id="addPrevBody" class="text-white/70 text-sm mt-2"></div>
-                </div>
-
-                <button class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
-            </form>
-        </section>
-
-        <section class="lg:col-span-3 space-y-3">
+    <div class="space-y-3">
+        <div class="panel p-4 flex items-center justify-between gap-3">
+            <p class="text-sm text-white/65">La création d'une actualité se fait désormais dans une sous-page dédiée.</p>
+            <a href="/admin-news-new.php" class="btn-primary px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap">➕ Nouvelle actualité</a>
+        </div>
+        <section class="space-y-3">
             <div class="panel p-2.5 flex flex-wrap items-center gap-2">
                 <span class="text-white/55 text-xs">Tri</span>
                 <select id="sortMode" class="input-dark px-2.5 py-1.5 rounded-lg text-xs">
@@ -189,11 +147,6 @@ $csrfToken = $_SESSION['csrf_token'];
 const CSRF = <?= json_encode($csrfToken) ?>;
 const ANN_DATA = <?= json_encode(array_values($featured), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
 
-const quillAdd = new Quill('#addEditor', {
-    theme: 'snow',
-    placeholder: 'Rédigez votre actualité...',
-    modules: { toolbar: [[{ header: [2,3,false] }], ['bold','italic','underline','strike'], [{ list:'ordered' },{ list:'bullet' }], ['blockquote'], ['clean']] }
-});
 const quillEdit = new Quill('#editEditor', {
     theme: 'snow',
     placeholder: 'Modifiez le contenu...',
@@ -215,16 +168,6 @@ function showStatus(el, msg, type) {
     el.className = 'text-sm rounded-xl px-4 py-2.5 ' + (type === 'success' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300');
     el.classList.remove('hidden');
     if (type === 'success') setTimeout(() => el.classList.add('hidden'), 3200);
-}
-
-function updateAddPreview() {
-    const emoji = document.getElementById('addEmoji').value.trim() || '📢';
-    const title = document.getElementById('addTitle').value.trim() || 'Titre';
-    const status = document.getElementById('addStatusType').value === 'draft' ? 'Brouillon' : 'Publie';
-    document.getElementById('addPrevEmoji').textContent = emoji;
-    document.getElementById('addPrevTitle').textContent = title;
-    document.getElementById('addPrevMeta').textContent = status;
-    document.getElementById('addPrevBody').innerHTML = quillAdd.root.innerHTML;
 }
 
 function filteredSortedAnnouncements() {
@@ -296,41 +239,6 @@ async function apiFeatured(payload) {
     return data;
 }
 
-document.getElementById('addForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const statusEl = document.getElementById('addStatus');
-    const btn = e.target.querySelector('button[type="submit"]');
-    if (quillAdd.getText().trim() === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
-
-    btn.disabled = true;
-    btn.textContent = 'Enregistrement...';
-    try {
-        const data = await apiFeatured({
-            action:'add', csrf_token:CSRF,
-            emoji:document.getElementById('addEmoji').value.trim() || '📢',
-            title:document.getElementById('addTitle').value.trim(),
-            category:document.getElementById('addCategory').value,
-            status:document.getElementById('addStatusType').value,
-            color:document.getElementById('addColor').value,
-            html_content:quillAdd.root.innerHTML,
-        });
-        ANN_DATA.unshift(data.announcement);
-        showStatus(statusEl, data.announcement.status === 'draft' ? 'Brouillon enregistré.' : 'Actualité publiée.', 'success');
-        e.target.reset();
-        quillAdd.setContents([]);
-        document.getElementById('addEmoji').value = '📢';
-        document.getElementById('addColor').value = '#3454d1';
-        document.getElementById('addStatusType').value = 'published';
-        updateAddPreview();
-        renderAnnouncements();
-    } catch (err) {
-        showStatus(statusEl, err.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Enregistrer';
-    }
-});
-
 function editAnn(id) {
     const ann = ANN_DATA.find(a => a.id === id);
     if (!ann) return;
@@ -394,16 +302,11 @@ async function deleteAnn(id) {
     }
 }
 
-quillAdd.on('text-change', updateAddPreview);
-document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
-document.getElementById('addTitle').addEventListener('input', updateAddPreview);
-document.getElementById('addStatusType').addEventListener('change', updateAddPreview);
 document.getElementById('sortMode').addEventListener('change', renderAnnouncements);
 document.getElementById('filterStatus').addEventListener('change', renderAnnouncements);
 document.getElementById('filterCategory').addEventListener('change', renderAnnouncements);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
 
-updateAddPreview();
 renderAnnouncements();
 </script>
 </body>
