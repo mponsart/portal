@@ -331,7 +331,7 @@ foreach ($apps as $idx => $app) {
             </form>
         </div>
 
-        <div id="customAppsList" class="space-y-2">
+        <div id="customAppsList" class="space-y-3">
             <?php $displayOrder = 1; ?>
             <?php foreach ($customApps as $row):
                 $idx = (int)$row['index'];
@@ -342,52 +342,103 @@ foreach ($apps as $idx => $app) {
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
                 $adminOnly = !empty($app['admin_only']);
                 $appStatus = normalizeStatus((string)($app['status'] ?? 'active'));
+                $statusCls = match($appStatus) {
+                    'maintenance' => 'bg-amber-500/20 text-amber-300 border border-amber-500/35',
+                    'disabled'    => 'bg-white/[0.07] text-white/40 border border-white/10',
+                    default       => 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
+                };
+                $statusLabel = match($appStatus) {
+                    'maintenance' => '🔧 Maintenance',
+                    'disabled'    => '⛔ Désactivé',
+                    default       => '✅ Actif',
+                };
             ?>
-            <div class="card app-sort-item rounded-lg bg-white/[0.03] border border-white/10 p-2" data-index="<?= $idx ?>">
-                <form method="post" class="grid sm:grid-cols-10 gap-2">
+            <div class="app-sort-item rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden" data-index="<?= $idx ?>">
+
+                <!-- En-tête de la carte -->
+                <div class="flex items-center justify-between gap-3 px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.07]">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="text-2xl leading-none select-none flex-shrink-0"><?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?></span>
+                        <span class="font-semibold text-sm text-white truncate"><?= htmlspecialchars($name) ?></span>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 <?= $statusCls ?>"><?= $statusLabel ?></span>
+                        <?php if ($adminOnly): ?>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex-shrink-0">🔒 Admin</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <label class="text-xs text-white/50 flex items-center gap-1.5">
+                            <span>Ordre</span>
+                            <input type="number" min="1" value="<?= $displayOrder ?>" class="order-input w-14 input-dark px-2 py-1 rounded-lg text-xs">
+                        </label>
+                        <form method="post" class="inline-flex">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="action" value="delete_app">
+                            <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                            <button class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-500/15 text-red-300 hover:bg-red-500/30 border border-red-500/20">Supprimer</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Champs d'édition -->
+                <form method="post" class="p-4 space-y-3">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="update_app">
                     <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars($name) ?>" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
-                    <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars($url) ?>" class="input-dark sm:col-span-2 px-3 py-2 rounded-xl text-sm">
-                    <input type="text" name="emoji" maxlength="8" value="<?= htmlspecialchars($emoji) ?>" placeholder="Emoji" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
-                    <select name="icon" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
-                        <option value="link" <?= $icon === 'link' ? 'selected' : '' ?>>🔗 Lien</option>
-                        <option value="youtube" <?= $icon === 'youtube' ? 'selected' : '' ?>>▶️ YouTube</option>
-                        <option value="discord" <?= $icon === 'discord' ? 'selected' : '' ?>>💬 Discord</option>
-                        <option value="github" <?= $icon === 'github' ? 'selected' : '' ?>>🐙 GitHub</option>
-                        <option value="notion" <?= $icon === 'notion' ? 'selected' : '' ?>>🗂️ Notion</option>
-                        <option value="figma" <?= $icon === 'figma' ? 'selected' : '' ?>>🎨 Figma</option>
-                    </select>
-                    <select name="status" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
-                        <option value="active" <?= $appStatus === 'active' ? 'selected' : '' ?>>✅ Actif</option>
-                        <option value="maintenance" <?= $appStatus === 'maintenance' ? 'selected' : '' ?>>🔧 Maintenance</option>
-                        <option value="disabled" <?= $appStatus === 'disabled' ? 'selected' : '' ?>>⛔ Désactivé</option>
-                    </select>
-                    <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-xs flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="admin_only" value="1" <?= $adminOnly ? 'checked' : '' ?> class="accent-blue-500">
-                        <span>Admin uniquement</span>
-                    </label>
-                    <div class="sm:col-span-1 text-xs text-white/65 flex items-center justify-center rounded-xl bg-white/5 border border-white/10">
-                        Affichage: <?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?>
+
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-xs text-white/45 font-medium">Nom</label>
+                            <input type="text" name="name" maxlength="80" required value="<?= htmlspecialchars($name) ?>"
+                                   class="input-dark w-full px-3 py-2 rounded-xl text-sm">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-white/45 font-medium">URL</label>
+                            <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars($url) ?>"
+                                   class="input-dark w-full px-3 py-2 rounded-xl text-sm">
+                        </div>
                     </div>
-                    <div class="sm:col-span-2 flex items-center justify-end gap-1.5">
-                        <label class="text-xs text-white/70 flex items-center gap-1">
-                            Ordre
-                            <input type="number" min="1" value="<?= $displayOrder ?>" class="order-input w-16 input-dark px-2 py-1 rounded-lg text-xs">
-                        </label>
-                        <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
+
+                    <div class="grid sm:grid-cols-4 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-xs text-white/45 font-medium">Emoji</label>
+                            <input type="text" name="emoji" maxlength="8" value="<?= htmlspecialchars($emoji) ?>" placeholder="ex : 🚀"
+                                   class="input-dark w-full px-3 py-2 rounded-xl text-sm">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-white/45 font-medium">Icône</label>
+                            <select name="icon" class="input-dark w-full px-3 py-2 rounded-xl text-sm">
+                                <option value="link"    <?= $icon === 'link'    ? 'selected' : '' ?>>🔗 Lien</option>
+                                <option value="youtube" <?= $icon === 'youtube' ? 'selected' : '' ?>>▶️ YouTube</option>
+                                <option value="discord" <?= $icon === 'discord' ? 'selected' : '' ?>>💬 Discord</option>
+                                <option value="github"  <?= $icon === 'github'  ? 'selected' : '' ?>>🐙 GitHub</option>
+                                <option value="notion"  <?= $icon === 'notion'  ? 'selected' : '' ?>>🗂️ Notion</option>
+                                <option value="figma"   <?= $icon === 'figma'   ? 'selected' : '' ?>>🎨 Figma</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-white/45 font-medium">Statut</label>
+                            <select name="status" class="input-dark w-full px-3 py-2 rounded-xl text-sm">
+                                <option value="active"      <?= $appStatus === 'active'      ? 'selected' : '' ?>>✅ Actif</option>
+                                <option value="maintenance" <?= $appStatus === 'maintenance' ? 'selected' : '' ?>>🔧 Maintenance</option>
+                                <option value="disabled"    <?= $appStatus === 'disabled'    ? 'selected' : '' ?>>⛔ Désactivé</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-white/45 font-medium">Visibilité</label>
+                            <label class="input-dark w-full px-3 py-2 rounded-xl text-sm flex items-center gap-2 cursor-pointer h-[38px]">
+                                <input type="checkbox" name="admin_only" value="1" <?= $adminOnly ? 'checked' : '' ?> class="accent-blue-500">
+                                <span>Admin uniquement</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Enregistrer</button>
                     </div>
                 </form>
-                <div class="mt-1 flex items-center justify-end">
-                <form method="post" class="inline-flex">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <input type="hidden" name="action" value="delete_app">
-                    <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
-                </form>
-                </div>
-                <?php $displayOrder++; ?>
+
+            </div>
+            <?php $displayOrder++; ?>
             <?php endforeach; ?>
         </div>
     </section>
