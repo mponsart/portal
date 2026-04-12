@@ -37,11 +37,28 @@ $csrfToken = $_SESSION['csrf_token'];
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
         .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
-        .simple-editor { min-height:220px; resize:vertical; }
+        .tiptap-shell { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
+        .tiptap-toolbar { border-bottom:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
+        .tiptap-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:#e2e8f0; }
+        .tiptap-btn:hover { background:rgba(255,255,255,.15); }
+        .tiptap-btn.active { background:rgba(52,84,209,.35); border-color:rgba(107,143,255,.8); }
+        .tiptap-editor { min-height:220px; padding:.9rem 1rem; }
+        .tiptap-editor:focus { outline:none; }
+        .tiptap-editor .ProseMirror { min-height:220px; }
+        .tiptap-editor .ProseMirror:focus { outline:none; }
+        .tiptap-editor p { margin:.45rem 0; }
+        .tiptap-editor ul, .tiptap-editor ol { margin:.45rem 0 .45rem 1.1rem; }
+        .tiptap-editor blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; margin:.45rem 0; }
+        .tiptap-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; overflow:auto; }
+        .tiptap-editor code { background:rgba(255,255,255,.08); padding:0 .25rem; border-radius:.25rem; }
         .preview-box { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
         .editor-meta { color:rgba(226,232,240,.65); font-size:.75rem; }
         .editor-meta.warn { color:#fda4af; }
-        .content-preview { white-space:pre-wrap; word-break:break-word; }
+        .content-preview p { margin:.4rem 0; }
+        .content-preview ul, .content-preview ol { margin:.4rem 0 .4rem 1.2rem; }
+        .content-preview blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; margin:.4rem 0; }
+        .content-preview pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; overflow:auto; }
+        .content-preview code { background:rgba(255,255,255,.08); padding:0 .25rem; border-radius:.25rem; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -92,7 +109,18 @@ $csrfToken = $_SESSION['csrf_token'];
                 </div>
             </div>
 
-            <textarea id="addContent" class="input-dark simple-editor w-full px-4 py-3 rounded-xl text-sm" placeholder="Rédigez votre actualité..."></textarea>
+            <div class="tiptap-shell rounded-xl overflow-hidden">
+                <div class="tiptap-toolbar p-2 flex flex-wrap items-center gap-1.5">
+                    <button type="button" data-action="bold" class="tiptap-btn px-2.5 py-1 rounded text-xs"><strong>Gras</strong></button>
+                    <button type="button" data-action="italic" class="tiptap-btn px-2.5 py-1 rounded text-xs"><em>Italique</em></button>
+                    <button type="button" data-action="h2" class="tiptap-btn px-2.5 py-1 rounded text-xs">Titre</button>
+                    <button type="button" data-action="bullet" class="tiptap-btn px-2.5 py-1 rounded text-xs">Liste</button>
+                    <button type="button" data-action="quote" class="tiptap-btn px-2.5 py-1 rounded text-xs">Citation</button>
+                    <button type="button" data-action="code" class="tiptap-btn px-2.5 py-1 rounded text-xs">Code</button>
+                    <button type="button" data-action="link" class="tiptap-btn px-2.5 py-1 rounded text-xs">Lien</button>
+                </div>
+                <div id="addEditor" class="tiptap-editor text-sm"></div>
+            </div>
             <div class="flex items-center justify-between gap-2">
                 <p class="text-white/40 text-xs">Astuce: Ctrl/Cmd + Entrée pour enregistrer rapidement.</p>
                 <p id="addEditorMeta" class="editor-meta">0 mot • 0 caractère</p>
@@ -110,25 +138,90 @@ $csrfToken = $_SESSION['csrf_token'];
     </section>
 </main>
 
-<script>
+<script type="module">
+import { Editor } from 'https://esm.sh/@tiptap/core@2.11.5';
+import StarterKit from 'https://esm.sh/@tiptap/starter-kit@2.11.5';
+import Link from 'https://esm.sh/@tiptap/extension-link@2.11.5';
+
 const CSRF = <?= json_encode($csrfToken) ?>;
 const MAX_EDITOR_CHARS = 20000;
-const contentInput = document.getElementById('addContent');
+const editorRoot = document.getElementById('addEditor');
+
+const editor = new Editor({
+    element: editorRoot,
+    extensions: [
+        StarterKit.configure({
+            heading: { levels: [1, 2, 3] },
+        }),
+        Link.configure({
+            openOnClick: true,
+            autolink: true,
+            linkOnPaste: true,
+            protocols: ['http', 'https', 'mailto'],
+        }),
+    ],
+    content: '<p></p>',
+    editorProps: {
+        attributes: {
+            class: 'focus:outline-none',
+        },
+    },
+    onUpdate: () => {
+        updateAddPreview();
+        refreshToolbarState();
+    },
+    onSelectionUpdate: () => {
+        refreshToolbarState();
+    },
+});
 
 function escHtml(s) {
     return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function getEditorHtml() {
-    return escHtml(contentInput.value.trim());
+    return editor.getHTML();
+}
+
+function getEditorPlainText() {
+    return editor.getText({ blockSeparator: '\n' }).trim();
 }
 
 function getEditorStats() {
-    const text = contentInput.value.replace(/\s+/g, ' ').trim();
+    const text = getEditorPlainText().replace(/\s+/g, ' ').trim();
     const chars = text.length;
     const words = text ? text.split(' ').length : 0;
     return { chars, words };
 }
+
+function refreshToolbarState() {
+    document.querySelectorAll('[data-action]').forEach((btn) => btn.classList.remove('active'));
+    if (editor.isActive('bold')) document.querySelector('[data-action="bold"]')?.classList.add('active');
+    if (editor.isActive('italic')) document.querySelector('[data-action="italic"]')?.classList.add('active');
+    if (editor.isActive('heading', { level: 2 })) document.querySelector('[data-action="h2"]')?.classList.add('active');
+    if (editor.isActive('bulletList')) document.querySelector('[data-action="bullet"]')?.classList.add('active');
+    if (editor.isActive('blockquote')) document.querySelector('[data-action="quote"]')?.classList.add('active');
+    if (editor.isActive('codeBlock')) document.querySelector('[data-action="code"]')?.classList.add('active');
+    if (editor.isActive('link')) document.querySelector('[data-action="link"]')?.classList.add('active');
+}
+
+document.querySelector('[data-action="bold"]')?.addEventListener('click', () => editor.chain().focus().toggleBold().run());
+document.querySelector('[data-action="italic"]')?.addEventListener('click', () => editor.chain().focus().toggleItalic().run());
+document.querySelector('[data-action="h2"]')?.addEventListener('click', () => editor.chain().focus().toggleHeading({ level: 2 }).run());
+document.querySelector('[data-action="bullet"]')?.addEventListener('click', () => editor.chain().focus().toggleBulletList().run());
+document.querySelector('[data-action="quote"]')?.addEventListener('click', () => editor.chain().focus().toggleBlockquote().run());
+document.querySelector('[data-action="code"]')?.addEventListener('click', () => editor.chain().focus().toggleCodeBlock().run());
+document.querySelector('[data-action="link"]')?.addEventListener('click', () => {
+    const previousUrl = editor.getAttributes('link').href || '';
+    const url = window.prompt('URL du lien', previousUrl || 'https://');
+    if (url === null) return;
+    const trimmed = String(url).trim();
+    if (trimmed === '') {
+        editor.chain().focus().unsetLink().run();
+        return;
+    }
+    editor.chain().focus().setLink({ href: trimmed }).run();
+});
 
 function showStatus(el, msg, type) {
     el.textContent = msg;
@@ -174,8 +267,9 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const statusEl = document.getElementById('addStatus');
     const btn = e.target.querySelector('button[type="submit"]');
-    const content = contentInput.value.trim();
-    if (content === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const plainContent = getEditorPlainText();
+    const htmlContent = getEditorHtml();
+    if (plainContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
     const stats = getEditorStats();
     if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu dépasse ${MAX_EDITOR_CHARS} caractères.`, 'error');
 
@@ -189,11 +283,12 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
             category:document.getElementById('addCategory').value,
             status:document.getElementById('addStatusType').value,
             color:document.getElementById('addColor').value,
-            markdown_content:content,
+            markdown_content:plainContent,
+            html_content:htmlContent,
         });
         showStatus(statusEl, data.announcement.status === 'draft' ? 'Brouillon enregistré.' : 'Actualité publiée.', 'success');
         e.target.reset();
-        contentInput.value = '';
+        editor.commands.setContent('<p></p>');
         document.getElementById('addEmoji').value = '📢';
         document.getElementById('addColor').value = '#3454d1';
         document.getElementById('addStatusType').value = 'published';
@@ -206,11 +301,10 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     }
 });
 
-contentInput.addEventListener('input', updateAddPreview);
 document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
 document.getElementById('addTitle').addEventListener('input', updateAddPreview);
 document.getElementById('addStatusType').addEventListener('change', updateAddPreview);
-contentInput.addEventListener('keydown', (e) => {
+editorRoot.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         document.getElementById('addForm').requestSubmit();
@@ -218,6 +312,7 @@ contentInput.addEventListener('keydown', (e) => {
 });
 
 updateAddPreview();
+refreshToolbarState();
 </script>
 </body>
 </html>

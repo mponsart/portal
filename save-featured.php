@@ -171,6 +171,28 @@ function markdownToSafeHtml(string $markdown): string {
     return implode('', $html);
 }
 
+function sanitizeRichHtml(string $html): string {
+    $allowedTags = '<p><br><strong><em><u><s><blockquote><ul><ol><li><code><pre><h1><h2><h3><a>';
+    $clean = strip_tags($html, $allowedTags);
+
+    $clean = preg_replace('/\s(?:on\w+|style)\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/iu', '', $clean) ?? $clean;
+
+    $clean = preg_replace_callback('/<a\b[^>]*>/iu', static function (array $m): string {
+        $tag = $m[0];
+        $href = '#';
+        if (preg_match('/href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/iu', $tag, $h) === 1) {
+            $candidate = trim((string)($h[2] !== '' ? $h[2] : ($h[3] !== '' ? $h[3] : ($h[4] ?? ''))));
+            if (preg_match('#^(https?://|mailto:|/|#)#i', $candidate)) {
+                $href = $candidate;
+            }
+        }
+        $safeHref = htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return '<a href="' . $safeHref . '" target="_blank" rel="noopener noreferrer">';
+    }, $clean) ?? $clean;
+
+    return trim($clean);
+}
+
 function htmlToText(string $html): string {
     return trim(preg_replace('/\s+/u', ' ', strip_tags($html)) ?? '');
 }
@@ -179,11 +201,18 @@ $action = $body['action'] ?? '';
 
 // ── ADD ───────────────────────────────────────────────────────────────────────
 if ($action === 'add') {
+    $submittedHtml = trim((string)($body['html_content'] ?? ''));
     $markdownContent = trim((string)($body['markdown_content'] ?? ''));
-    if ($markdownContent === '' && isset($body['html_content'])) {
-        $markdownContent = htmlToText((string)$body['html_content']);
+
+    if ($submittedHtml !== '') {
+        $htmlContent = sanitizeRichHtml($submittedHtml);
+        if ($markdownContent === '') {
+            $markdownContent = htmlToText($htmlContent);
+        }
+    } else {
+        $htmlContent = markdownToSafeHtml($markdownContent);
     }
-    $htmlContent = markdownToSafeHtml($markdownContent);
+
     $plainText   = trim(strip_tags($htmlContent));
     if ($plainText === '') jsonError('Le contenu est obligatoire.');
 
@@ -233,11 +262,18 @@ if ($action === 'update') {
     }
     if ($idx === null) jsonError('Annonce introuvable.', 404);
 
+    $submittedHtml = trim((string)($body['html_content'] ?? ''));
     $markdownContent = trim((string)($body['markdown_content'] ?? ($featured[$idx]['markdown_content'] ?? '')));
-    if ($markdownContent === '' && isset($body['html_content'])) {
-        $markdownContent = htmlToText((string)$body['html_content']);
+
+    if ($submittedHtml !== '') {
+        $htmlContent = sanitizeRichHtml($submittedHtml);
+        if ($markdownContent === '') {
+            $markdownContent = htmlToText($htmlContent);
+        }
+    } else {
+        $htmlContent = markdownToSafeHtml($markdownContent);
     }
-    $htmlContent = markdownToSafeHtml($markdownContent);
+
     $plainText   = trim(strip_tags($htmlContent));
     if ($plainText === '') jsonError('Le contenu est obligatoire.');
 
