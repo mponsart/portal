@@ -69,6 +69,7 @@ $csrfToken = $_SESSION['csrf_token'];
     <section class="panel p-5 space-y-4">
         <div id="bannerStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
         <form id="bannerForm" class="grid lg:grid-cols-5 gap-2.5">
+            <input id="bannerId" type="hidden">
             <input id="bannerTitle" type="text" maxlength="150" placeholder="Titre bannière" class="input-dark lg:col-span-1 px-3 py-2.5 rounded-xl text-sm">
             <input id="bannerMessage" type="text" maxlength="600" placeholder="Message important" class="input-dark lg:col-span-2 px-3 py-2.5 rounded-xl text-sm">
             <select id="bannerStyle" class="input-dark lg:col-span-1 px-3 py-2.5 rounded-xl text-sm">
@@ -77,7 +78,10 @@ $csrfToken = $_SESSION['csrf_token'];
                 <option value="info">ℹ️ Info</option>
                 <option value="success">✅ Succès</option>
             </select>
-            <button class="lg:col-span-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Ajouter</button>
+            <div class="lg:col-span-1 flex gap-2">
+                <button id="bannerSubmitBtn" class="flex-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Ajouter</button>
+                <button id="bannerCancelEditBtn" type="button" onclick="cancelEditBanner()" class="hidden px-3 py-2.5 rounded-xl text-sm font-semibold btn-ghost">Annuler</button>
+            </div>
         </form>
         <div id="bannerList" class="space-y-2"></div>
     </section>
@@ -124,6 +128,7 @@ function renderBanners() {
                     <p class="text-xs opacity-70 mt-0.5">Auteur: ${esc(b.created_by || 'Inconnu')}</p>
                 </div>
                 <div class="flex gap-1.5">
+                    <button onclick="editBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg btn-ghost">Modifier</button>
                     <button onclick="toggleBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg btn-ghost">${b.active ? 'Désactiver' : 'Activer'}</button>
                     <button onclick="deleteBanner('${esc(b.id)}')" class="px-2 py-1 text-xs rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </div>
@@ -141,20 +146,62 @@ async function api(payload) {
     return data;
 }
 
+function resetBannerForm() {
+    document.getElementById('bannerForm').reset();
+    document.getElementById('bannerId').value = '';
+    document.getElementById('bannerStyle').value = 'danger';
+    document.getElementById('bannerSubmitBtn').textContent = 'Ajouter';
+    document.getElementById('bannerCancelEditBtn').classList.add('hidden');
+}
+
+function editBanner(id) {
+    const banner = BANNER_DATA.find((b) => b.id === id);
+    if (!banner) return;
+
+    document.getElementById('bannerId').value = banner.id;
+    document.getElementById('bannerTitle').value = banner.title || '';
+    document.getElementById('bannerMessage').value = banner.message || '';
+    document.getElementById('bannerStyle').value = banner.style || 'danger';
+    document.getElementById('bannerSubmitBtn').textContent = 'Enregistrer';
+    document.getElementById('bannerCancelEditBtn').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEditBanner() {
+    resetBannerForm();
+}
+
 document.getElementById('bannerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const statusEl = document.getElementById('bannerStatus');
+    const id = document.getElementById('bannerId').value;
     const title = document.getElementById('bannerTitle').value.trim();
     const message = document.getElementById('bannerMessage').value.trim();
     const style = document.getElementById('bannerStyle').value;
     if (!title || !message) return showStatus(statusEl, 'Titre et message obligatoires.', 'error');
 
     try {
-        const data = await api({ action:'add', csrf_token:CSRF, title, message, style, active:true });
-        BANNER_DATA.push(data.banner);
-        showStatus(statusEl, 'Bannière ajoutée.', 'success');
-        e.target.reset();
-        document.getElementById('bannerStyle').value = 'danger';
+        if (id) {
+            const current = BANNER_DATA.find((b) => b.id === id) || {};
+            const data = await api({
+                action:'update',
+                csrf_token:CSRF,
+                id,
+                title,
+                message,
+                style,
+                active: Boolean(current.active)
+            });
+            const idx = BANNER_DATA.findIndex((b) => b.id === id);
+            if (idx >= 0) BANNER_DATA[idx] = data.banner;
+            showStatus(statusEl, 'Bannière modifiée.', 'success');
+            resetBannerForm();
+        } else {
+            const data = await api({ action:'add', csrf_token:CSRF, title, message, style, active:true });
+            BANNER_DATA.push(data.banner);
+            showStatus(statusEl, 'Bannière ajoutée.', 'success');
+            resetBannerForm();
+        }
         renderBanners();
     } catch (err) {
         showStatus(statusEl, err.message, 'error');
