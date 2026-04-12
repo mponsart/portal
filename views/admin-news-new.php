@@ -55,6 +55,8 @@ $csrfToken = $_SESSION['csrf_token'];
         .ql-editor blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; }
         .ql-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; }
         .preview-box { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
+        .editor-meta { color:rgba(226,232,240,.65); font-size:.75rem; }
+        .editor-meta.warn { color:#fda4af; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -106,6 +108,10 @@ $csrfToken = $_SESSION['csrf_token'];
             </div>
 
             <div id="addEditor"></div>
+            <div class="flex items-center justify-between gap-2">
+                <p class="text-white/40 text-xs">Astuce: Ctrl/Cmd + Entrée pour enregistrer rapidement.</p>
+                <p id="addEditorMeta" class="editor-meta">0 mot • 0 caractere</p>
+            </div>
 
             <div class="preview-box rounded-2xl p-3">
                 <p class="text-white/45 text-[11px] uppercase tracking-[.14em] mb-2">Apercu article</p>
@@ -121,6 +127,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <script>
 const CSRF = <?= json_encode($csrfToken) ?>;
+const MAX_EDITOR_CHARS = 5000;
 
 const quillAdd = new Quill('#addEditor', {
     theme: 'snow',
@@ -142,6 +149,13 @@ function getEditorHtml(editor) {
     return html.replace(/<p><br><\/p>/g, '').trim();
 }
 
+function getEditorStats(editor) {
+    const text = editor.getText().replace(/\s+/g, ' ').trim();
+    const chars = text.length;
+    const words = text ? text.split(' ').length : 0;
+    return { chars, words };
+}
+
 function showStatus(el, msg, type) {
     el.textContent = msg;
     el.className = 'text-sm rounded-xl px-4 py-2.5 ' + (type === 'success' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300');
@@ -157,6 +171,11 @@ function updateAddPreview() {
     document.getElementById('addPrevTitle').textContent = title;
     document.getElementById('addPrevMeta').textContent = status;
     document.getElementById('addPrevBody').innerHTML = getEditorHtml(quillAdd);
+
+    const meta = document.getElementById('addEditorMeta');
+    const stats = getEditorStats(quillAdd);
+    meta.textContent = `${stats.words} mot${stats.words > 1 ? 's' : ''} • ${stats.chars}/${MAX_EDITOR_CHARS} caracteres`;
+    meta.classList.toggle('warn', stats.chars > MAX_EDITOR_CHARS);
 }
 
 async function apiFeatured(payload) {
@@ -174,6 +193,8 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     const btn = e.target.querySelector('button[type="submit"]');
     const htmlContent = getEditorHtml(quillAdd);
     if (quillAdd.getText().trim() === '' || htmlContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const stats = getEditorStats(quillAdd);
+    if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu depasse ${MAX_EDITOR_CHARS} caracteres.`, 'error');
 
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
@@ -206,6 +227,12 @@ quillAdd.on('text-change', updateAddPreview);
 document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
 document.getElementById('addTitle').addEventListener('input', updateAddPreview);
 document.getElementById('addStatusType').addEventListener('change', updateAddPreview);
+quillAdd.root.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('addForm').requestSubmit();
+    }
+});
 
 updateAddPreview();
 </script>

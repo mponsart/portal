@@ -63,6 +63,9 @@ $csrfToken = $_SESSION['csrf_token'];
         .ql-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; }
         .news-card { transition:transform .15s,border-color .15s; }
         .news-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.24); }
+        .editor-meta { color:rgba(226,232,240,.65); font-size:.75rem; }
+        .editor-meta.warn { color:#fda4af; }
+        .editor-preview { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -150,6 +153,14 @@ $csrfToken = $_SESSION['csrf_token'];
             <input id="editColor" type="color" class="w-8 h-8 rounded border border-white/20 bg-transparent">
         </div>
         <div id="editEditor"></div>
+        <div class="flex items-center justify-between gap-2">
+            <p class="text-white/40 text-xs">Astuce: Ctrl/Cmd + Entree pour enregistrer.</p>
+            <p id="editEditorMeta" class="editor-meta">0 mot • 0 caractere</p>
+        </div>
+        <div class="editor-preview rounded-xl p-3">
+            <p class="text-white/45 text-[11px] uppercase tracking-[.14em] mb-2">Apercu du contenu</p>
+            <div id="editPreviewBody" class="text-white/75 text-sm"></div>
+        </div>
         <button id="editSubmitBtn" onclick="submitEdit()" class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
     </div>
 </div>
@@ -157,6 +168,7 @@ $csrfToken = $_SESSION['csrf_token'];
 <script>
 const CSRF = <?= json_encode($csrfToken) ?>;
 const ANN_DATA = <?= json_encode(array_values($featured), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
+const MAX_EDITOR_CHARS = 5000;
 
 const quillEdit = new Quill('#editEditor', {
     theme: 'snow',
@@ -176,6 +188,22 @@ const quillEdit = new Quill('#editEditor', {
 function getEditorHtml(editor) {
     const html = editor.root.innerHTML || '';
     return html.replace(/<p><br><\/p>/g, '').trim();
+}
+
+function getEditorStats(editor) {
+    const text = editor.getText().replace(/\s+/g, ' ').trim();
+    const chars = text.length;
+    const words = text ? text.split(' ').length : 0;
+    return { chars, words };
+}
+
+function updateEditMeta() {
+    const meta = document.getElementById('editEditorMeta');
+    const preview = document.getElementById('editPreviewBody');
+    const stats = getEditorStats(quillEdit);
+    meta.textContent = `${stats.words} mot${stats.words > 1 ? 's' : ''} • ${stats.chars}/${MAX_EDITOR_CHARS} caracteres`;
+    meta.classList.toggle('warn', stats.chars > MAX_EDITOR_CHARS);
+    preview.innerHTML = getEditorHtml(quillEdit) || '<span class="text-white/35 italic">Aucun contenu</span>';
 }
 
 function esc(s) {
@@ -275,6 +303,7 @@ function editAnn(id) {
     document.getElementById('editColor').value = ann.color || '#3454d1';
     quillEdit.root.innerHTML = ann.html_content || '';
     quillEdit.focus();
+    updateEditMeta();
     document.getElementById('editStatus').classList.add('hidden');
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -291,6 +320,8 @@ async function submitEdit() {
     const id = document.getElementById('editId').value;
     const htmlContent = getEditorHtml(quillEdit);
     if (quillEdit.getText().trim() === '' || htmlContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const stats = getEditorStats(quillEdit);
+    if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu depasse ${MAX_EDITOR_CHARS} caracteres.`, 'error');
 
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
@@ -333,6 +364,13 @@ document.getElementById('sortMode').addEventListener('change', renderAnnouncemen
 document.getElementById('filterStatus').addEventListener('change', renderAnnouncements);
 document.getElementById('filterCategory').addEventListener('change', renderAnnouncements);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
+quillEdit.on('text-change', updateEditMeta);
+quillEdit.root.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        submitEdit();
+    }
+});
 
 renderAnnouncements();
 </script>
