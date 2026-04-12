@@ -223,7 +223,6 @@ function appEmoji(string $icon): string {
         .mini-kpi { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
         .featured-grid { grid-template-columns:1fr; }
         .app-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
-        .apps-widget-grid { display:grid; grid-template-columns:1fr; gap:.75rem; align-items:start; }
         .panel-stack { display:flex; flex-direction:column; gap:.75rem; }
         @media (min-width: 640px) {
             .app-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
@@ -236,7 +235,7 @@ function appEmoji(string $icon): string {
         @media (min-width: 1024px) {
             .featured-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
             .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
-            .apps-widget-grid { grid-template-columns:1fr 220px; }
+
         }
 
     </style>
@@ -266,7 +265,7 @@ function appEmoji(string $icon): string {
     <?php endif; ?>
 
     <!-- ══ HERO ═════════════════════════════════════════════════════════ -->
-    <section class="hero-grid">
+    <section class="hero-grid items-start">
         <article class="glass rounded-3xl p-4 sm:p-5">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
 
@@ -315,6 +314,31 @@ function appEmoji(string $icon): string {
             </div>
         </form>
         </article>
+
+        <!-- ══ WIDGET INDISPONIBLES ════════════════════════════════════ -->
+        <?php if (!empty($unavailableApps)): ?>
+        <aside class="glass rounded-3xl p-4 self-start">
+            <p class="section-label mb-3">⚠️ Services indisponibles</p>
+            <ul class="space-y-2.5">
+                <?php foreach ($unavailableApps as $ua):
+                    $uaName   = htmlspecialchars($ua['name'] ?? '');
+                    $uaIcon   = strtolower(trim((string)($ua['icon'] ?? 'link')));
+                    $uaEmoji  = trim((string)($ua['emoji'] ?? ''));
+                    $uaStatus = $ua['status'] ?? 'disabled';
+                ?>
+                <li class="flex items-center gap-2.5 py-1 border-b border-white/[0.06] last:border-0">
+                    <span class="text-xl leading-none select-none flex-shrink-0"><?= $uaEmoji !== '' ? htmlspecialchars($uaEmoji) : appEmoji($uaIcon) ?></span>
+                    <span class="flex-1 text-sm text-white/75 truncate font-medium"><?= $uaName ?></span>
+                    <span class="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full
+                        <?= $uaStatus === 'maintenance' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/[0.07] text-white/35 border border-white/10' ?>">
+                        <?= $uaStatus === 'maintenance' ? '🔧 Maintenance' : 'Désactivé' ?>
+                    </span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </aside>
+        <?php endif; ?>
+
     </section>
 
     <!-- ══ ANNONCES À LA UNE ═════════════════════════════════════════════ -->
@@ -354,11 +378,7 @@ function appEmoji(string $icon): string {
     </section>
     <?php endif; ?>
 
-    <!-- ══ APPS + WIDGET INDISPONIBLES ═══════════════════════════════ -->
-    <div class="apps-widget-grid">
-        <div class="panel-stack">
-
-        <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════ -->
+        <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════════════════════ -->
         <?php if (!empty($workspaceApps)): ?>
         <section>
             <p class="section-label mb-3">Suite Google Workspace</p>
@@ -404,33 +424,7 @@ function appEmoji(string $icon): string {
             <?php endif; ?>
         </section>
 
-        </div><!-- /panel-stack -->
 
-        <!-- ══ WIDGET INDISPONIBLES ════════════════════════════════════ -->
-        <?php if (!empty($unavailableApps)): ?>
-        <aside class="glass rounded-2xl p-4 self-start">
-            <p class="section-label mb-3">Indisponibles</p>
-            <ul class="space-y-2">
-                <?php foreach ($unavailableApps as $ua):
-                    $uaName   = htmlspecialchars($ua['name'] ?? '');
-                    $uaIcon   = strtolower(trim((string)($ua['icon'] ?? 'link')));
-                    $uaEmoji  = trim((string)($ua['emoji'] ?? ''));
-                    $uaStatus = $ua['status'] ?? 'disabled';
-                ?>
-                <li class="flex items-center gap-2.5">
-                    <span class="text-xl leading-none select-none flex-shrink-0"><?= $uaEmoji !== '' ? htmlspecialchars($uaEmoji) : appEmoji($uaIcon) ?></span>
-                    <span class="flex-1 text-xs text-white/70 truncate"><?= $uaName ?></span>
-                    <span class="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full
-                        <?= $uaStatus === 'maintenance' ? 'bg-amber-500/25 text-amber-300 border border-amber-500/35' : 'bg-white/8 text-white/35 border border-white/12' ?>">
-                        <?= $uaStatus === 'maintenance' ? '🔧 Maintenance' : 'Désactivé' ?>
-                    </span>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </aside>
-        <?php endif; ?>
-
-    </div><!-- /apps-widget-grid -->
     </div>
 
 </main>
