@@ -33,4 +33,10 @@ return [
     //     ],
     // ],
 
+    // Sites surveillés sur la page /status.php
+    // 'status_sites' => [
+    //     ['name' => 'Portail', 'url' => 'https://portail.groupe-speed.cloud'],
+    //     ['name' => 'SSO', 'url' => 'https://sign.groupe-speed.cloud'],
+    // ],
+
 ];

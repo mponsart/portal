@@ -65,6 +65,9 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         /* Annonce card */
         .ann-card { transition: border-color .15s; }
         .ann-card:hover { border-color: rgba(255,255,255,.2); }
+        .form-box { border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03); border-radius:14px; padding:12px; }
+        .emoji-chip { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); border-radius:10px; padding:5px 8px; font-size:16px; line-height:1; transition:all .15s; }
+        .emoji-chip:hover { background:rgba(255,255,255,.14); transform:translateY(-1px); }
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
         .fade-up { animation: fadeUp .35s ease both; }
     </style>
@@ -118,33 +121,46 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                 <!-- Emoji + Titre -->
-                <div class="flex gap-2">
-                    <input type="text" id="addEmoji" value="📢" maxlength="4"
-                           class="w-14 px-2 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-center text-xl focus:outline-none focus:ring-2 focus:ring-brand transition flex-shrink-0">
-                    <input type="text" id="addTitle" placeholder="Titre (optionnel)…"
-                           class="flex-1 px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand transition">
+                <div class="form-box space-y-2.5">
+                    <p class="text-white/55 text-xs font-medium">Titre & humeur</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="addEmoji" value="📢" maxlength="4"
+                               class="w-14 px-2 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-center text-xl focus:outline-none focus:ring-2 focus:ring-brand transition flex-shrink-0">
+                        <input type="text" id="addTitle" placeholder="Titre de l'article (optionnel)…"
+                               class="flex-1 px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand transition">
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <?php foreach (['📢','📰','🚨','🎉','📣','⚠️','✅','🛠️'] as $e): ?>
+                        <button type="button" onclick="document.getElementById('addEmoji').value='<?= $e ?>'" class="emoji-chip" title="Choisir <?= $e ?>"><?= $e ?></button>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
 
                 <!-- Catégorie -->
-                <select id="addCategory"
-                        class="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand transition cursor-pointer">
-                    <option value="general"  class="bg-gray-900">Général</option>
-                    <option value="info"     class="bg-gray-900">Info</option>
-                    <option value="event"    class="bg-gray-900">Événement</option>
-                    <option value="urgent"   class="bg-gray-900">🚨 Urgent</option>
-                </select>
+                <div class="form-box space-y-2.5">
+                    <p class="text-white/55 text-xs font-medium">Classement</p>
+                    <select id="addCategory"
+                            class="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand transition cursor-pointer">
+                        <option value="general"  class="bg-gray-900">Général</option>
+                        <option value="info"     class="bg-gray-900">Info</option>
+                        <option value="event"    class="bg-gray-900">Événement</option>
+                        <option value="urgent"   class="bg-gray-900">🚨 Urgent</option>
+                    </select>
+                </div>
 
                 <!-- Couleur -->
-                <div class="flex items-center gap-3">
-                    <label class="text-white/50 text-xs">Couleur d'accent</label>
-                    <input type="color" id="addColor" value="#3454d1"
-                           class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-white/15">
-                    <div class="flex gap-1.5">
-                        <?php foreach (['#3454d1','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
-                        <button type="button" onclick="document.getElementById('addColor').value='<?= $c ?>'"
-                                class="w-5 h-5 rounded-full border border-white/20 hover:scale-110 transition"
-                                style="background:<?= $c ?>"></button>
-                        <?php endforeach; ?>
+                <div class="form-box">
+                    <div class="flex items-center gap-3">
+                        <label class="text-white/50 text-xs">Couleur d'accent</label>
+                        <input type="color" id="addColor" value="#3454d1"
+                               class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-white/15">
+                        <div class="flex gap-1.5">
+                            <?php foreach (['#3454d1','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
+                            <button type="button" onclick="document.getElementById('addColor').value='<?= $c ?>'"
+                                    class="w-5 h-5 rounded-full border border-white/20 hover:scale-110 transition"
+                                    style="background:<?= $c ?>"></button>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
 
@@ -207,15 +223,11 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                         <div class="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">
                             <button onclick="editAnn('<?= $annId ?>')"
                                     class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition" title="Modifier">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
+                                <span class="text-sm">✏️</span>
                             </button>
                             <button onclick="deleteAnn('<?= $annId ?>')"
                                     class="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg transition" title="Supprimer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0a1 1 0 011-1h4a1 1 0 011 1m-7 0h8"/>
-                                </svg>
+                                <span class="text-sm">🗑️</span>
                             </button>
                         </div>
                     </div>
@@ -234,9 +246,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         <div class="flex items-center justify-between">
             <h3 class="font-semibold text-white">✏️ Modifier l'actualité</h3>
             <button onclick="closeEdit()" class="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+                <span class="text-sm">✖️</span>
             </button>
         </div>
         <div id="editStatus" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
@@ -254,6 +264,11 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
             <option value="event"   class="bg-gray-900">Événement</option>
             <option value="urgent"  class="bg-gray-900">🚨 Urgent</option>
         </select>
+        <div class="flex flex-wrap gap-1.5">
+            <?php foreach (['📢','📰','🚨','🎉','📣','⚠️','✅','🛠️'] as $e): ?>
+            <button type="button" onclick="document.getElementById('editEmoji').value='<?= $e ?>'" class="emoji-chip" title="Choisir <?= $e ?>"><?= $e ?></button>
+            <?php endforeach; ?>
+        </div>
         <div class="flex items-center gap-3">
             <label class="text-white/50 text-xs">Couleur</label>
             <input type="color" id="editColor"
@@ -341,15 +356,11 @@ function buildCard(ann) {
             <div class="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">
                 <button onclick="editAnn('${esc(ann.id)}')"
                         class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition" title="Modifier">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
+                    <span class="text-sm">✏️</span>
                 </button>
                 <button onclick="deleteAnn('${esc(ann.id)}')"
                         class="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg transition" title="Supprimer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0a1 1 0 011-1h4a1 1 0 011 1m-7 0h8"/>
-                    </svg>
+                    <span class="text-sm">🗑️</span>
                 </button>
             </div>
         </div>

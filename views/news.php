@@ -65,8 +65,9 @@ $catBadge  = [
         .filter-btn.active { background:rgba(52,84,209,.35)!important;border-color:rgba(52,84,209,.7)!important;color:#fff!important; }
 
         /* Card */
-        .news-card { transition: border-color .15s, transform .15s; }
-        .news-card:hover { border-color:rgba(255,255,255,.2);transform:translateY(-2px); }
+        .news-card { transition: border-color .15s, transform .15s, background .15s; }
+        .news-card:hover { border-color:rgba(255,255,255,.2);transform:translateY(-2px);background:rgba(255,255,255,.07); }
+        .news-excerpt { color:rgba(255,255,255,.62);font-size:.875rem;line-height:1.7; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -116,6 +117,7 @@ $catBadge  = [
                 $annEmoji   = htmlspecialchars($ann['emoji']          ?? '📢');
                 $annTitle   = htmlspecialchars($ann['title']          ?? '');
                 $annHtml    = $ann['html_content'] ?? nl2br(htmlspecialchars($ann['content'] ?? ''));
+            $annExcerpt = mb_substr(trim(strip_tags($annHtml)), 0, 220);
                 $annColor   = htmlspecialchars($ann['color']          ?? '#3454d1');
                 $annCat     = $ann['category'] ?? 'general';
                 $annDate    = htmlspecialchars($ann['created_at'] ?? ($ann['pinned_at'] ?? ''));
@@ -127,9 +129,7 @@ $catBadge  = [
         <article id="art-<?= $annId ?>" data-cat="<?= htmlspecialchars($annCat) ?>"
                  class="news-card glass rounded-2xl overflow-hidden fade-up"
                  style="border-left:3px solid <?= $annColor ?>;animation-delay:<?= $delay ?>s;">
-            <!-- Header cliquable -->
-            <button onclick="toggleNews('<?= $annId ?>')"
-                    class="w-full text-left p-5 flex items-start gap-4">
+            <div class="p-5 flex items-start gap-4">
                 <span class="text-2xl select-none flex-shrink-0 mt-0.5"><?= $annEmoji ?></span>
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2 mb-1">
@@ -145,16 +145,17 @@ $catBadge  = [
                         <?= $annDate ?>
                         <?= ($annUpdated && $annUpdated !== $annDate) ? ' · Modifié le ' . $annUpdated : '' ?>
                     </p>
+                    <?php if ($annExcerpt !== ''): ?>
+                    <p class="news-excerpt mt-3"><?= htmlspecialchars($annExcerpt) ?><?= mb_strlen(trim(strip_tags($annHtml))) > 220 ? '…' : '' ?></p>
+                    <?php endif; ?>
+                    <div class="mt-4">
+                        <a href="/article.php?id=<?= urlencode((string)($ann['id'] ?? '')) ?>"
+                           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand/25 hover:bg-brand/35 text-brand-lt text-xs font-semibold border border-brand/35 transition">
+                            <span>📖</span>
+                            Lire l'article
+                        </a>
+                    </div>
                 </div>
-                <!-- Chevron -->
-                <svg id="chev-<?= $annId ?>" class="w-5 h-5 text-white/30 flex-shrink-0 mt-1 transition-transform duration-200"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </button>
-            <!-- Corps dépliable -->
-            <div id="body-<?= $annId ?>" class="hidden px-5 pb-5 pl-16">
-                <div class="news-body"><?= $annHtml ?></div>
             </div>
         </article>
         <?php endforeach; endif; ?>
@@ -163,15 +164,6 @@ $catBadge  = [
 </main>
 
 <script>
-// ── Accordéon ────────────────────────────────────────────────────────────────
-function toggleNews(id) {
-    const body = document.getElementById('body-' + id);
-    const chev = document.getElementById('chev-' + id);
-    const open = !body.classList.contains('hidden');
-    body.classList.toggle('hidden', open);
-    chev.style.transform = open ? '' : 'rotate(180deg)';
-}
-
 // ── Filtre catégorie ─────────────────────────────────────────────────────────
 function filterCat(cat) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
