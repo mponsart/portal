@@ -34,7 +34,7 @@ if (preg_match('/^[0-9a-f]{16}$/', $articleId)) {
     }
 }
 
-$catLabels = ['general' => 'General', 'event' => 'Evenement', 'urgent' => 'Urgent', 'info' => 'Info'];
+$catLabels = ['general' => 'Général', 'event' => 'Événement', 'urgent' => 'Urgent', 'info' => 'Info'];
 $catBadge  = [
     'general' => ['bg' => 'rgba(52,84,209,.25)',  'color' => '#6b8fff'],
     'urgent'  => ['bg' => 'rgba(239,68,68,.25)',   'color' => '#f87171'],
@@ -98,8 +98,8 @@ $catBadge  = [
     <section class="glass rounded-3xl p-8 text-center">
         <p class="text-5xl mb-3">🕳️</p>
         <h1 class="text-xl font-semibold mb-2">Article introuvable</h1>
-        <p class="text-white/45 text-sm mb-5">Le lien est invalide ou l'article a ete supprime.</p>
-        <a href="/news.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-sm">⬅️ Retour aux actualites</a>
+        <p class="text-white/45 text-sm mb-5">Le lien est invalide ou l'article a été supprimé.</p>
+        <a href="/news.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-sm">⬅️ Retour aux actualités</a>
     </section>
     <?php else:
         $annEmoji = htmlspecialchars($article['emoji'] ?? '📢');
@@ -108,10 +108,10 @@ $catBadge  = [
         $annDate  = htmlspecialchars($article['created_at'] ?? ($article['pinned_at'] ?? ''));
         $annHtml  = $article['html_content'] ?? nl2br(htmlspecialchars($article['content'] ?? ''));
         $badge    = $catBadge[$annCat] ?? $catBadge['general'];
-        $catLabel = $catLabels[$annCat] ?? 'General';
+        $catLabel = $catLabels[$annCat] ?? 'Général';
     ?>
     <article class="glass rounded-3xl p-6 sm:p-8">
-        <a href="/news.php" class="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4">⬅️ Retour aux actualites</a>
+        <a href="/news.php" class="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">⬅️ Retour aux actualités</a>
         <div class="flex items-start gap-4 mb-5">
             <span class="text-4xl leading-none select-none"><?= $annEmoji ?></span>
             <div class="min-w-0">

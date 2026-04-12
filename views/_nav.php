@@ -8,7 +8,7 @@ $isAdmin = $isAdmin ?? false;
 ?>
 <nav style="background:rgba(6,8,15,.75);border-bottom:1px solid rgba(255,255,255,.08);"
      class="sticky top-0 z-50 backdrop-blur-xl">
-    <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+    <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
         <!-- Logo -->
         <a href="/" class="flex items-center gap-2.5 hover:opacity-80 transition flex-shrink-0">
@@ -17,7 +17,7 @@ $isAdmin = $isAdmin ?? false;
         </a>
 
         <!-- Liens -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1">
                 <a href="/news.php"
                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition
                           <?= $currentPage === 'news'
@@ -46,7 +46,7 @@ $isAdmin = $isAdmin ?? false;
             <?php endif; ?>
 
             <!-- Avatar -->
-            <div class="flex items-center gap-2 pl-2" style="border-left:1px solid rgba(255,255,255,.1);">
+            <div class="flex items-center gap-2 pl-2 ml-1" style="border-left:1px solid rgba(255,255,255,.1);">
                 <?php if (!empty($user['picture'])): ?>
                 <img src="<?= htmlspecialchars($user['picture']) ?>" alt=""
                      class="w-7 h-7 rounded-full border border-white/15 flex-shrink-0">

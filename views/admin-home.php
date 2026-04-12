@@ -55,10 +55,10 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
     </section>
 
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="glass rounded-2xl p-4"><p class="text-blue-300 text-xl font-bold"><?= $total ?></p><p class="text-white/45 text-xs">Total actualités</p></div>
-        <div class="glass rounded-2xl p-4"><p class="text-emerald-300 text-xl font-bold"><?= $published ?></p><p class="text-white/45 text-xs">Publiées</p></div>
-        <div class="glass rounded-2xl p-4"><p class="text-amber-300 text-xl font-bold"><?= $drafts ?></p><p class="text-white/45 text-xs">Brouillons</p></div>
-        <div class="glass rounded-2xl p-4"><p class="text-red-300 text-xl font-bold"><?= $activeBanners ?></p><p class="text-white/45 text-xs">Bannières actives</p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-blue-300 text-xs uppercase tracking-wider">Actualités</p><p class="text-white text-2xl font-bold mt-1\"><?= $total ?></p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-emerald-300 text-xs uppercase tracking-wider">Publiées</p><p class="text-white text-2xl font-bold mt-1\"><?= $published ?></p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-amber-300 text-xs uppercase tracking-wider">Brouillons</p><p class="text-white text-2xl font-bold mt-1\"><?= $drafts ?></p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-red-300 text-xs uppercase tracking-wider">Bannières actives</p><p class="text-white text-2xl font-bold mt-1\"><?= $activeBanners ?></p></div>
     </section>
 
     <section class="grid md:grid-cols-2 xl:grid-cols-4 gap-4">

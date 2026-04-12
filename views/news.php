@@ -105,14 +105,14 @@ $catBadge  = [
     <?php endif; ?>
 
     <!-- En-tête -->
-    <div class="fade-up" style="animation-delay:.05s">
+    <section class="glass rounded-3xl p-5 sm:p-6 fade-up" style="animation-delay:.05s">
         <h1 class="text-2xl font-bold text-white mb-1">📰 Actualités</h1>
-        <p class="text-white/40 text-sm">Toutes les annonces et informations de l'association.</p>
-    </div>
+        <p class="text-white/45 text-sm">Toutes les annonces et informations de l'association.</p>
+    </section>
 
     <!-- Filtres -->
     <?php if (!empty($all)): ?>
-    <div class="flex flex-wrap gap-2 fade-up" style="animation-delay:.10s">
+    <div class="glass rounded-2xl p-3 flex flex-wrap gap-2 fade-up" style="animation-delay:.10s">
         <button onclick="filterCat('all')" data-cat="all"
                 class="filter-btn active px-3 py-1.5 rounded-xl text-xs font-medium text-white/70 glass border border-white/10">
             Tout (<?= count($all) ?>)

@@ -293,7 +293,7 @@ $totalApps = count($appResults);
 
     <header class="glass rounded-3xl p-6">
         <h1 class="text-2xl font-bold mb-1">📡 Statuts des sites</h1>
-        <p class="text-white/45 text-sm">Ping HTTP effectué depuis le serveur pour des mesures réelles côté hébergement.</p>
+        <p class="text-white/45 text-sm">Mesure en direct depuis le serveur pour un état réel des services.</p>
         <div class="mt-3 inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-white/15 bg-white/5">
             <span><?= $upCount === $totalCount ? '✅' : '⚠️' ?></span>
             <span><?= $upCount ?> / <?= $totalCount ?> services operationnels</span>
@@ -336,7 +336,7 @@ $totalApps = count($appResults);
     </section>
 
     <section class="glass rounded-3xl p-5 space-y-3">
-        <h2 class="text-lg font-bold">🧩 Statut des applications</h2>
+        <h2 class="text-lg font-bold">🧩 Statut des applications personnalisées</h2>
         <?php foreach ($appResults as $item):
             $ok = $item['ping']['ok'];
             $code = (int)$item['ping']['code'];

@@ -55,7 +55,7 @@ $csrfToken = $_SESSION['csrf_token'];
             <p class="text-white/45 text-sm">Messages prioritaires affichés sur tout le portail.</p>
             <p class="crumb mt-1">Admin / Bannières</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
             <a href="/admin-news.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Actualités</a>
             <a href="/admin-banners.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>

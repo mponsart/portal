@@ -165,10 +165,10 @@ unset($_SESSION['admin_apps_flash']);
     <section class="glass rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">🧩 Administration des applications</h1>
-            <p class="text-white/45 text-sm">Gestion des apps du portail (enregistrement uniquement).</p>
+            <p class="text-white/45 text-sm">Gestion des applications personnalisées du portail.</p>
             <p class="crumb mt-1">Admin / Applications</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
             <a href="/admin-news.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Actualités</a>
             <a href="/admin-banners.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>
