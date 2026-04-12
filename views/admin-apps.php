@@ -288,9 +288,14 @@ unset($_SESSION['admin_apps_flash']);
                     </div>
                     <div class="sm:col-span-2 flex items-center justify-end gap-1.5">
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
-                        <button type="submit" formaction="/admin-apps.php" name="action" value="move_app" class="px-2 py-1 rounded-lg text-xs btn-soft">↑</button>
-                        <input type="hidden" name="direction" value="up">
                     </div>
+                </form>
+                <form method="post" class="mt-1 flex justify-end gap-1.5">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                    <input type="hidden" name="action" value="move_app">
+                    <input type="hidden" name="index" value="<?= (int)$idx ?>">
+                    <input type="hidden" name="direction" value="up">
+                    <button class="px-2 py-1 rounded-lg text-xs btn-soft">↑</button>
                 </form>
                 <form method="post" class="mt-1 flex justify-end gap-1.5">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
@@ -298,9 +303,12 @@ unset($_SESSION['admin_apps_flash']);
                     <input type="hidden" name="index" value="<?= (int)$idx ?>">
                     <input type="hidden" name="direction" value="down">
                     <button class="px-2 py-1 rounded-lg text-xs btn-soft">↓</button>
+                </form>
+                <form method="post" class="mt-1 flex justify-end">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="delete_app">
                     <input type="hidden" name="index" value="<?= (int)$idx ?>">
-                    <button formaction="/admin-apps.php" name="action" value="delete_app" class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
+                    <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </form>
             </div>
             <?php endforeach; ?>

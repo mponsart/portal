@@ -57,8 +57,19 @@ $googleWorkspaceIcons = ['gmail', 'drive', 'calendar', 'meet', 'docs', 'sheets',
 $portalApps = [];
 foreach ($apps as $app) {
     $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
+    $adminOnly = !empty($app['admin_only']);
+    if ($adminOnly && !$isAdmin) {
+        continue;
+    }
     if (!in_array($icon, $googleWorkspaceIcons, true)) {
         $portalApps[] = $app;
+    } else {
+        foreach ($workspaceApps as $wIdx => $wApp) {
+            if (($wApp['url'] ?? '') === ($app['url'] ?? '') && ($wApp['icon'] ?? '') === $icon) {
+                $workspaceApps[$wIdx] = $app;
+                break;
+            }
+        }
     }
 }
 
