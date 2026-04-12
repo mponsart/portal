@@ -197,15 +197,16 @@ $totalApps = count($apps);
 <main class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
     <section class="glass rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold">📡 Administration des statuts</h1>
-            <p class="text-white/45 text-sm">Gestion des sites/apps monitorés (enregistrement uniquement, sans ping).</p>
-            <p class="crumb mt-1">Admin / Statuts</p>
+            <h1 class="text-xl sm:text-2xl font-bold">📡 Administration des sites</h1>
+            <p class="text-white/45 text-sm">Gestion des sites monitorés (enregistrement uniquement, sans ping).</p>
+            <p class="crumb mt-1">Admin / Sites</p>
         </div>
         <div class="flex items-center gap-2">
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
             <a href="/admin-news.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Actualités</a>
             <a href="/admin-banners.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>
-            <a href="/admin-status.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">📡 Statuts</a>
+            <a href="/admin-status.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">📡 Sites</a>
+            <a href="/admin-apps.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🧩 Applications</a>
         </div>
     </section>
 
