@@ -60,6 +60,10 @@ function normalizeAdminOnly(mixed $value): bool {
     return $value === '1' || $value === 1 || $value === true || $value === 'on';
 }
 
+function normalizeStatus(string $status): string {
+    return in_array($status, ['active', 'maintenance', 'disabled'], true) ? $status : 'active';
+}
+
 function isWorkspaceIcon(string $icon): bool {
     return in_array($icon, ['gmail','drive','calendar','meet','docs','sheets','slides'], true);
 }
@@ -157,8 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $icon = normalizeIcon((string)($_POST['icon'] ?? 'link'));
         $emoji = normalizeEmoji((string)($_POST['emoji'] ?? ''));
         $adminOnly = normalizeAdminOnly($_POST['admin_only'] ?? false);
+        $status = normalizeStatus((string)($_POST['status'] ?? 'active'));
         if ($name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-            $apps[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'admin_only' => $adminOnly];
+            $apps[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'admin_only' => $adminOnly, 'status' => $status];
             $ok = saveJsonArray($appsFile, $apps);
         }
     }
@@ -170,8 +175,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $icon = normalizeIcon((string)($_POST['icon'] ?? 'link'));
         $emoji = normalizeEmoji((string)($_POST['emoji'] ?? ''));
         $adminOnly = normalizeAdminOnly($_POST['admin_only'] ?? false);
+        $status = normalizeStatus((string)($_POST['status'] ?? 'active'));
         if (isset($apps[$idx]) && $name !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-            $apps[$idx] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'admin_only' => $adminOnly];
+            $apps[$idx] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'admin_only' => $adminOnly, 'status' => $status];
             $ok = saveJsonArray($appsFile, $apps);
         }
     }
@@ -289,7 +295,7 @@ foreach ($apps as $idx => $app) {
 
     <section class="panel p-4 space-y-3">
         <h2 class="font-semibold">➕ Ajouter une application</h2>
-        <form method="post" class="grid sm:grid-cols-6 gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <form method="post" class="grid sm:grid-cols-7 gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
             <input type="hidden" name="action" value="add_app">
             <input type="text" name="name" maxlength="80" required placeholder="Nom de l'app" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
@@ -303,11 +309,16 @@ foreach ($apps as $idx => $app) {
                 <option value="notion">🗂️ Notion</option>
                 <option value="figma">🎨 Figma</option>
             </select>
+            <select name="status" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
+                <option value="active">✅ Actif</option>
+                <option value="maintenance">🔧 Maintenance</option>
+                <option value="disabled">⛔ Désactivé</option>
+            </select>
             <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" name="admin_only" value="1" class="accent-blue-500">
                 <span>Admin uniquement</span>
             </label>
-            <button class="sm:col-span-6 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
+            <button class="sm:col-span-7 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
         </form>
 
         <div class="flex items-center justify-between gap-2">
@@ -330,9 +341,10 @@ foreach ($apps as $idx => $app) {
                 $icon = normalizeIcon((string)($app['icon'] ?? 'link'));
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
                 $adminOnly = !empty($app['admin_only']);
+                $appStatus = normalizeStatus((string)($app['status'] ?? 'active'));
             ?>
             <div class="card app-sort-item rounded-lg bg-white/[0.03] border border-white/10 p-2" data-index="<?= $idx ?>">
-                <form method="post" class="grid sm:grid-cols-9 gap-2">
+                <form method="post" class="grid sm:grid-cols-10 gap-2">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="update_app">
                     <input type="hidden" name="index" value="<?= (int)$idx ?>">
@@ -346,6 +358,11 @@ foreach ($apps as $idx => $app) {
                         <option value="github" <?= $icon === 'github' ? 'selected' : '' ?>>🐙 GitHub</option>
                         <option value="notion" <?= $icon === 'notion' ? 'selected' : '' ?>>🗂️ Notion</option>
                         <option value="figma" <?= $icon === 'figma' ? 'selected' : '' ?>>🎨 Figma</option>
+                    </select>
+                    <select name="status" class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-sm">
+                        <option value="active" <?= $appStatus === 'active' ? 'selected' : '' ?>>✅ Actif</option>
+                        <option value="maintenance" <?= $appStatus === 'maintenance' ? 'selected' : '' ?>>🔧 Maintenance</option>
+                        <option value="disabled" <?= $appStatus === 'disabled' ? 'selected' : '' ?>>⛔ Désactivé</option>
                     </select>
                     <label class="input-dark sm:col-span-1 px-3 py-2 rounded-xl text-xs flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="admin_only" value="1" <?= $adminOnly ? 'checked' : '' ?> class="accent-blue-500">
