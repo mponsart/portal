@@ -37,18 +37,11 @@ $csrfToken = $_SESSION['csrf_token'];
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
         .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
-        .md-editor { min-height:220px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace; }
-        .md-toolbar { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); }
-        .md-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:#e2e8f0; }
-        .md-btn:hover { background:rgba(255,255,255,.15); }
+        .simple-editor { min-height:220px; resize:vertical; }
         .preview-box { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
         .editor-meta { color:rgba(226,232,240,.65); font-size:.75rem; }
         .editor-meta.warn { color:#fda4af; }
-        .md-preview p { margin:.4rem 0; }
-        .md-preview ul, .md-preview ol { margin:.4rem 0 .4rem 1.2rem; }
-        .md-preview blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; margin:.4rem 0; }
-        .md-preview pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; overflow:auto; }
-        .md-preview code { background:rgba(255,255,255,.08); padding:0 .25rem; border-radius:.25rem; }
+        .content-preview { white-space:pre-wrap; word-break:break-word; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -99,15 +92,7 @@ $csrfToken = $_SESSION['csrf_token'];
                 </div>
             </div>
 
-            <div class="md-toolbar rounded-xl p-2 flex flex-wrap items-center gap-1.5">
-                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="wrapSelection('**', '**')"><strong>Gras</strong></button>
-                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="wrapSelection('*', '*')"><em>Italique</em></button>
-                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="prefixLines('- ')">Liste</button>
-                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="prefixLines('> ')">Citation</button>
-                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="insertLink()">Lien</button>
-                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="insertCodeBlock()">Code</button>
-            </div>
-            <textarea id="addMarkdown" class="input-dark md-editor w-full px-4 py-3 rounded-xl text-sm" placeholder="Rédigez votre actualité en Markdown..."></textarea>
+            <textarea id="addContent" class="input-dark simple-editor w-full px-4 py-3 rounded-xl text-sm" placeholder="Rédigez votre actualité..."></textarea>
             <div class="flex items-center justify-between gap-2">
                 <p class="text-white/40 text-xs">Astuce: Ctrl/Cmd + Entrée pour enregistrer rapidement.</p>
                 <p id="addEditorMeta" class="editor-meta">0 mot • 0 caractère</p>
@@ -117,10 +102,10 @@ $csrfToken = $_SESSION['csrf_token'];
                 <p class="text-white/45 text-[11px] uppercase tracking-[.14em] mb-2">Aperçu article</p>
                 <p class="text-sm font-semibold"><span id="addPrevEmoji">📢</span> <span id="addPrevTitle">Titre</span></p>
                 <p class="text-white/35 text-xs" id="addPrevMeta">Publié</p>
-                <div id="addPrevBody" class="text-white/70 text-sm mt-2 md-preview"></div>
+                <div id="addPrevBody" class="text-white/70 text-sm mt-2 content-preview"></div>
             </div>
 
-            <button class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
+            <button type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
         </form>
     </section>
 </main>
@@ -128,143 +113,21 @@ $csrfToken = $_SESSION['csrf_token'];
 <script>
 const CSRF = <?= json_encode($csrfToken) ?>;
 const MAX_EDITOR_CHARS = 20000;
-const mdInput = document.getElementById('addMarkdown');
+const contentInput = document.getElementById('addContent');
 
 function escHtml(s) {
     return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function renderMarkdown(md) {
-    const lines = String(md || '').replace(/\r\n/g, '\n').split('\n');
-    const out = [];
-    let inUl = false;
-    let inOl = false;
-    let inCode = false;
-
-    const closeLists = () => {
-        if (inUl) { out.push('</ul>'); inUl = false; }
-        if (inOl) { out.push('</ol>'); inOl = false; }
-    };
-
-    const inline = (text) => {
-        let t = escHtml(text);
-        t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
-        t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-        t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-        t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-            const url = String(href || '').trim();
-            if (!/^(https?:\/\/|mailto:|\/|#)/i.test(url)) return label;
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline">${label}</a>`;
-        });
-        return t;
-    };
-
-    for (const line of lines) {
-        if (line.startsWith('```')) {
-            closeLists();
-            out.push(inCode ? '</code></pre>' : '<pre><code>');
-            inCode = !inCode;
-            continue;
-        }
-        if (inCode) {
-            out.push(`${escHtml(line)}\n`);
-            continue;
-        }
-        if (/^\s*$/.test(line)) {
-            closeLists();
-            continue;
-        }
-        const h = line.match(/^(#{1,3})\s+(.+)$/);
-        if (h) {
-            closeLists();
-            const level = h[1].length;
-            out.push(`<h${level} class="font-bold mt-2 mb-1">${inline(h[2])}</h${level}>`);
-            continue;
-        }
-        const ul = line.match(/^[-*]\s+(.+)$/);
-        if (ul) {
-            if (!inUl) { closeLists(); out.push('<ul class="list-disc pl-5">'); inUl = true; }
-            out.push(`<li>${inline(ul[1])}</li>`);
-            continue;
-        }
-        const ol = line.match(/^\d+\.\s+(.+)$/);
-        if (ol) {
-            if (!inOl) { closeLists(); out.push('<ol class="list-decimal pl-5">'); inOl = true; }
-            out.push(`<li>${inline(ol[1])}</li>`);
-            continue;
-        }
-        const bq = line.match(/^>\s+(.+)$/);
-        if (bq) {
-            closeLists();
-            out.push(`<blockquote>${inline(bq[1])}</blockquote>`);
-            continue;
-        }
-        closeLists();
-        out.push(`<p>${inline(line)}</p>`);
-    }
-    closeLists();
-    if (inCode) out.push('</code></pre>');
-    return out.join('');
-}
-
 function getEditorHtml() {
-    return renderMarkdown(mdInput.value.trim());
+    return escHtml(contentInput.value.trim());
 }
 
 function getEditorStats() {
-    const text = mdInput.value.replace(/\s+/g, ' ').trim();
+    const text = contentInput.value.replace(/\s+/g, ' ').trim();
     const chars = text.length;
     const words = text ? text.split(' ').length : 0;
     return { chars, words };
-}
-
-function replaceSelection(transformer) {
-    const start = mdInput.selectionStart;
-    const end = mdInput.selectionEnd;
-    const before = mdInput.value.slice(0, start);
-    const selected = mdInput.value.slice(start, end);
-    const after = mdInput.value.slice(end);
-    const { text, cursorStart, cursorEnd } = transformer(selected);
-    mdInput.value = before + text + after;
-    mdInput.focus();
-    mdInput.setSelectionRange(before.length + cursorStart, before.length + cursorEnd);
-    updateAddPreview();
-}
-
-function wrapSelection(prefix, suffix) {
-    replaceSelection((selected) => {
-        const core = selected || 'texte';
-        return {
-            text: `${prefix}${core}${suffix}`,
-            cursorStart: prefix.length,
-            cursorEnd: prefix.length + core.length,
-        };
-    });
-}
-
-function prefixLines(prefix) {
-    replaceSelection((selected) => {
-        const core = selected || 'élément';
-        const lines = core.split('\n').map((l) => `${prefix}${l}`);
-        const text = lines.join('\n');
-        return { text, cursorStart: 0, cursorEnd: text.length };
-    });
-}
-
-function insertLink() {
-    replaceSelection((selected) => {
-        const label = selected || 'texte du lien';
-        const text = `[${label}](https://)`;
-        return { text, cursorStart: 1, cursorEnd: 1 + label.length };
-    });
-}
-
-function insertCodeBlock() {
-    replaceSelection((selected) => {
-        const core = selected || 'code ici';
-        const text = `\n\`\`\`\n${core}\n\`\`\`\n`;
-        return { text, cursorStart: 5, cursorEnd: 5 + core.length };
-    });
 }
 
 function showStatus(el, msg, type) {
@@ -291,9 +154,18 @@ function updateAddPreview() {
 
 async function apiFeatured(payload) {
     const res = await fetch('/save-featured.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     });
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try {
+        data = JSON.parse(raw);
+    } catch {
+        throw new Error('Réponse serveur invalide.');
+    }
     if (!res.ok) throw new Error(data.error || 'Erreur serveur');
     return data;
 }
@@ -302,8 +174,8 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const statusEl = document.getElementById('addStatus');
     const btn = e.target.querySelector('button[type="submit"]');
-    const markdownContent = mdInput.value.trim();
-    if (markdownContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const content = contentInput.value.trim();
+    if (content === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
     const stats = getEditorStats();
     if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu dépasse ${MAX_EDITOR_CHARS} caractères.`, 'error');
 
@@ -317,11 +189,11 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
             category:document.getElementById('addCategory').value,
             status:document.getElementById('addStatusType').value,
             color:document.getElementById('addColor').value,
-            markdown_content:markdownContent,
+            markdown_content:content,
         });
         showStatus(statusEl, data.announcement.status === 'draft' ? 'Brouillon enregistré.' : 'Actualité publiée.', 'success');
         e.target.reset();
-        mdInput.value = '';
+        contentInput.value = '';
         document.getElementById('addEmoji').value = '📢';
         document.getElementById('addColor').value = '#3454d1';
         document.getElementById('addStatusType').value = 'published';
@@ -334,11 +206,11 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     }
 });
 
-mdInput.addEventListener('input', updateAddPreview);
+contentInput.addEventListener('input', updateAddPreview);
 document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
 document.getElementById('addTitle').addEventListener('input', updateAddPreview);
 document.getElementById('addStatusType').addEventListener('change', updateAddPreview);
-mdInput.addEventListener('keydown', (e) => {
+contentInput.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         document.getElementById('addForm').requestSubmit();
