@@ -33,11 +33,6 @@ try {
     $oauth2 = new Oauth2($client);
     $userInfo = $oauth2->userinfo->get();
     
-    // Vérifier le domaine
-    if (!str_ends_with($userInfo->email, '@' . $config['google']['hosted_domain'])) {
-        throw new Exception('Accès réservé aux emails @groupe-speed.cloud');
-    }
-    
     // Parser le nom
     $nameParts = explode(' ', $userInfo->name, 2);
     $firstName = $nameParts[0] ?? '';
@@ -63,7 +58,7 @@ try {
     <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Erreur - Annonces Discord</title>
+        <title>Erreur — Portail</title>
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body class="min-h-screen bg-gray-900 flex items-center justify-center">

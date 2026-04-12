@@ -16,10 +16,9 @@
 
 return [
     'google' => [
-        'client_id' => 'VOTRE_CLIENT_ID.apps.googleusercontent.com',
+        'client_id'     => 'VOTRE_CLIENT_ID.apps.googleusercontent.com',
         'client_secret' => 'VOTRE_CLIENT_SECRET',
-        'redirect_uri' => 'https://portail.groupe-speed.cloud/callback.php',
-        'hosted_domain' => 'groupe-speed.cloud',
+        'redirect_uri'  => 'https://portail.groupe-speed.cloud/callback.php',
     ],
     // Emails autorisés à accéder à l'espace admin (admin.php)
     'admins' => [
@@ -34,21 +33,4 @@ return [
     //     ],
     // ],
 
-    // Webhooks Discord. Ne jamais exposer ces URLs côté client.
-    'discord' => [
-        'channels' => [
-            'annonces' => [
-                'label' => 'Annonces générales',
-                'webhook_url' => 'https://discord.com/api/webhooks/ID/TOKEN',
-            ],
-            'events' => [
-                'label' => 'Events',
-                'webhook_url' => 'https://discord.com/api/webhooks/ID/TOKEN',
-            ],
-            'staff' => [
-                'label' => 'Staff',
-                'webhook_url' => 'https://discord.com/api/webhooks/ID/TOKEN',
-            ],
-        ],
-    ],
 ];
