@@ -44,10 +44,20 @@ $csrfToken = $_SESSION['csrf_token'];
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
         .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
-        .md-editor { min-height:220px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace; }
-        .md-toolbar { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); }
-        .md-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:#e2e8f0; }
-        .md-btn:hover { background:rgba(255,255,255,.15); }
+        .tiptap-shell { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
+        .tiptap-toolbar { border-bottom:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
+        .tiptap-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:#e2e8f0; }
+        .tiptap-btn:hover { background:rgba(255,255,255,.15); }
+        .tiptap-btn.active { background:rgba(52,84,209,.35); border-color:rgba(107,143,255,.8); }
+        .tiptap-editor { min-height:220px; padding:.9rem 1rem; }
+        .tiptap-editor:focus { outline:none; }
+        .tiptap-editor .ProseMirror { min-height:220px; }
+        .tiptap-editor .ProseMirror:focus { outline:none; }
+        .tiptap-editor p { margin:.45rem 0; }
+        .tiptap-editor ul, .tiptap-editor ol { margin:.45rem 0 .45rem 1.1rem; }
+        .tiptap-editor blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; margin:.45rem 0; }
+        .tiptap-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; overflow:auto; }
+        .tiptap-editor code { background:rgba(255,255,255,.08); padding:0 .25rem; border-radius:.25rem; }
         .news-card { transition:transform .15s,border-color .15s; }
         .news-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.24); }
         .editor-meta { color:rgba(226,232,240,.65); font-size:.75rem; }
@@ -144,15 +154,18 @@ $csrfToken = $_SESSION['csrf_token'];
             <label class="text-white/50 text-xs">Couleur</label>
             <input id="editColor" type="color" class="w-8 h-8 rounded border border-white/20 bg-transparent">
         </div>
-        <div class="md-toolbar rounded-xl p-2 flex flex-wrap items-center gap-1.5">
-            <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="editWrapSelection('**', '**')"><strong>Gras</strong></button>
-            <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="editWrapSelection('*', '*')"><em>Italique</em></button>
-            <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="editPrefixLines('- ')">Liste</button>
-            <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="editPrefixLines('> ')">Citation</button>
-            <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="editInsertLink()">Lien</button>
-            <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="editInsertCodeBlock()">Code</button>
+        <div class="tiptap-shell rounded-xl overflow-hidden">
+            <div class="tiptap-toolbar p-2 flex flex-wrap items-center gap-1.5">
+                <button type="button" data-edit-action="bold" class="tiptap-btn px-2.5 py-1 rounded text-xs"><strong>Gras</strong></button>
+                <button type="button" data-edit-action="italic" class="tiptap-btn px-2.5 py-1 rounded text-xs"><em>Italique</em></button>
+                <button type="button" data-edit-action="h2" class="tiptap-btn px-2.5 py-1 rounded text-xs">Titre</button>
+                <button type="button" data-edit-action="bullet" class="tiptap-btn px-2.5 py-1 rounded text-xs">Liste</button>
+                <button type="button" data-edit-action="quote" class="tiptap-btn px-2.5 py-1 rounded text-xs">Citation</button>
+                <button type="button" data-edit-action="code" class="tiptap-btn px-2.5 py-1 rounded text-xs">Code</button>
+                <button type="button" data-edit-action="link" class="tiptap-btn px-2.5 py-1 rounded text-xs">Lien</button>
+            </div>
+            <div id="editEditor" class="tiptap-editor text-sm"></div>
         </div>
-        <textarea id="editMarkdown" class="input-dark md-editor w-full px-4 py-3 rounded-xl text-sm" placeholder="Modifiez le contenu en Markdown..."></textarea>
         <div class="flex items-center justify-between gap-2">
             <p class="text-white/40 text-xs">Astuce: Ctrl/Cmd + Entrée pour enregistrer.</p>
             <p id="editEditorMeta" class="editor-meta">0 mot • 0 caractère</p>
@@ -165,87 +178,44 @@ $csrfToken = $_SESSION['csrf_token'];
     </div>
 </div>
 
-<script>
+<script type="module">
+import { Editor } from 'https://esm.sh/@tiptap/core@2.11.5';
+import StarterKit from 'https://esm.sh/@tiptap/starter-kit@2.11.5';
+import Link from 'https://esm.sh/@tiptap/extension-link@2.11.5';
+
 const CSRF = <?= json_encode($csrfToken) ?>;
 const ANN_DATA = <?= json_encode(array_values($featured), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) ?>;
 const MAX_EDITOR_CHARS = 20000;
-const editInput = document.getElementById('editMarkdown');
+const editEditorRoot = document.getElementById('editEditor');
+
+const editEditor = new Editor({
+    element: editEditorRoot,
+    extensions: [
+        StarterKit.configure({
+            heading: { levels: [1, 2, 3] },
+        }),
+        Link.configure({
+            openOnClick: true,
+            autolink: true,
+            linkOnPaste: true,
+            protocols: ['http', 'https', 'mailto'],
+        }),
+    ],
+    content: '<p></p>',
+    editorProps: {
+        attributes: { class: 'focus:outline-none' },
+    },
+    onUpdate: () => {
+        updateEditMeta();
+        refreshEditToolbarState();
+    },
+    onSelectionUpdate: () => {
+        refreshEditToolbarState();
+    },
+});
 
 function escHtml(s) {
     return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function renderMarkdown(md) {
-    const lines = String(md || '').replace(/\r\n/g, '\n').split('\n');
-    const out = [];
-    let inUl = false;
-    let inOl = false;
-    let inCode = false;
-
-    const closeLists = () => {
-        if (inUl) { out.push('</ul>'); inUl = false; }
-        if (inOl) { out.push('</ol>'); inOl = false; }
-    };
-
-    const inline = (text) => {
-        let t = escHtml(text);
-        t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
-        t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-        t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-        t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-            const url = String(href || '').trim();
-            if (!/^(https?:\/\/|mailto:|\/|#)/i.test(url)) return label;
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline">${label}</a>`;
-        });
-        return t;
-    };
-
-    for (const line of lines) {
-        if (line.startsWith('```')) {
-            closeLists();
-            out.push(inCode ? '</code></pre>' : '<pre><code>');
-            inCode = !inCode;
-            continue;
-        }
-        if (inCode) {
-            out.push(`${escHtml(line)}\n`);
-            continue;
-        }
-        if (/^\s*$/.test(line)) {
-            closeLists();
-            continue;
-        }
-        const h = line.match(/^(#{1,3})\s+(.+)$/);
-        if (h) {
-            closeLists();
-            const level = h[1].length;
-            out.push(`<h${level} class="font-bold mt-2 mb-1">${inline(h[2])}</h${level}>`);
-            continue;
-        }
-        const ul = line.match(/^[-*]\s+(.+)$/);
-        if (ul) {
-            if (!inUl) { closeLists(); out.push('<ul class="list-disc pl-5">'); inUl = true; }
-            out.push(`<li>${inline(ul[1])}</li>`);
-            continue;
-        }
-        const ol = line.match(/^\d+\.\s+(.+)$/);
-        if (ol) {
-            if (!inOl) { closeLists(); out.push('<ol class="list-decimal pl-5">'); inOl = true; }
-            out.push(`<li>${inline(ol[1])}</li>`);
-            continue;
-        }
-        const bq = line.match(/^>\s+(.+)$/);
-        if (bq) {
-            closeLists();
-            out.push(`<blockquote>${inline(bq[1])}</blockquote>`);
-            continue;
-        }
-        closeLists();
-        out.push(`<p>${inline(line)}</p>`);
-    }
-    closeLists();
-    if (inCode) out.push('</code></pre>');
-    return out.join('');
 }
 
 function htmlToText(html) {
@@ -255,14 +225,29 @@ function htmlToText(html) {
 }
 
 function getEditorHtml() {
-    return renderMarkdown(editInput.value.trim());
+    return editEditor.getHTML();
+}
+
+function getEditorPlainText() {
+    return editEditor.getText({ blockSeparator: '\n' }).trim();
 }
 
 function getEditorStats() {
-    const text = editInput.value.replace(/\s+/g, ' ').trim();
+    const text = getEditorPlainText().replace(/\s+/g, ' ').trim();
     const chars = text.length;
     const words = text ? text.split(' ').length : 0;
     return { chars, words };
+}
+
+function refreshEditToolbarState() {
+    document.querySelectorAll('[data-edit-action]').forEach((btn) => btn.classList.remove('active'));
+    if (editEditor.isActive('bold')) document.querySelector('[data-edit-action="bold"]')?.classList.add('active');
+    if (editEditor.isActive('italic')) document.querySelector('[data-edit-action="italic"]')?.classList.add('active');
+    if (editEditor.isActive('heading', { level: 2 })) document.querySelector('[data-edit-action="h2"]')?.classList.add('active');
+    if (editEditor.isActive('bulletList')) document.querySelector('[data-edit-action="bullet"]')?.classList.add('active');
+    if (editEditor.isActive('blockquote')) document.querySelector('[data-edit-action="quote"]')?.classList.add('active');
+    if (editEditor.isActive('codeBlock')) document.querySelector('[data-edit-action="code"]')?.classList.add('active');
+    if (editEditor.isActive('link')) document.querySelector('[data-edit-action="link"]')?.classList.add('active');
 }
 
 function updateEditMeta() {
@@ -274,54 +259,23 @@ function updateEditMeta() {
     preview.innerHTML = getEditorHtml() || '<span class="text-white/35 italic">Aucun contenu</span>';
 }
 
-function editReplaceSelection(transformer) {
-    const start = editInput.selectionStart;
-    const end = editInput.selectionEnd;
-    const before = editInput.value.slice(0, start);
-    const selected = editInput.value.slice(start, end);
-    const after = editInput.value.slice(end);
-    const { text, cursorStart, cursorEnd } = transformer(selected);
-    editInput.value = before + text + after;
-    editInput.focus();
-    editInput.setSelectionRange(before.length + cursorStart, before.length + cursorEnd);
-    updateEditMeta();
-}
-
-function editWrapSelection(prefix, suffix) {
-    editReplaceSelection((selected) => {
-        const core = selected || 'texte';
-        return {
-            text: `${prefix}${core}${suffix}`,
-            cursorStart: prefix.length,
-            cursorEnd: prefix.length + core.length,
-        };
-    });
-}
-
-function editPrefixLines(prefix) {
-    editReplaceSelection((selected) => {
-        const core = selected || 'élément';
-        const lines = core.split('\n').map((l) => `${prefix}${l}`);
-        const text = lines.join('\n');
-        return { text, cursorStart: 0, cursorEnd: text.length };
-    });
-}
-
-function editInsertLink() {
-    editReplaceSelection((selected) => {
-        const label = selected || 'texte du lien';
-        const text = `[${label}](https://)`;
-        return { text, cursorStart: 1, cursorEnd: 1 + label.length };
-    });
-}
-
-function editInsertCodeBlock() {
-    editReplaceSelection((selected) => {
-        const core = selected || 'code ici';
-        const text = `\n\`\`\`\n${core}\n\`\`\`\n`;
-        return { text, cursorStart: 5, cursorEnd: 5 + core.length };
-    });
-}
+document.querySelector('[data-edit-action="bold"]')?.addEventListener('click', () => editEditor.chain().focus().toggleBold().run());
+document.querySelector('[data-edit-action="italic"]')?.addEventListener('click', () => editEditor.chain().focus().toggleItalic().run());
+document.querySelector('[data-edit-action="h2"]')?.addEventListener('click', () => editEditor.chain().focus().toggleHeading({ level: 2 }).run());
+document.querySelector('[data-edit-action="bullet"]')?.addEventListener('click', () => editEditor.chain().focus().toggleBulletList().run());
+document.querySelector('[data-edit-action="quote"]')?.addEventListener('click', () => editEditor.chain().focus().toggleBlockquote().run());
+document.querySelector('[data-edit-action="code"]')?.addEventListener('click', () => editEditor.chain().focus().toggleCodeBlock().run());
+document.querySelector('[data-edit-action="link"]')?.addEventListener('click', () => {
+    const previousUrl = editEditor.getAttributes('link').href || '';
+    const url = window.prompt('URL du lien', previousUrl || 'https://');
+    if (url === null) return;
+    const trimmed = String(url).trim();
+    if (trimmed === '') {
+        editEditor.chain().focus().unsetLink().run();
+        return;
+    }
+    editEditor.chain().focus().setLink({ href: trimmed }).run();
+});
 
 function esc(s) {
     return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -402,9 +356,18 @@ function renderAnnouncements() {
 
 async function apiFeatured(payload) {
     const res = await fetch('/save-featured.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     });
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try {
+        data = JSON.parse(raw);
+    } catch {
+        throw new Error('Réponse serveur invalide.');
+    }
     if (!res.ok) throw new Error(data.error || 'Erreur serveur');
     return data;
 }
@@ -418,9 +381,13 @@ function editAnn(id) {
     document.getElementById('editCategory').value = ann.category || 'general';
     document.getElementById('editStatusType').value = ann.status || 'published';
     document.getElementById('editColor').value = ann.color || '#3454d1';
-    editInput.value = ann.markdown_content || htmlToText(ann.html_content || '');
-    editInput.focus();
+    const htmlContent = String(ann.html_content || '').trim();
+    const fallbackText = ann.markdown_content || htmlToText(ann.html_content || '');
+    const fallbackHtml = `<p>${escHtml(fallbackText).replace(/\n/g, '<br>')}</p>`;
+    editEditor.commands.setContent(htmlContent !== '' ? htmlContent : fallbackHtml);
+    editEditor.commands.focus('end');
     updateEditMeta();
+    refreshEditToolbarState();
     document.getElementById('editStatus').classList.add('hidden');
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -435,7 +402,8 @@ async function submitEdit() {
     const statusEl = document.getElementById('editStatus');
     const btn = document.getElementById('editSubmitBtn');
     const id = document.getElementById('editId').value;
-    const markdownContent = editInput.value.trim();
+    const markdownContent = getEditorPlainText();
+    const htmlContent = getEditorHtml();
     if (markdownContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
     const stats = getEditorStats();
     if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu dépasse ${MAX_EDITOR_CHARS} caractères.`, 'error');
@@ -451,6 +419,7 @@ async function submitEdit() {
             status:document.getElementById('editStatusType').value,
             color:document.getElementById('editColor').value,
             markdown_content:markdownContent,
+            html_content:htmlContent,
         });
         const idx = ANN_DATA.findIndex(a => a.id === id);
         if (idx >= 0) ANN_DATA[idx] = data.announcement;
@@ -477,12 +446,16 @@ async function deleteAnn(id) {
     }
 }
 
+window.editAnn = editAnn;
+window.deleteAnn = deleteAnn;
+window.submitEdit = submitEdit;
+window.closeEdit = closeEdit;
+
 document.getElementById('sortMode').addEventListener('change', renderAnnouncements);
 document.getElementById('filterStatus').addEventListener('change', renderAnnouncements);
 document.getElementById('filterCategory').addEventListener('change', renderAnnouncements);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
-editInput.addEventListener('input', updateEditMeta);
-editInput.addEventListener('keydown', (e) => {
+editEditorRoot.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         submitEdit();
@@ -490,6 +463,8 @@ editInput.addEventListener('keydown', (e) => {
 });
 
 renderAnnouncements();
+updateEditMeta();
+refreshEditToolbarState();
 </script>
 </body>
 </html>
