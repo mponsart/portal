@@ -3,13 +3,18 @@ session_start();
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/db.php';
 
-use Google\Client;
-use Google\Service\Oauth2;
-
 $config = require __DIR__ . '/config.php';
 
 // Créer le client Google
-$client = new Client();
+$googleClientClass = 'Google\\Client';
+$googleOauth2Class = 'Google\\Service\\Oauth2';
+
+if (!class_exists($googleClientClass) || !class_exists($googleOauth2Class)) {
+    http_response_code(500);
+    exit('Dépendances Google manquantes. Exécutez composer install.');
+}
+
+$client = new $googleClientClass();
 $client->setClientId($config['google']['client_id']);
 $client->setClientSecret($config['google']['client_secret']);
 $client->setRedirectUri($config['google']['redirect_uri']);
@@ -31,7 +36,7 @@ try {
     $client->setAccessToken($token);
     
     // Récupérer les infos utilisateur
-    $oauth2 = new Oauth2($client);
+    $oauth2 = new $googleOauth2Class($client);
     $userInfo = $oauth2->userinfo->get();
     
     // Parser le nom

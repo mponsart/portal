@@ -2,7 +2,7 @@
 $user    = $_SESSION['user'];
 $config  = require __DIR__ . '/../config.php';
 $isAdmin = in_array($user['email'], $config['admins'] ?? [], true);
-if (!$isAdmin) { http_response_code(403); exit('Acces non autorise.'); }
+if (!$isAdmin) { http_response_code(403); exit('Accès non autorisé.'); }
 
 $currentPage = 'admin';
 
@@ -16,10 +16,8 @@ $csrfToken = $_SESSION['csrf_token'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nouvelle Actualite - Groupe Speed Cloud</title>
+    <title>Nouvelle actualité - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
@@ -39,24 +37,18 @@ $csrfToken = $_SESSION['csrf_token'];
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
         .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
-        .ql-toolbar { background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:12px 12px 0 0!important; }
-        .ql-container { background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.12)!important;border-top:none!important;border-radius:0 0 12px 12px!important;min-height:140px; }
-        .ql-editor { color:#e2e8f0!important;min-height:120px; }
-        .ql-editor.ql-blank::before { color:rgba(255,255,255,.25)!important;font-style:normal!important; }
-        .ql-snow .ql-stroke { stroke:#cbd5e1!important; }
-        .ql-snow .ql-fill { fill:#cbd5e1!important; }
-        .ql-snow .ql-picker { color:#cbd5e1!important; }
-        .ql-snow .ql-picker-options { background:#0f172a!important; border:1px solid rgba(255,255,255,.16)!important; }
-        .ql-snow .ql-tooltip { background:#0f172a!important; color:#e2e8f0!important; border:1px solid rgba(255,255,255,.16)!important; box-shadow:none!important; }
-        .ql-snow .ql-tooltip input[type=text] { color:#e2e8f0!important; border:1px solid rgba(255,255,255,.16)!important; background:rgba(255,255,255,.06)!important; }
-        .ql-editor p, .ql-editor ul, .ql-editor ol, .ql-editor blockquote, .ql-editor pre { margin-bottom:.55rem; }
-        .ql-editor h1, .ql-editor h2, .ql-editor h3 { font-weight:700; margin:.4rem 0 .65rem; }
-        .ql-editor a { color:#7dd3fc; text-decoration:underline; }
-        .ql-editor blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; }
-        .ql-editor pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; }
+        .md-editor { min-height:220px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace; }
+        .md-toolbar { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); }
+        .md-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:#e2e8f0; }
+        .md-btn:hover { background:rgba(255,255,255,.15); }
         .preview-box { border:1px dashed rgba(255,255,255,.18); background:rgba(255,255,255,.04); }
         .editor-meta { color:rgba(226,232,240,.65); font-size:.75rem; }
         .editor-meta.warn { color:#fda4af; }
+        .md-preview p { margin:.4rem 0; }
+        .md-preview ul, .md-preview ol { margin:.4rem 0 .4rem 1.2rem; }
+        .md-preview blockquote { border-left:3px solid rgba(148,163,184,.45); padding-left:.75rem; color:#cbd5e1; margin:.4rem 0; }
+        .md-preview pre { background:rgba(2,6,23,.8); color:#e2e8f0; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.6rem .75rem; overflow:auto; }
+        .md-preview code { background:rgba(255,255,255,.08); padding:0 .25rem; border-radius:.25rem; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -66,12 +58,12 @@ $csrfToken = $_SESSION['csrf_token'];
 <main class="page-stack relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
     <section class="glass rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold">➕ Nouvelle actualite</h1>
-            <p class="text-white/45 text-sm">Creation d'une actualite dans une page dediee.</p>
-            <p class="crumb mt-1">Admin / Actualites / Nouvelle</p>
+            <h1 class="text-xl sm:text-2xl font-bold">➕ Nouvelle actualité</h1>
+            <p class="text-white/45 text-sm">Création d'une actualité dans une page dédiée.</p>
+            <p class="crumb mt-1">Admin / Actualités / Nouvelle</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a href="/admin-news.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Retour aux actualites</a>
+            <a href="/admin-news.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Retour aux actualités</a>
         </div>
     </section>
 
@@ -86,9 +78,9 @@ $csrfToken = $_SESSION['csrf_token'];
 
             <div class="grid sm:grid-cols-2 gap-2">
                 <select id="addCategory" class="input-dark w-full px-3 py-2.5 rounded-xl text-sm">
-                    <option value="general">General</option>
+                    <option value="general">Général</option>
                     <option value="info">Info</option>
-                    <option value="event">Evenement</option>
+                    <option value="event">Événement</option>
                     <option value="urgent">Urgent</option>
                 </select>
                 <select id="addStatusType" class="input-dark w-full px-3 py-2.5 rounded-xl text-sm">
@@ -107,17 +99,25 @@ $csrfToken = $_SESSION['csrf_token'];
                 </div>
             </div>
 
-            <div id="addEditor"></div>
+            <div class="md-toolbar rounded-xl p-2 flex flex-wrap items-center gap-1.5">
+                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="wrapSelection('**', '**')"><strong>Gras</strong></button>
+                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="wrapSelection('*', '*')"><em>Italique</em></button>
+                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="prefixLines('- ')">Liste</button>
+                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="prefixLines('> ')">Citation</button>
+                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="insertLink()">Lien</button>
+                <button type="button" class="md-btn px-2.5 py-1 rounded text-xs" onclick="insertCodeBlock()">Code</button>
+            </div>
+            <textarea id="addMarkdown" class="input-dark md-editor w-full px-4 py-3 rounded-xl text-sm" placeholder="Rédigez votre actualité en Markdown..."></textarea>
             <div class="flex items-center justify-between gap-2">
                 <p class="text-white/40 text-xs">Astuce: Ctrl/Cmd + Entrée pour enregistrer rapidement.</p>
-                <p id="addEditorMeta" class="editor-meta">0 mot • 0 caractere</p>
+                <p id="addEditorMeta" class="editor-meta">0 mot • 0 caractère</p>
             </div>
 
             <div class="preview-box rounded-2xl p-3">
-                <p class="text-white/45 text-[11px] uppercase tracking-[.14em] mb-2">Apercu article</p>
+                <p class="text-white/45 text-[11px] uppercase tracking-[.14em] mb-2">Aperçu article</p>
                 <p class="text-sm font-semibold"><span id="addPrevEmoji">📢</span> <span id="addPrevTitle">Titre</span></p>
-                <p class="text-white/35 text-xs" id="addPrevMeta">Publie</p>
-                <div id="addPrevBody" class="text-white/70 text-sm mt-2"></div>
+                <p class="text-white/35 text-xs" id="addPrevMeta">Publié</p>
+                <div id="addPrevBody" class="text-white/70 text-sm mt-2 md-preview"></div>
             </div>
 
             <button class="w-full py-2.5 rounded-xl text-sm font-semibold btn-primary">Enregistrer</button>
@@ -127,33 +127,144 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <script>
 const CSRF = <?= json_encode($csrfToken) ?>;
-const MAX_EDITOR_CHARS = 5000;
+const MAX_EDITOR_CHARS = 20000;
+const mdInput = document.getElementById('addMarkdown');
 
-const quillAdd = new Quill('#addEditor', {
-    theme: 'snow',
-    placeholder: 'Redigez votre actualite...',
-    modules: {
-        toolbar: [
-            [{ header: [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ list:'ordered' }, { list:'bullet' }, { indent:'-1' }, { indent:'+1' }],
-            ['blockquote', 'code-block', 'link'],
-            ['clean']
-        ],
-        history: { delay: 500, maxStack: 100, userOnly: true }
-    }
-});
-
-function getEditorHtml(editor) {
-    const html = editor.root.innerHTML || '';
-    return html.replace(/<p><br><\/p>/g, '').trim();
+function escHtml(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function getEditorStats(editor) {
-    const text = editor.getText().replace(/\s+/g, ' ').trim();
+function renderMarkdown(md) {
+    const lines = String(md || '').replace(/\r\n/g, '\n').split('\n');
+    const out = [];
+    let inUl = false;
+    let inOl = false;
+    let inCode = false;
+
+    const closeLists = () => {
+        if (inUl) { out.push('</ul>'); inUl = false; }
+        if (inOl) { out.push('</ol>'); inOl = false; }
+    };
+
+    const inline = (text) => {
+        let t = escHtml(text);
+        t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+        t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+            const url = String(href || '').trim();
+            if (!/^(https?:\/\/|mailto:|\/|#)/i.test(url)) return label;
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline">${label}</a>`;
+        });
+        return t;
+    };
+
+    for (const line of lines) {
+        if (line.startsWith('```')) {
+            closeLists();
+            out.push(inCode ? '</code></pre>' : '<pre><code>');
+            inCode = !inCode;
+            continue;
+        }
+        if (inCode) {
+            out.push(`${escHtml(line)}\n`);
+            continue;
+        }
+        if (/^\s*$/.test(line)) {
+            closeLists();
+            continue;
+        }
+        const h = line.match(/^(#{1,3})\s+(.+)$/);
+        if (h) {
+            closeLists();
+            const level = h[1].length;
+            out.push(`<h${level} class="font-bold mt-2 mb-1">${inline(h[2])}</h${level}>`);
+            continue;
+        }
+        const ul = line.match(/^[-*]\s+(.+)$/);
+        if (ul) {
+            if (!inUl) { closeLists(); out.push('<ul class="list-disc pl-5">'); inUl = true; }
+            out.push(`<li>${inline(ul[1])}</li>`);
+            continue;
+        }
+        const ol = line.match(/^\d+\.\s+(.+)$/);
+        if (ol) {
+            if (!inOl) { closeLists(); out.push('<ol class="list-decimal pl-5">'); inOl = true; }
+            out.push(`<li>${inline(ol[1])}</li>`);
+            continue;
+        }
+        const bq = line.match(/^>\s+(.+)$/);
+        if (bq) {
+            closeLists();
+            out.push(`<blockquote>${inline(bq[1])}</blockquote>`);
+            continue;
+        }
+        closeLists();
+        out.push(`<p>${inline(line)}</p>`);
+    }
+    closeLists();
+    if (inCode) out.push('</code></pre>');
+    return out.join('');
+}
+
+function getEditorHtml() {
+    return renderMarkdown(mdInput.value.trim());
+}
+
+function getEditorStats() {
+    const text = mdInput.value.replace(/\s+/g, ' ').trim();
     const chars = text.length;
     const words = text ? text.split(' ').length : 0;
     return { chars, words };
+}
+
+function replaceSelection(transformer) {
+    const start = mdInput.selectionStart;
+    const end = mdInput.selectionEnd;
+    const before = mdInput.value.slice(0, start);
+    const selected = mdInput.value.slice(start, end);
+    const after = mdInput.value.slice(end);
+    const { text, cursorStart, cursorEnd } = transformer(selected);
+    mdInput.value = before + text + after;
+    mdInput.focus();
+    mdInput.setSelectionRange(before.length + cursorStart, before.length + cursorEnd);
+    updateAddPreview();
+}
+
+function wrapSelection(prefix, suffix) {
+    replaceSelection((selected) => {
+        const core = selected || 'texte';
+        return {
+            text: `${prefix}${core}${suffix}`,
+            cursorStart: prefix.length,
+            cursorEnd: prefix.length + core.length,
+        };
+    });
+}
+
+function prefixLines(prefix) {
+    replaceSelection((selected) => {
+        const core = selected || 'élément';
+        const lines = core.split('\n').map((l) => `${prefix}${l}`);
+        const text = lines.join('\n');
+        return { text, cursorStart: 0, cursorEnd: text.length };
+    });
+}
+
+function insertLink() {
+    replaceSelection((selected) => {
+        const label = selected || 'texte du lien';
+        const text = `[${label}](https://)`;
+        return { text, cursorStart: 1, cursorEnd: 1 + label.length };
+    });
+}
+
+function insertCodeBlock() {
+    replaceSelection((selected) => {
+        const core = selected || 'code ici';
+        const text = `\n\`\`\`\n${core}\n\`\`\`\n`;
+        return { text, cursorStart: 5, cursorEnd: 5 + core.length };
+    });
 }
 
 function showStatus(el, msg, type) {
@@ -166,15 +277,15 @@ function showStatus(el, msg, type) {
 function updateAddPreview() {
     const emoji = document.getElementById('addEmoji').value.trim() || '📢';
     const title = document.getElementById('addTitle').value.trim() || 'Titre';
-    const status = document.getElementById('addStatusType').value === 'draft' ? 'Brouillon' : 'Publie';
+    const status = document.getElementById('addStatusType').value === 'draft' ? 'Brouillon' : 'Publié';
     document.getElementById('addPrevEmoji').textContent = emoji;
     document.getElementById('addPrevTitle').textContent = title;
     document.getElementById('addPrevMeta').textContent = status;
-    document.getElementById('addPrevBody').innerHTML = getEditorHtml(quillAdd);
+    document.getElementById('addPrevBody').innerHTML = getEditorHtml();
 
     const meta = document.getElementById('addEditorMeta');
-    const stats = getEditorStats(quillAdd);
-    meta.textContent = `${stats.words} mot${stats.words > 1 ? 's' : ''} • ${stats.chars}/${MAX_EDITOR_CHARS} caracteres`;
+    const stats = getEditorStats();
+    meta.textContent = `${stats.words} mot${stats.words > 1 ? 's' : ''} • ${stats.chars}/${MAX_EDITOR_CHARS} caractères`;
     meta.classList.toggle('warn', stats.chars > MAX_EDITOR_CHARS);
 }
 
@@ -191,10 +302,10 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const statusEl = document.getElementById('addStatus');
     const btn = e.target.querySelector('button[type="submit"]');
-    const htmlContent = getEditorHtml(quillAdd);
-    if (quillAdd.getText().trim() === '' || htmlContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
-    const stats = getEditorStats(quillAdd);
-    if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu depasse ${MAX_EDITOR_CHARS} caracteres.`, 'error');
+    const markdownContent = mdInput.value.trim();
+    if (markdownContent === '') return showStatus(statusEl, 'Le contenu est obligatoire.', 'error');
+    const stats = getEditorStats();
+    if (stats.chars > MAX_EDITOR_CHARS) return showStatus(statusEl, `Le contenu dépasse ${MAX_EDITOR_CHARS} caractères.`, 'error');
 
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
@@ -206,11 +317,11 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
             category:document.getElementById('addCategory').value,
             status:document.getElementById('addStatusType').value,
             color:document.getElementById('addColor').value,
-            html_content:htmlContent,
+            markdown_content:markdownContent,
         });
-        showStatus(statusEl, data.announcement.status === 'draft' ? 'Brouillon enregistre.' : 'Actualite publiee.', 'success');
+        showStatus(statusEl, data.announcement.status === 'draft' ? 'Brouillon enregistré.' : 'Actualité publiée.', 'success');
         e.target.reset();
-        quillAdd.setContents([]);
+        mdInput.value = '';
         document.getElementById('addEmoji').value = '📢';
         document.getElementById('addColor').value = '#3454d1';
         document.getElementById('addStatusType').value = 'published';
@@ -223,11 +334,11 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     }
 });
 
-quillAdd.on('text-change', updateAddPreview);
+mdInput.addEventListener('input', updateAddPreview);
 document.getElementById('addEmoji').addEventListener('input', updateAddPreview);
 document.getElementById('addTitle').addEventListener('input', updateAddPreview);
 document.getElementById('addStatusType').addEventListener('change', updateAddPreview);
-quillAdd.root.addEventListener('keydown', (e) => {
+mdInput.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         document.getElementById('addForm').requestSubmit();

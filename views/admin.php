@@ -240,7 +240,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                         <span id="addPreviewEmoji" class="text-lg leading-none select-none">📢</span>
                         <div class="min-w-0">
                             <p id="addPreviewTitle" class="preview-title">Titre de l'actualité</p>
-                            <p id="addPreviewMeta" class="preview-body">Publie · apercu instantane</p>
+                            <p id="addPreviewMeta" class="preview-body">Publié · aperçu instantané</p>
                             <div id="addPreviewArticle" class="preview-body article-preview mt-1">Votre contenu s'affichera ici...</div>
                         </div>
                     </div>
@@ -270,15 +270,15 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                 <span class="text-white/55 text-xs">Filtre</span>
                 <select id="filterStatus" class="px-2.5 py-1.5 rounded-lg bg-white/8 border border-white/12 text-white text-xs">
                     <option value="all" class="bg-gray-900">Tous</option>
-                    <option value="published" class="bg-gray-900">Publie</option>
+                    <option value="published" class="bg-gray-900">Publié</option>
                     <option value="draft" class="bg-gray-900">Brouillon</option>
                 </select>
                 <select id="filterCategory" class="px-2.5 py-1.5 rounded-lg bg-white/8 border border-white/12 text-white text-xs">
-                    <option value="all" class="bg-gray-900">Toutes categories</option>
+                    <option value="all" class="bg-gray-900">Toutes catégories</option>
                     <option value="urgent" class="bg-gray-900">Urgent</option>
-                    <option value="event" class="bg-gray-900">Evenement</option>
+                    <option value="event" class="bg-gray-900">Événement</option>
                     <option value="info" class="bg-gray-900">Info</option>
-                    <option value="general" class="bg-gray-900">General</option>
+                    <option value="general" class="bg-gray-900">Général</option>
                 </select>
             </div>
 
@@ -298,7 +298,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                     $annUpdated = htmlspecialchars($ann['updated_at']     ?? '');
                     $badgeCls   = $catBadge[$annCat] ?? $catBadge['general'];
                     $catLabel   = $catLabels[$annCat] ?? 'Général';
-                    $statusLabel = $annStatus === 'draft' ? 'Brouillon' : 'Publie';
+                    $statusLabel = $annStatus === 'draft' ? 'Brouillon' : 'Publié';
                     $statusCls = $annStatus === 'draft' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300';
                 ?>
                 <div id="ann-<?= $annId ?>"
@@ -392,7 +392,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         </select>
         <select id="editStatusType"
                 class="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/12 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand transition cursor-pointer">
-            <option value="published" class="bg-gray-900">✅ Publie</option>
+                    <option value="published" class="bg-gray-900">✅ Publié</option>
             <option value="draft" class="bg-gray-900">📝 Brouillon</option>
         </select>
         <div class="flex flex-wrap gap-1.5">
@@ -422,7 +422,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                 <span id="editPreviewEmoji" class="text-lg leading-none select-none">📢</span>
                 <div class="min-w-0">
                     <p id="editPreviewTitle" class="preview-title">Titre de l'actualité</p>
-                    <p id="editPreviewMeta" class="preview-body">Publie · apercu instantane</p>
+                    <p id="editPreviewMeta" class="preview-body">Publié · aperçu instantané</p>
                     <div id="editPreviewArticle" class="preview-body article-preview mt-1">Le contenu modifié apparaîtra ici...</div>
                 </div>
             </div>
@@ -483,22 +483,22 @@ function stripHtml(html) {
 function updateAddPreview() {
     const emoji = document.getElementById('addEmoji').value.trim() || '📢';
     const title = document.getElementById('addTitle').value.trim() || 'Titre de l\'actualité';
-    const status = document.getElementById('addStatusType').value === 'draft' ? 'Brouillon' : 'Publie';
+    const status = document.getElementById('addStatusType').value === 'draft' ? 'Brouillon' : 'Publié';
     const html = quillAdd.root.innerHTML;
     document.getElementById('addPreviewEmoji').textContent = emoji;
     document.getElementById('addPreviewTitle').textContent = title;
-    document.getElementById('addPreviewMeta').textContent = status + ' · apercu instantane';
+    document.getElementById('addPreviewMeta').textContent = status + ' · aperçu instantané';
     document.getElementById('addPreviewArticle').innerHTML = stripHtml(html) ? html : 'Votre contenu s\'affichera ici...';
 }
 
 function updateEditPreview() {
     const emoji = document.getElementById('editEmoji').value.trim() || '📢';
     const title = document.getElementById('editTitle').value.trim() || 'Titre de l\'actualité';
-    const status = document.getElementById('editStatusType').value === 'draft' ? 'Brouillon' : 'Publie';
+    const status = document.getElementById('editStatusType').value === 'draft' ? 'Brouillon' : 'Publié';
     const html = quillEdit.root.innerHTML;
     document.getElementById('editPreviewEmoji').textContent = emoji;
     document.getElementById('editPreviewTitle').textContent = title;
-    document.getElementById('editPreviewMeta').textContent = status + ' · apercu instantane';
+    document.getElementById('editPreviewMeta').textContent = status + ' · aperçu instantané';
     document.getElementById('editPreviewArticle').innerHTML = stripHtml(html) ? html : 'Le contenu modifié apparaîtra ici...';
 }
 
@@ -599,7 +599,7 @@ function buildCard(ann) {
                     <div class="flex items-center gap-2 flex-wrap mb-1">
                         ${titleH}
                         <span class="text-xs px-2 py-0.5 rounded-full font-medium ${badge}">${label}</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full font-medium ${(ann.status === 'draft') ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}">${(ann.status === 'draft') ? 'Brouillon' : 'Publie'}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium ${(ann.status === 'draft') ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}">${(ann.status === 'draft') ? 'Brouillon' : 'Publié'}</span>
                     </div>
                     <div class="text-white/50 text-xs leading-relaxed line-clamp-2">
                         ${esc(ann.html_content.replace(/<[^>]+>/g,''))}

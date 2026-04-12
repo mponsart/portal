@@ -2,7 +2,7 @@
 $user    = $_SESSION['user'];
 $config  = require __DIR__ . '/../config.php';
 $isAdmin = in_array($user['email'], $config['admins'] ?? [], true);
-if (!$isAdmin) { http_response_code(403); exit('Acces non autorise.'); }
+if (!$isAdmin) { http_response_code(403); exit('Accès non autorisé.'); }
 
 $currentPage = 'admin';
 $appsFile = __DIR__ . '/../uploads/apps.json';

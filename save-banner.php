@@ -2,13 +2,13 @@
 session_start();
 header('Content-Type: application/json');
 
-function jsonError(string $msg, int $code = 400): never {
+function jsonError(string $msg, int $code = 400): void {
     http_response_code($code);
     echo json_encode(['error' => $msg]);
     exit;
 }
 
-function jsonOk(array $payload): never {
+function jsonOk(array $payload): void {
     http_response_code(200);
     echo json_encode($payload);
     exit;

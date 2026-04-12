@@ -104,7 +104,7 @@ $catBadge  = [
     </section>
     <?php else:
         $annEmoji = htmlspecialchars($article['emoji'] ?? '📢');
-        $annTitle = htmlspecialchars($article['title'] ?? 'Actualite');
+        $annTitle = htmlspecialchars($article['title'] ?? 'Actualité');
         $annCat   = $article['category'] ?? 'general';
         $annDate  = htmlspecialchars($article['created_at'] ?? ($article['pinned_at'] ?? ''));
         $annHtml  = $article['html_content'] ?? nl2br(htmlspecialchars($article['content'] ?? ''));
@@ -116,7 +116,7 @@ $catBadge  = [
         <div class="flex items-start gap-4 mb-5">
             <span class="text-4xl leading-none select-none"><?= $annEmoji ?></span>
             <div class="min-w-0">
-                <h1 class="text-2xl sm:text-3xl font-bold leading-tight text-white"><?= $annTitle !== '' ? $annTitle : 'Actualite' ?></h1>
+                <h1 class="text-2xl sm:text-3xl font-bold leading-tight text-white"><?= $annTitle !== '' ? $annTitle : 'Actualité' ?></h1>
                 <div class="flex items-center gap-2 mt-2">
                     <span class="text-xs px-2 py-0.5 rounded-full font-medium"
                           style="background:<?= $badge['bg'] ?>; color:<?= $badge['color'] ?>;">

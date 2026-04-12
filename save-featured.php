@@ -7,13 +7,13 @@
 session_start();
 header('Content-Type: application/json');
 
-function jsonError(string $msg, int $code = 400): never {
+function jsonError(string $msg, int $code = 400): void {
     http_response_code($code);
     echo json_encode(['error' => $msg]);
     exit;
 }
 
-function jsonOk(array $payload): never {
+function jsonOk(array $payload): void {
     http_response_code(200);
     echo json_encode($payload);
     exit;
@@ -57,58 +57,133 @@ function saveFile(string $path, array $data): void {
     }
 }
 
-function sanitizeHtml(string $html): string {
-    // Balises autorisées pour le texte riche (Quill)
-    $allowed = '<p><br><strong><em><u><s><ul><ol><li><h1><h2><h3><blockquote><a><pre><code><span>';
-    $clean = strip_tags($html, $allowed);
+function markdownInlineToSafeHtml(string $text): string {
+    $escaped = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
-    // Supprimer les attributs inline dangereux
-    $clean = preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean);
-    $clean = preg_replace('/\s+style\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean);
+    $stash = [];
+    $escaped = preg_replace_callback('/`([^`\n]+)`/', static function (array $m) use (&$stash): string {
+        $idx = count($stash);
+        $stash[] = '<code>' . $m[1] . '</code>';
+        return "\x02{$idx}\x03";
+    }, $escaped) ?? $escaped;
 
-    // Sécuriser les href des liens
-    $clean = preg_replace_callback(
-        '/<a\b([^>]*)>/i',
-        static function (array $matches): string {
-            $attrs = $matches[1] ?? '';
-            if (!preg_match('/href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $attrs, $hrefMatch)) {
-                return '<a>';
+    $escaped = preg_replace_callback('/\[([^\]]+)\]\(([^)]+)\)/', static function (array $m): string {
+        $label = $m[1];
+        $href = trim(html_entity_decode($m[2], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if (!preg_match('#^(https?://|mailto:|/|#)#i', $href)) {
+            return $label;
+        }
+        $safeHref = htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return '<a href="' . $safeHref . '" target="_blank" rel="noopener noreferrer">' . $label . '</a>';
+    }, $escaped) ?? $escaped;
+
+    $escaped = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $escaped) ?? $escaped;
+    $escaped = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $escaped) ?? $escaped;
+
+    $escaped = preg_replace_callback('/\x02(\d+)\x03/', static function (array $m) use ($stash): string {
+        $i = (int)$m[1];
+        return $stash[$i] ?? '';
+    }, $escaped) ?? $escaped;
+
+    return $escaped;
+}
+
+function markdownToSafeHtml(string $markdown): string {
+    $lines = preg_split('/\r\n|\r|\n/', $markdown) ?: [];
+    $html = [];
+    $inUl = false;
+    $inOl = false;
+    $inCode = false;
+
+    $closeLists = static function () use (&$html, &$inUl, &$inOl): void {
+        if ($inUl) {
+            $html[] = '</ul>';
+            $inUl = false;
+        }
+        if ($inOl) {
+            $html[] = '</ol>';
+            $inOl = false;
+        }
+    };
+
+    foreach ($lines as $line) {
+        $line = rtrim($line, "\t ");
+
+        if (str_starts_with($line, '```')) {
+            $closeLists();
+            $html[] = $inCode ? '</code></pre>' : '<pre><code>';
+            $inCode = !$inCode;
+            continue;
+        }
+
+        if ($inCode) {
+            $html[] = htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "\n";
+            continue;
+        }
+
+        if (trim($line) === '') {
+            $closeLists();
+            continue;
+        }
+
+        if (preg_match('/^(#{1,3})\s+(.+)$/u', $line, $m) === 1) {
+            $closeLists();
+            $level = strlen($m[1]);
+            $html[] = '<h' . $level . '>' . markdownInlineToSafeHtml($m[2]) . '</h' . $level . '>';
+            continue;
+        }
+
+        if (preg_match('/^[-*]\s+(.+)$/u', $line, $m) === 1) {
+            if (!$inUl) {
+                $closeLists();
+                $html[] = '<ul>';
+                $inUl = true;
             }
+            $html[] = '<li>' . markdownInlineToSafeHtml($m[1]) . '</li>';
+            continue;
+        }
 
-            $href = $hrefMatch[2] ?: ($hrefMatch[3] ?: ($hrefMatch[4] ?? ''));
-            $href = trim($href);
-            if ($href === '') {
-                return '<a>';
+        if (preg_match('/^\d+\.\s+(.+)$/u', $line, $m) === 1) {
+            if (!$inOl) {
+                $closeLists();
+                $html[] = '<ol>';
+                $inOl = true;
             }
+            $html[] = '<li>' . markdownInlineToSafeHtml($m[1]) . '</li>';
+            continue;
+        }
 
-            $lowerHref = strtolower($href);
-            $allowedSchemes = ['http://', 'https://', 'mailto:', '/', '#'];
-            $isAllowed = false;
-            foreach ($allowedSchemes as $scheme) {
-                if (str_starts_with($lowerHref, $scheme)) {
-                    $isAllowed = true;
-                    break;
-                }
-            }
+        if (preg_match('/^>\s+(.+)$/u', $line, $m) === 1) {
+            $closeLists();
+            $html[] = '<blockquote>' . markdownInlineToSafeHtml($m[1]) . '</blockquote>';
+            continue;
+        }
 
-            if (!$isAllowed) {
-                return '<a>';
-            }
+        $closeLists();
+        $html[] = '<p>' . markdownInlineToSafeHtml($line) . '</p>';
+    }
 
-            $safeHref = htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            return '<a href="' . $safeHref . '" target="_blank" rel="noopener noreferrer">';
-        },
-        $clean
-    );
+    $closeLists();
+    if ($inCode) {
+        $html[] = '</code></pre>';
+    }
 
-    return $clean;
+    return implode('', $html);
+}
+
+function htmlToText(string $html): string {
+    return trim(preg_replace('/\s+/u', ' ', strip_tags($html)) ?? '');
 }
 
 $action = $body['action'] ?? '';
 
 // ── ADD ───────────────────────────────────────────────────────────────────────
 if ($action === 'add') {
-    $htmlContent = trim((string)($body['html_content'] ?? ''));
+    $markdownContent = trim((string)($body['markdown_content'] ?? ''));
+    if ($markdownContent === '' && isset($body['html_content'])) {
+        $markdownContent = htmlToText((string)$body['html_content']);
+    }
+    $htmlContent = markdownToSafeHtml($markdownContent);
     $plainText   = trim(strip_tags($htmlContent));
     if ($plainText === '') jsonError('Le contenu est obligatoire.');
 
@@ -131,7 +206,8 @@ if ($action === 'add') {
         'id'           => bin2hex(random_bytes(8)),
         'emoji'        => $emoji ?: '📢',
         'title'        => $title,
-        'html_content' => sanitizeHtml($htmlContent),
+        'markdown_content' => $markdownContent,
+        'html_content' => $htmlContent,
         'color'        => $color,
         'category'     => $category,
         'status'       => $status,
@@ -157,7 +233,11 @@ if ($action === 'update') {
     }
     if ($idx === null) jsonError('Annonce introuvable.', 404);
 
-    $htmlContent = trim((string)($body['html_content'] ?? ''));
+    $markdownContent = trim((string)($body['markdown_content'] ?? ($featured[$idx]['markdown_content'] ?? '')));
+    if ($markdownContent === '' && isset($body['html_content'])) {
+        $markdownContent = htmlToText((string)$body['html_content']);
+    }
+    $htmlContent = markdownToSafeHtml($markdownContent);
     $plainText   = trim(strip_tags($htmlContent));
     if ($plainText === '') jsonError('Le contenu est obligatoire.');
 
@@ -174,7 +254,8 @@ if ($action === 'update') {
     $featured[$idx] = array_merge($featured[$idx], [
         'emoji'        => mb_substr(trim((string)($body['emoji'] ?? $featured[$idx]['emoji'] ?? '📢')), 0, 4),
         'title'        => mb_substr(trim((string)($body['title'] ?? $featured[$idx]['title'] ?? '')), 0, 200),
-        'html_content' => sanitizeHtml($htmlContent),
+        'markdown_content' => $markdownContent,
+        'html_content' => $htmlContent,
         'color'        => $color,
         'category'     => $category,
         'status'       => $status,
