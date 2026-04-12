@@ -12,7 +12,7 @@ if (isset($_SESSION['user'])) {
     exit;
 }
 
-// Créer le client Google
+// Non connecté → redirection immédiate vers Google
 $client = new Client();
 $client->setClientId($config['google']['client_id']);
 $client->setClientSecret($config['google']['client_secret']);
@@ -20,8 +20,8 @@ $client->setRedirectUri($config['google']['redirect_uri']);
 $client->addScope('email');
 $client->addScope('profile');
 
-$authUrl = $client->createAuthUrl();
-?>
+header('Location: ' . $client->createAuthUrl());
+exit;
 <!DOCTYPE html>
 <html lang="fr">
 <head>
