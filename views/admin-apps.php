@@ -48,7 +48,7 @@ function normalizeUrl(string $url): string {
 
 function normalizeIcon(string $icon): string {
     $icon = trim($icon);
-    $allowed = ['gmail','drive','calendar','meet','docs','sheets','slides','youtube','discord','github','notion','figma','link'];
+    $allowed = ['youtube','discord','github','notion','figma','link'];
     return in_array($icon, $allowed, true) ? $icon : 'link';
 }
 
@@ -75,6 +75,7 @@ function appEmoji(string $icon): string {
 }
 
 $apps = readJsonArray($appsFile, $defaultApps);
+$workspaceIcons = ['gmail','drive','calendar','meet','docs','sheets','slides'];
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -173,7 +174,6 @@ unset($_SESSION['admin_apps_flash']);
             <a href="/admin-banners.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>
             <a href="/admin-status.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📡 Sites</a>
             <a href="/admin-apps.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">🧩 Applications</a>
-            <a href="/admin-workspace.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏢 Workspace</a>
         </div>
     </section>
 
@@ -193,13 +193,6 @@ unset($_SESSION['admin_apps_flash']);
             <input type="text" name="emoji" maxlength="8" placeholder="Emoji (ex: 🚀)" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
             <select name="icon" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                 <option value="link">🔗 Lien</option>
-                <option value="gmail">📧 Gmail</option>
-                <option value="drive">💾 Drive</option>
-                <option value="calendar">📅 Agenda</option>
-                <option value="meet">🎥 Meet</option>
-                <option value="docs">📄 Docs</option>
-                <option value="sheets">📊 Sheets</option>
-                <option value="slides">🖼️ Slides</option>
                 <option value="youtube">▶️ YouTube</option>
                 <option value="discord">💬 Discord</option>
                 <option value="github">🐙 GitHub</option>
@@ -215,6 +208,7 @@ unset($_SESSION['admin_apps_flash']);
                 $url = trim((string)($app['url'] ?? ''));
                 $icon = normalizeIcon((string)($app['icon'] ?? 'link'));
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
+                if (in_array(strtolower(trim((string)($app['icon'] ?? ''))), $workspaceIcons, true)) continue;
             ?>
             <div class="card rounded-lg bg-white/[0.03] border border-white/10 p-2">
                 <form method="post" class="grid sm:grid-cols-7 gap-2">
@@ -226,13 +220,6 @@ unset($_SESSION['admin_apps_flash']);
                     <input type="text" name="emoji" maxlength="8" value="<?= htmlspecialchars($emoji) ?>" placeholder="Emoji" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                     <select name="icon" class="sm:col-span-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                         <option value="link" <?= $icon === 'link' ? 'selected' : '' ?>>🔗 Lien</option>
-                        <option value="gmail" <?= $icon === 'gmail' ? 'selected' : '' ?>>📧 Gmail</option>
-                        <option value="drive" <?= $icon === 'drive' ? 'selected' : '' ?>>💾 Drive</option>
-                        <option value="calendar" <?= $icon === 'calendar' ? 'selected' : '' ?>>📅 Agenda</option>
-                        <option value="meet" <?= $icon === 'meet' ? 'selected' : '' ?>>🎥 Meet</option>
-                        <option value="docs" <?= $icon === 'docs' ? 'selected' : '' ?>>📄 Docs</option>
-                        <option value="sheets" <?= $icon === 'sheets' ? 'selected' : '' ?>>📊 Sheets</option>
-                        <option value="slides" <?= $icon === 'slides' ? 'selected' : '' ?>>🖼️ Slides</option>
                         <option value="youtube" <?= $icon === 'youtube' ? 'selected' : '' ?>>▶️ YouTube</option>
                         <option value="discord" <?= $icon === 'discord' ? 'selected' : '' ?>>💬 Discord</option>
                         <option value="github" <?= $icon === 'github' ? 'selected' : '' ?>>🐙 GitHub</option>

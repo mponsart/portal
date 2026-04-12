@@ -176,6 +176,12 @@ function savePingCache(string $path, array $payload): void {
 
 $sites = readJsonArray($sitesFile, $defaultSites);
 $apps = readJsonArray($appsFile, $defaultApps);
+$workspaceIcons = ['gmail','drive','calendar','meet','docs','sheets','slides'];
+
+$apps = array_values(array_filter($apps, function ($app) use ($workspaceIcons) {
+    $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
+    return !in_array($icon, $workspaceIcons, true);
+}));
 
 $bannerFile = __DIR__ . '/../uploads/banners.json';
 $activeBanner = null;

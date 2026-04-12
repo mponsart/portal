@@ -27,7 +27,7 @@ if (file_exists($bannerFile)) {
 
 // Applications
 $appsFile = __DIR__ . '/../uploads/apps.json';
-$defaultApps = $config['portal']['apps'] ?? [
+$workspaceApps = [
     ['name' => 'Gmail',       'url' => 'https://mail.google.com',     'icon' => 'gmail'],
     ['name' => 'Drive',       'url' => 'https://drive.google.com',    'icon' => 'drive'],
     ['name' => 'Agenda',      'url' => 'https://calendar.google.com', 'icon' => 'calendar'],
@@ -35,6 +35,9 @@ $defaultApps = $config['portal']['apps'] ?? [
     ['name' => 'Docs',        'url' => 'https://docs.google.com',     'icon' => 'docs'],
     ['name' => 'Sheets',      'url' => 'https://sheets.google.com',   'icon' => 'sheets'],
     ['name' => 'Slides',      'url' => 'https://slides.google.com',   'icon' => 'slides'],
+];
+
+$defaultApps = $config['portal']['apps'] ?? [
     ['name' => 'YouTube',     'url' => 'https://youtube.com',         'icon' => 'youtube'],
     ['name' => 'Discord',     'url' => 'https://discord.com',         'icon' => 'discord'],
     ['name' => 'GitHub',      'url' => 'https://github.com',          'icon' => 'github'],
@@ -51,13 +54,10 @@ if (file_exists($appsFile)) {
 }
 
 $googleWorkspaceIcons = ['gmail', 'drive', 'calendar', 'meet', 'docs', 'sheets', 'slides'];
-$workspaceApps = [];
 $portalApps = [];
 foreach ($apps as $app) {
     $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
-    if (in_array($icon, $googleWorkspaceIcons, true)) {
-        $workspaceApps[] = $app;
-    } else {
+    if (!in_array($icon, $googleWorkspaceIcons, true)) {
         $portalApps[] = $app;
     }
 }
