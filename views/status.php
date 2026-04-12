@@ -232,8 +232,9 @@ foreach ($apps as $i => $app) {
     $name = trim((string)($app['name'] ?? 'Application'));
     $url = trim((string)($app['url'] ?? ''));
     $icon = trim((string)($app['icon'] ?? 'link'));
+    $emoji = trim((string)($app['emoji'] ?? ''));
     $ping = $pingData['app:' . $i] ?? singlePing($url);
-    $appResults[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'ping' => $ping];
+    $appResults[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'ping' => $ping];
 }
 
 $upCount = count(array_filter($results, fn($r) => $r['ping']['ok']));
@@ -339,7 +340,7 @@ $totalApps = count($appResults);
         <article class="status-card rounded-2xl p-4 border border-white/10 bg-white/[0.03]">
             <div class="flex items-center justify-between gap-4">
                 <div class="min-w-0">
-                    <p class="text-white font-semibold"><?= appEmoji((string)$item['icon']) ?> <?= htmlspecialchars($item['name']) ?></p>
+                    <p class="text-white font-semibold"><?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?> <?= htmlspecialchars($item['name']) ?></p>
                     <a href="<?= htmlspecialchars($item['url']) ?>" class="text-xs text-white/50 hover:text-white/80" rel="noopener noreferrer">
                         <?= htmlspecialchars($item['url']) ?>
                     </a>

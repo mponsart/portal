@@ -277,12 +277,6 @@ function appEmoji(string $icon): string {
                     Rechercher
                 </button>
             </div>
-            <div class="flex flex-wrap gap-1.5">
-                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='groupe speed cloud';f.submit();">🏠 Groupe</button>
-                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='incident status';f.submit();">📡 Incident</button>
-                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='documentation interne';f.submit();">📚 Docs</button>
-                <button type="button" class="quick-chip" onclick="const f=this.closest('form');f.q.value='oauth error';f.submit();">🛠️ Support</button>
-            </div>
         </form>
     </section>
 
@@ -331,12 +325,13 @@ function appEmoji(string $icon): string {
                 $appName = htmlspecialchars($app['name'] ?? '');
                 $appUrl  = htmlspecialchars($app['url']  ?? '#');
                 $appIcon = $app['icon'] ?? 'default';
+                $appEmojiValue = trim((string)($app['emoji'] ?? ''));
                 $delay   = 'd' . min($i + 1, 12);
             ?>
             <a href="<?= $appUrl ?>"
                class="app-card glass fade-up <?= $delay ?> rounded-2xl p-4 flex flex-col items-center gap-2.5">
                 <div class="w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none select-none"><?= appEmoji($appIcon) ?></span>
+                    <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
                 <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
             </a>
@@ -358,12 +353,13 @@ function appEmoji(string $icon): string {
                 $appName = htmlspecialchars($app['name'] ?? '');
                 $appUrl  = htmlspecialchars($app['url']  ?? '#');
                 $appIcon = $app['icon'] ?? 'default';
+                $appEmojiValue = trim((string)($app['emoji'] ?? ''));
                 $delay   = 'd' . min($index + 1, 12);
             ?>
             <a href="<?= $appUrl ?>"
                class="app-card glass fade-up <?= $delay ?> rounded-2xl p-4 flex flex-col items-center gap-2.5">
                 <div class="w-10 h-10 flex items-center justify-center">
-                    <span class="text-3xl leading-none select-none"><?= appEmoji($appIcon) ?></span>
+                    <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
                 <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
             </a>
