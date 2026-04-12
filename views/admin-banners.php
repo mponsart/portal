@@ -59,6 +59,7 @@ $csrfToken = $_SESSION['csrf_token'];
             <a href="/admin.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">🏠 Accueil Admin</a>
             <a href="/admin-news.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📰 Actualités</a>
             <a href="/admin-banners.php" class="admin-tab active px-3 py-1.5 rounded-lg text-xs font-semibold">📣 Bannières</a>
+            <a href="/admin-status.php" class="admin-tab px-3 py-1.5 rounded-lg text-xs font-semibold">📡 Statuts</a>
         </div>
     </section>
 

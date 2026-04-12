@@ -61,7 +61,7 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
         <div class="glass rounded-2xl p-4"><p class="text-red-300 text-xl font-bold"><?= $activeBanners ?></p><p class="text-white/45 text-xs">Bannières actives</p></div>
     </section>
 
-    <section class="grid md:grid-cols-2 gap-4">
+    <section class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
         <a href="/admin-news.php" class="admin-card glass rounded-3xl p-6 block border border-white/10">
             <p class="text-lg font-semibold">📰 Gérer les actualités</p>
             <p class="text-white/45 text-sm mt-1">Création, brouillons, publication, édition, tri et filtres.</p>
@@ -70,6 +70,11 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
         <a href="/admin-banners.php" class="admin-card glass rounded-3xl p-6 block border border-white/10">
             <p class="text-lg font-semibold">📣 Gérer les bannières</p>
             <p class="text-white/45 text-sm mt-1">Messages critiques, activation/désactivation et nettoyage.</p>
+            <p class="text-xs text-brand-lt mt-4">Ouvrir la page →</p>
+        </a>
+        <a href="/admin-status.php" class="admin-card glass rounded-3xl p-6 block border border-white/10">
+            <p class="text-lg font-semibold">📡 Gérer les statuts</p>
+            <p class="text-white/45 text-sm mt-1">Sites/apps monitorés, édition inline et ping serveur.</p>
             <p class="text-xs text-brand-lt mt-4">Ouvrir la page →</p>
         </a>
     </section>
