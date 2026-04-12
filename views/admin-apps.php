@@ -311,7 +311,7 @@ foreach ($apps as $idx => $app) {
         </form>
 
         <div class="flex items-center justify-between gap-2">
-            <p class="text-xs text-white/60">Glissez-déposez les cartes pour réorganiser l'ordre.</p>
+            <p class="text-xs text-white/60">Définissez un numéro d'ordre, puis enregistrez.</p>
             <form id="reorderAppsForm" method="post" class="flex items-center gap-2">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="action" value="reorder_apps">
@@ -321,6 +321,7 @@ foreach ($apps as $idx => $app) {
         </div>
 
         <div id="customAppsList" class="space-y-2">
+            <?php $displayOrder = 1; ?>
             <?php foreach ($customApps as $row):
                 $idx = (int)$row['index'];
                 $app = $row['app'];
@@ -330,7 +331,7 @@ foreach ($apps as $idx => $app) {
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
                 $adminOnly = !empty($app['admin_only']);
             ?>
-            <div class="card app-sort-item rounded-lg bg-white/[0.03] border border-white/10 p-2" draggable="true" data-index="<?= $idx ?>">
+            <div class="card app-sort-item rounded-lg bg-white/[0.03] border border-white/10 p-2" data-index="<?= $idx ?>">
                 <form method="post" class="grid sm:grid-cols-9 gap-2">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="update_app">
@@ -354,7 +355,10 @@ foreach ($apps as $idx => $app) {
                         Affichage: <?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?>
                     </div>
                     <div class="sm:col-span-2 flex items-center justify-end gap-1.5">
-                        <span class="text-xs text-white/45 cursor-move select-none" title="Déplacer">↕</span>
+                        <label class="text-xs text-white/70 flex items-center gap-1">
+                            Ordre
+                            <input type="number" min="1" value="<?= $displayOrder ?>" class="order-input w-16 input-dark px-2 py-1 rounded-lg text-xs">
+                        </label>
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
                     </div>
                 </form>
@@ -366,6 +370,7 @@ foreach ($apps as $idx => $app) {
                     <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </form>
                 </div>
+                <?php $displayOrder++; ?>
             <?php endforeach; ?>
         </div>
     </section>
@@ -377,50 +382,32 @@ foreach ($apps as $idx => $app) {
     const orderInput = document.getElementById('appsOrderInput');
     if (!list || !saveBtn || !orderInput) return;
 
-    let dragEl = null;
-    let changed = false;
+    Array.from(list.querySelectorAll('.order-input')).forEach((input) => {
+        input.addEventListener('input', () => {
+            saveBtn.disabled = false;
+        });
+    });
 
-    function markChanged() {
-        changed = true;
-        saveBtn.disabled = false;
-    }
-
-    function currentOrder() {
+    function currentOrderFromNumbers() {
         return Array.from(list.querySelectorAll('.app-sort-item'))
-            .map((el) => el.getAttribute('data-index'))
+            .map((el, position) => {
+                const input = el.querySelector('.order-input');
+                const parsed = parseInt(input?.value ?? '', 10);
+                const order = Number.isFinite(parsed) && parsed > 0 ? parsed : position + 1;
+                return {
+                    index: el.getAttribute('data-index') || '',
+                    order,
+                    position,
+                };
+            })
+            .sort((a, b) => (a.order - b.order) || (a.position - b.position))
+            .map((item) => item.index)
             .filter(Boolean)
             .join(',');
     }
 
-    function setupItem(item) {
-        item.addEventListener('dragstart', () => {
-            dragEl = item;
-            item.classList.add('opacity-50');
-        });
-
-        item.addEventListener('dragend', () => {
-            item.classList.remove('opacity-50');
-            dragEl = null;
-        });
-
-        item.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (!dragEl || dragEl === item) return;
-
-            const rect = item.getBoundingClientRect();
-            const isAfter = (e.clientY - rect.top) > (rect.height / 2);
-            const anchor = isAfter ? item.nextElementSibling : item;
-            if (anchor !== dragEl) {
-                list.insertBefore(dragEl, anchor);
-                markChanged();
-            }
-        });
-    }
-
-    Array.from(list.querySelectorAll('.app-sort-item')).forEach(setupItem);
-
     document.getElementById('reorderAppsForm')?.addEventListener('submit', () => {
-        orderInput.value = currentOrder();
+        orderInput.value = currentOrderFromNumbers();
     });
 })();
 </script>

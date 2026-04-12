@@ -82,6 +82,39 @@ function moveWithinFiltered(array &$apps, int $idx, string $direction, callable 
     return true;
 }
 
+function reorderFilteredByIndexes(array &$apps, array $orderedIndexes, callable $predicate): bool {
+    $currentIndexes = [];
+    foreach ($apps as $i => $app) {
+        if ($predicate($app)) $currentIndexes[] = $i;
+    }
+
+    $orderedIndexes = array_values(array_unique(array_map('intval', $orderedIndexes)));
+
+    $sortedCurrent = $currentIndexes;
+    $sortedPosted = $orderedIndexes;
+    sort($sortedCurrent);
+    sort($sortedPosted);
+    if ($sortedCurrent !== $sortedPosted) {
+        return false;
+    }
+
+    $reorderedItems = [];
+    foreach ($orderedIndexes as $idx) {
+        if (!isset($apps[$idx])) return false;
+        $reorderedItems[] = $apps[$idx];
+    }
+
+    $cursor = 0;
+    foreach ($apps as $i => $app) {
+        if ($predicate($app)) {
+            $apps[$i] = $reorderedItems[$cursor] ?? $apps[$i];
+            $cursor++;
+        }
+    }
+
+    return true;
+}
+
 $apps = readJsonArray($appsFile, $defaultApps);
 
 if (empty($_SESSION['csrf_token'])) {
@@ -140,6 +173,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $apps,
                 $idx,
                 $direction,
+                static fn(array $app): bool => isWorkspaceIcon(strtolower(trim((string)($app['icon'] ?? ''))))
+            );
+            if ($ok) $ok = saveJsonArray($appsFile, $apps);
+        }
+    }
+
+    if ($action === 'reorder_workspace_apps') {
+        $rawOrder = trim((string)($_POST['order'] ?? ''));
+        if ($rawOrder !== '') {
+            $orderedIndexes = array_filter(
+                array_map('intval', explode(',', $rawOrder)),
+                static fn(int $v): bool => $v >= 0
+            );
+            $ok = reorderFilteredByIndexes(
+                $apps,
+                $orderedIndexes,
                 static fn(array $app): bool => isWorkspaceIcon(strtolower(trim((string)($app['icon'] ?? ''))))
             );
             if ($ok) $ok = saveJsonArray($appsFile, $apps);
@@ -245,7 +294,18 @@ foreach ($apps as $idx => $app) {
             <button class="sm:col-span-6 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter</button>
         </form>
 
-        <div class="space-y-2">
+        <div class="flex items-center justify-between gap-2">
+            <p class="text-xs text-white/60">Définissez un numéro d'ordre, puis enregistrez.</p>
+            <form id="reorderWorkspaceForm" method="post" class="flex items-center gap-2">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                <input type="hidden" name="action" value="reorder_workspace_apps">
+                <input id="workspaceOrderInput" type="hidden" name="order" value="">
+                <button id="saveWorkspaceOrderBtn" type="submit" disabled class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/70 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-emerald-600">Enregistrer l'ordre</button>
+            </form>
+        </div>
+
+        <div id="workspaceAppsList" class="space-y-2">
+            <?php $displayOrder = 1; ?>
             <?php foreach ($workspaceApps as $row):
                 $idx = (int)$row['index'];
                 $app = $row['app'];
@@ -255,7 +315,7 @@ foreach ($apps as $idx => $app) {
                 $emoji = normalizeEmoji((string)($app['emoji'] ?? ''));
                 $adminOnly = !empty($app['admin_only']);
             ?>
-            <div class="card rounded-lg bg-white/[0.03] border border-white/10 p-2">
+            <div class="card app-sort-item rounded-lg bg-white/[0.03] border border-white/10 p-2" data-index="<?= $idx ?>">
                 <form method="post" class="grid sm:grid-cols-9 gap-2">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="update_workspace_app">
@@ -279,25 +339,15 @@ foreach ($apps as $idx => $app) {
                     <div class="sm:col-span-1 text-xs text-white/65 flex items-center justify-center rounded-xl bg-white/5 border border-white/10">
                         Affichage: <?= $emoji !== '' ? htmlspecialchars($emoji) : appEmoji($icon) ?>
                     </div>
-                    <div class="sm:col-span-2 flex items-center justify-end">
+                    <div class="sm:col-span-2 flex items-center justify-end gap-1.5">
+                        <label class="text-xs text-white/70 flex items-center gap-1">
+                            Ordre
+                            <input type="number" min="1" value="<?= $displayOrder ?>" class="order-input w-16 input-dark px-2 py-1 rounded-lg text-xs">
+                        </label>
                         <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
                     </div>
                 </form>
-                <div class="mt-1 flex items-center justify-end gap-1.5">
-                <form method="post" class="inline-flex">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <input type="hidden" name="action" value="move_workspace_app">
-                    <input type="hidden" name="index" value="<?= $idx ?>">
-                    <input type="hidden" name="direction" value="up">
-                    <button class="px-2 py-1 rounded-lg text-xs btn-soft">↑</button>
-                </form>
-                <form method="post" class="inline-flex">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <input type="hidden" name="action" value="move_workspace_app">
-                    <input type="hidden" name="index" value="<?= $idx ?>">
-                    <input type="hidden" name="direction" value="down">
-                    <button class="px-2 py-1 rounded-lg text-xs btn-soft">↓</button>
-                </form>
+                <div class="mt-1 flex items-center justify-end">
                 <form method="post" class="inline-flex">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="hidden" name="action" value="delete_workspace_app">
@@ -305,9 +355,46 @@ foreach ($apps as $idx => $app) {
                     <button class="px-2 py-1 rounded-lg text-xs bg-red-500/20 text-red-200 hover:bg-red-500/30">Suppr.</button>
                 </form>
                 </div>
+                <?php $displayOrder++; ?>
             <?php endforeach; ?>
         </div>
     </section>
 </main>
+<script>
+(() => {
+    const list = document.getElementById('workspaceAppsList');
+    const saveBtn = document.getElementById('saveWorkspaceOrderBtn');
+    const orderInput = document.getElementById('workspaceOrderInput');
+    if (!list || !saveBtn || !orderInput) return;
+
+    Array.from(list.querySelectorAll('.order-input')).forEach((input) => {
+        input.addEventListener('input', () => {
+            saveBtn.disabled = false;
+        });
+    });
+
+    function currentOrderFromNumbers() {
+        return Array.from(list.querySelectorAll('.app-sort-item'))
+            .map((el, position) => {
+                const input = el.querySelector('.order-input');
+                const parsed = parseInt(input?.value ?? '', 10);
+                const order = Number.isFinite(parsed) && parsed > 0 ? parsed : position + 1;
+                return {
+                    index: el.getAttribute('data-index') || '',
+                    order,
+                    position,
+                };
+            })
+            .sort((a, b) => (a.order - b.order) || (a.position - b.position))
+            .map((item) => item.index)
+            .filter(Boolean)
+            .join(',');
+    }
+
+    document.getElementById('reorderWorkspaceForm')?.addEventListener('submit', () => {
+        orderInput.value = currentOrderFromNumbers();
+    });
+})();
+</script>
 </body>
 </html>
