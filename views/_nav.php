@@ -14,7 +14,7 @@ $cp = $currentPage ?? '';
         <!-- Logo -->
         <a href="/" class="flex items-center gap-2 hover:opacity-85 transition-opacity flex-shrink-0">
             <img src="/assets/images/cloudy.png" alt="" class="w-7 h-7 rounded-lg">
-            <span class="text-white font-bold text-sm tracking-tight">Speed Cloud</span>
+            <span class="text-white font-bold text-sm tracking-tight hidden sm:block">Speed Cloud</span>
         </a>
 
         <!-- Centre — pill nav -->

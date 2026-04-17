@@ -264,7 +264,7 @@ function appEmoji(string $icon): string {
         }
 
         /* ── avatar online ring + status dot ───────────────────────── */
-        .avatar-ring { box-shadow: 0 0 0 2px #07080e, 0 0 0 3.5px rgba(52,211,153,.65); }
+        .avatar-ring { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px rgba(52,211,153,.65); }
         @keyframes pulse-green {
             0%,100% { box-shadow: 0 0 0 0   rgba(52,211,153,.55); }
             50%     { box-shadow: 0 0 0 4px  rgba(52,211,153,0);   }
@@ -357,8 +357,8 @@ function appEmoji(string $icon): string {
                         <img src="<?= htmlspecialchars($user['picture']) ?>"
                              alt="Photo"
                              class="w-14 h-14 rounded-2xl object-cover avatar-ring">
-                        <span class="status-dot absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#07080e]"
-                              style="background:#34d399;"></span>
+                        <span class="status-dot absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2"
+                              style="background:#34d399;border-color:var(--bg);"></span>
                     </div>
                     <?php endif; ?>
                     <div>
@@ -555,7 +555,7 @@ function appEmoji(string $icon): string {
         dateEl.textContent = `${JOURS[n.getDay()]} ${n.getDate()} ${MOIS[n.getMonth()]} ${n.getFullYear()}`;
     }
     tick();
-    setInterval(tick, 30000);
+    setInterval(tick, 60000);
 </script>
 
 </body>
