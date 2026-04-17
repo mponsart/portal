@@ -253,21 +253,30 @@ $totalApps = count($appResults);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statuts - Groupe Speed Cloud</title>
+    <title>Statuts — Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; }
-        .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%);
-                 -webkit-backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
-        .status-card { transition:transform .15s,border-color .15s; }
-        .status-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.2); }
+        body { font-family:'Inter',sans-serif; background:var(--bg); }
+        .bg-ambient {
+            position:fixed; inset:0; pointer-events:none; z-index:0;
+            background:
+                radial-gradient(ellipse 65% 50% at 10%  5%,  rgba(124,58,237,.25) 0%, transparent 58%),
+                radial-gradient(ellipse 50% 40% at 92% 95%,  rgba(8,145,178,.18)  0%, transparent 56%);
+        }
+        .panel { background:var(--surface); border:1px solid var(--border); border-radius:18px; }
+        .sec-title { font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38); }
+        .status-row {
+            background:rgba(255,255,255,.03);
+            border:1px solid var(--border);
+            border-radius:12px;
+            transition:border-color .13s;
+        }
+        .status-row:hover { border-color:rgba(167,139,250,.25); }
+        .status-dot-ok  { width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,.6); }
+        .status-dot-err { width:8px;height:8px;border-radius:50%;background:#f87171;box-shadow:0 0 6px rgba(248,113,113,.6); }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -276,97 +285,132 @@ $totalApps = count($appResults);
 <?php include __DIR__ . '/_nav.php'; ?>
 
 <main class="page-stack relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
+
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
-        $toneCls = [
-            'danger' => 'bg-red-500/20 border-red-500/35 text-red-100',
-            'warning' => 'bg-amber-500/20 border-amber-500/35 text-amber-100',
-            'success' => 'bg-emerald-500/20 border-emerald-500/35 text-emerald-100',
-            'info' => 'bg-cyan-500/20 border-cyan-500/35 text-cyan-100',
-        ][$tone] ?? 'bg-red-500/20 border-red-500/35 text-red-100';
+        $bannerStyles = [
+            'danger'  => ['bg'=>'rgba(220,38,38,.14)',  'border'=>'rgba(220,38,38,.35)',  'text'=>'#fca5a5'],
+            'warning' => ['bg'=>'rgba(217,119,6,.14)',  'border'=>'rgba(217,119,6,.35)',  'text'=>'#fcd34d'],
+            'success' => ['bg'=>'rgba(5,150,105,.14)',  'border'=>'rgba(5,150,105,.35)',  'text'=>'#6ee7b7'],
+            'info'    => ['bg'=>'rgba(8,145,178,.14)',  'border'=>'rgba(8,145,178,.35)',  'text'=>'#7dd3fc'],
+        ][$tone] ?? ['bg'=>'rgba(220,38,38,.14)', 'border'=>'rgba(220,38,38,.35)', 'text'=>'#fca5a5'];
         $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
     ?>
-    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?>">
-        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce importante') ?></p>
-        <p class="text-sm opacity-90 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
-    </section>
+    <div class="rounded-2xl border px-4 py-3"
+         style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;">
+        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce') ?></p>
+        <p class="text-sm opacity-85 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+    </div>
     <?php endif; ?>
 
-    <header class="glass rounded-3xl p-6">
-        <h1 class="text-2xl font-bold mb-1">📡 Statuts des sites</h1>
-        <p class="text-white/45 text-sm">Mesure en direct depuis le serveur pour un état réel des services.</p>
-        <div class="mt-3 inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-white/15 bg-white/5">
-            <span><?= $upCount === $totalCount ? '✅' : '⚠️' ?></span>
-            <span><?= $upCount ?> / <?= $totalCount ?> services operationnels</span>
-        </div>
-        <div class="mt-2 inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-white/15 bg-white/5">
-            <span><?= $upApps === $totalApps ? '✅' : '⚠️' ?></span>
-            <span><?= $upApps ?> / <?= $totalApps ?> applications operationnelles</span>
+    <!-- Header -->
+    <header class="panel p-5 sm:p-6">
+        <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style="background:rgba(5,150,105,.18);border:1px solid rgba(5,150,105,.35);">
+                    <span class="text-xl">📡</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">Statuts des services</h1>
+                    <p class="text-white/40 text-xs mt-0.5">Mesure serveur en temps réel.</p>
+                </div>
+            </div>
+            <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+                <span class="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style="<?= $upCount === $totalCount ? 'background:rgba(5,150,105,.18);color:#34d399;border:1px solid rgba(5,150,105,.35);' : 'background:rgba(220,38,38,.14);color:#f87171;border:1px solid rgba(220,38,38,.3);' ?>">
+                    <?= $upCount === $totalCount ? '✓' : '!' ?> Sites <?= $upCount ?>/<?= $totalCount ?>
+                </span>
+                <span class="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style="<?= $upApps === $totalApps ? 'background:rgba(5,150,105,.18);color:#34d399;border:1px solid rgba(5,150,105,.35);' : 'background:rgba(220,38,38,.14);color:#f87171;border:1px solid rgba(220,38,38,.3);' ?>">
+                    <?= $upApps === $totalApps ? '✓' : '!' ?> Apps <?= $upApps ?>/<?= $totalApps ?>
+                </span>
+            </div>
         </div>
     </header>
 
-    <section class="space-y-3">
-        <?php foreach ($results as $item):
-            $ok = $item['ping']['ok'];
-            $code = (int)$item['ping']['code'];
-            $ms = (int)$item['ping']['ms'];
-            $err = $item['ping']['error'];
-        ?>
-        <article class="status-card glass rounded-2xl p-4">
-            <div class="flex items-center justify-between gap-4">
-                <div class="min-w-0">
-                    <p class="text-white font-semibold"><?= htmlspecialchars($item['name']) ?></p>
-                    <a href="<?= htmlspecialchars($item['url']) ?>" class="text-xs text-white/50 hover:text-white/80" rel="noopener noreferrer">
-                        <?= htmlspecialchars($item['url']) ?>
-                    </a>
+    <!-- Sites -->
+    <section>
+        <p class="sec-title mb-3">Sites surveillés</p>
+        <div class="space-y-2">
+            <?php foreach ($results as $item):
+                $ok   = $item['ping']['ok'];
+                $code = (int)$item['ping']['code'];
+                $ms   = (int)$item['ping']['ms'];
+                $err  = $item['ping']['error'];
+            ?>
+            <div class="status-row px-4 py-3">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="<?= $ok ? 'status-dot-ok' : 'status-dot-err' ?> flex-shrink-0"></div>
+                        <div class="min-w-0">
+                            <p class="text-white font-semibold text-sm"><?= htmlspecialchars($item['name']) ?></p>
+                            <a href="<?= htmlspecialchars($item['url']) ?>" target="_blank" rel="noopener noreferrer"
+                               class="text-xs text-white/38 hover:text-white/65 truncate block">
+                                <?= htmlspecialchars($item['url']) ?>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
+                            <?= $ok ? 'En ligne' : 'Hors ligne' ?>
+                        </p>
+                        <p class="text-xs text-white/35 mt-0.5">
+                            <?= $code ? 'HTTP '.$code : '—' ?> · <?= $ms ?> ms
+                        </p>
+                    </div>
                 </div>
-                <div class="text-right flex-shrink-0">
-                    <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
-                        <?= $ok ? '🟢 En ligne' : '🔴 Hors ligne' ?>
-                    </p>
-                    <p class="text-xs text-white/45 mt-0.5">
-                        <?= $code ? ('HTTP ' . $code) : 'Aucun code' ?> · <?= $ms ?> ms
-                    </p>
-                </div>
+                <?php if (!$ok && $err !== ''): ?>
+                <p class="text-xs mt-2 pl-5" style="color:#fca5a5;">Erreur : <?= htmlspecialchars($err) ?></p>
+                <?php endif; ?>
             </div>
-            <?php if (!$ok && $err !== ''): ?>
-            <p class="text-xs text-red-300/90 mt-2">Erreur: <?= htmlspecialchars($err) ?></p>
-            <?php endif; ?>
-        </article>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
     </section>
 
-    <section class="glass rounded-3xl p-5 space-y-3">
-        <h2 class="text-lg font-bold">🧩 Statut des applications personnalisées</h2>
-        <?php foreach ($appResults as $item):
-            $ok = $item['ping']['ok'];
-            $code = (int)$item['ping']['code'];
-            $ms = (int)$item['ping']['ms'];
-            $err = $item['ping']['error'];
-        ?>
-        <article class="status-card rounded-2xl p-4 border border-white/10 bg-white/[0.03]">
-            <div class="flex items-center justify-between gap-4">
-                <div class="min-w-0">
-                    <p class="text-white font-semibold"><?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?> <?= htmlspecialchars($item['name']) ?></p>
-                    <a href="<?= htmlspecialchars($item['url']) ?>" class="text-xs text-white/50 hover:text-white/80" rel="noopener noreferrer">
-                        <?= htmlspecialchars($item['url']) ?>
-                    </a>
+    <!-- Apps -->
+    <?php if (!empty($appResults)): ?>
+    <section class="panel p-5">
+        <h2 class="font-bold mb-4">Applications</h2>
+        <div class="space-y-2">
+            <?php foreach ($appResults as $item):
+                $ok   = $item['ping']['ok'];
+                $code = (int)$item['ping']['code'];
+                $ms   = (int)$item['ping']['ms'];
+                $err  = $item['ping']['error'];
+            ?>
+            <div class="status-row px-4 py-3">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="<?= $ok ? 'status-dot-ok' : 'status-dot-err' ?> flex-shrink-0"></div>
+                        <div class="min-w-0">
+                            <p class="text-white font-semibold text-sm">
+                                <?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?>
+                                <?= htmlspecialchars($item['name']) ?>
+                            </p>
+                            <a href="<?= htmlspecialchars($item['url']) ?>" target="_blank" rel="noopener noreferrer"
+                               class="text-xs text-white/38 hover:text-white/65 truncate block">
+                                <?= htmlspecialchars($item['url']) ?>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
+                            <?= $ok ? 'En ligne' : 'Hors ligne' ?>
+                        </p>
+                        <p class="text-xs text-white/35 mt-0.5">
+                            <?= $code ? 'HTTP '.$code : '—' ?> · <?= $ms ?> ms
+                        </p>
+                    </div>
                 </div>
-                <div class="text-right flex-shrink-0">
-                    <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
-                        <?= $ok ? '🟢 En ligne' : '🔴 Hors ligne' ?>
-                    </p>
-                    <p class="text-xs text-white/45 mt-0.5">
-                        <?= $code ? ('HTTP ' . $code) : 'Aucun code' ?> · <?= $ms ?> ms
-                    </p>
-                </div>
+                <?php if (!$ok && $err !== ''): ?>
+                <p class="text-xs mt-2 pl-5" style="color:#fca5a5;">Erreur : <?= htmlspecialchars($err) ?></p>
+                <?php endif; ?>
             </div>
-            <?php if (!$ok && $err !== ''): ?>
-            <p class="text-xs text-red-300/90 mt-2">Erreur: <?= htmlspecialchars($err) ?></p>
-            <?php endif; ?>
-        </article>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
     </section>
+    <?php endif; ?>
 
 </main>
 </body>

@@ -27,8 +27,8 @@ if (empty($_SESSION['csrf_token'])) {
 $csrfToken = $_SESSION['csrf_token'];
 
 $catLabels = ['general' => 'Général', 'event' => 'Événement', 'urgent' => 'Urgent', 'info' => 'Info'];
-$catColors = ['general' => '#3454d1', 'urgent' => '#ef4444', 'event' => '#8b5cf6', 'info' => '#0ea5e9'];
-$catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-500/20 text-red-300', 'event' => 'bg-violet-500/20 text-violet-300', 'info' => 'bg-cyan-500/20 text-cyan-300'];
+$catColors = ['general' => '#7c3aed', 'urgent' => '#ef4444', 'event' => '#8b5cf6', 'info' => '#0ea5e9'];
+$catBadge  = ['general' => 'bg-violet-500/20 text-violet-300', 'urgent' => 'bg-red-500/20 text-red-300', 'event' => 'bg-violet-500/20 text-violet-300', 'info' => 'bg-cyan-500/20 text-cyan-300'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -42,20 +42,19 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <script>
         tailwind.config = {
-            theme: { extend: { colors: { 'brand':'#3454d1','brand-dk':'#2440a8' } } }
+            theme: { extend: { colors: { 'brand':'#7c3aed','brand-dk':'#6d28d9' } } }
         };
     </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Titillium Web', sans-serif; background: #06080f; color-scheme: dark; }
+        body { font-family: 'Inter', sans-serif; background:var(--bg); color-scheme: dark; }
         .bg-ambient { position:fixed;inset:0;pointer-events:none;z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055);backdrop-filter:blur(16px) saturate(160%);
-                 -webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.10); }
+            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124,58,237,.26) 0%, transparent 65%),
+                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(8,145,178,.18) 0%, transparent 60%); }
+        .glass { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); border-radius:16px; }
         .section-label { font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35); }
 
         /* Quill override */
@@ -84,8 +83,8 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         .article-preview p  { color:rgba(255,255,255,.72);font-size:.84rem;line-height:1.65;margin:.3rem 0; }
         .article-preview ul { list-style:disc;padding-left:1.2rem;color:rgba(255,255,255,.72);font-size:.84rem; }
         .article-preview ol { list-style:decimal;padding-left:1.2rem;color:rgba(255,255,255,.72);font-size:.84rem; }
-        .article-preview blockquote { border-left:3px solid #3454d1;padding:.35rem .7rem;background:rgba(52,84,209,.10);border-radius:0 8px 8px 0;color:rgba(255,255,255,.66);margin:.4rem 0; }
-        .article-preview a { color:#6b8fff;text-decoration:underline; }
+        .article-preview blockquote { border-left:3px solid #7c3aed;padding:.35rem .7rem;background:rgba(124,58,237,.10);border-radius:0 8px 8px 0;color:rgba(255,255,255,.66);margin:.4rem 0; }
+        .article-preview a { color:var(--primary-lt);text-decoration:underline; }
         /* Forcer un style dark stable sur tous les navigateurs */
         input[type="text"], input[type="color"], select, textarea {
             background: rgba(255,255,255,.08) !important;
@@ -123,7 +122,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
         .glass textarea:focus {
             outline: none !important;
             border-color: rgba(107,143,255,.65) !important;
-            box-shadow: 0 0 0 2px rgba(52,84,209,.35) !important;
+            box-shadow: 0 0 0 2px rgba(124,58,237,.25) !important;
         }
         #editModal .glass { border-color: rgba(255,255,255,.18); }
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
@@ -216,10 +215,10 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                 <div class="form-box">
                     <div class="flex items-center gap-3">
                         <label class="text-white/50 text-xs">Couleur d'accent</label>
-                        <input type="color" id="addColor" value="#3454d1"
+                        <input type="color" id="addColor" value="#7c3aed"
                                class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-white/15">
                         <div class="flex gap-1.5">
-                            <?php foreach (['#3454d1','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
+                            <?php foreach (['#7c3aed','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
                             <button type="button" onclick="document.getElementById('addColor').value='<?= $c ?>'"
                                     class="w-5 h-5 rounded-full border border-white/20 hover:scale-110 transition"
                                     style="background:<?= $c ?>"></button>
@@ -291,7 +290,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                     $annEmoji   = htmlspecialchars($ann['emoji']          ?? '📢');
                     $annTitle   = htmlspecialchars($ann['title']          ?? '');
                     $annHtml    = $ann['html_content'] ?? htmlspecialchars($ann['content'] ?? '');
-                    $annColor   = htmlspecialchars($ann['color']          ?? '#3454d1');
+                    $annColor   = htmlspecialchars($ann['color']          ?? '#7c3aed');
                     $annCat     = $ann['category'] ?? 'general';
                     $annStatus  = $ann['status'] ?? 'published';
                     $annDate    = htmlspecialchars($ann['created_at'] ?? ($ann['pinned_at'] ?? ''));
@@ -329,7 +328,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
                         </div>
                         <div class="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">
                             <button onclick="editAnn('<?= $annId ?>')"
-                                    class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition" title="Modifier">
+                                    class="p-1.5 text-blue-400 hover:bg-violet-500/20 rounded-lg transition" title="Modifier">
                                 <span class="text-sm">✏️</span>
                             </button>
                             <button onclick="deleteAnn('<?= $annId ?>')"
@@ -405,7 +404,7 @@ $catBadge  = ['general' => 'bg-blue-500/20 text-blue-300', 'urgent' => 'bg-red-5
             <input type="color" id="editColor"
                    class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-white/15">
             <div class="flex gap-1.5">
-                <?php foreach (['#3454d1','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
+                <?php foreach (['#7c3aed','#ef4444','#8b5cf6','#0ea5e9','#10b981','#f59e0b'] as $c): ?>
                 <button type="button" onclick="document.getElementById('editColor').value='<?= $c ?>'"
                         class="w-5 h-5 rounded-full border border-white/20 hover:scale-110 transition"
                         style="background:<?= $c ?>"></button>
@@ -577,7 +576,7 @@ function esc(s) {
 }
 
 const CAT_BADGE = {
-    general:'bg-blue-500/20 text-blue-300', urgent:'bg-red-500/20 text-red-300',
+    general:'bg-violet-500/20 text-blue-300', urgent:'bg-red-500/20 text-red-300',
     event:'bg-violet-500/20 text-violet-300', info:'bg-cyan-500/20 text-cyan-300'
 };
 const CAT_LABEL = { general:'Général', urgent:'Urgent', event:'Événement', info:'Info' };
@@ -609,7 +608,7 @@ function buildCard(ann) {
             </div>
             <div class="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">
                 <button onclick="editAnn('${esc(ann.id)}')"
-                        class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition" title="Modifier">
+                        class="p-1.5 text-blue-400 hover:bg-violet-500/20 rounded-lg transition" title="Modifier">
                     <span class="text-sm">✏️</span>
                 </button>
                 <button onclick="deleteAnn('${esc(ann.id)}')"
@@ -656,7 +655,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
         quillAdd.setContents([]);
         e.target.reset();
         document.getElementById('addEmoji').value = '📢';
-        document.getElementById('addColor').value = '#3454d1';
+        document.getElementById('addColor').value = '#7c3aed';
         updateAddPreview();
         applyListSortAndFilter();
     } catch(err) { showStatus(statusEl, err.message, 'error'); }
@@ -671,7 +670,7 @@ function editAnn(id) {
     document.getElementById('editTitle').value    = ann.title    || '';
     document.getElementById('editCategory').value = ann.category || 'general';
     document.getElementById('editStatusType').value = ann.status || 'published';
-    document.getElementById('editColor').value    = ann.color    || '#3454d1';
+    document.getElementById('editColor').value    = ann.color    || '#7c3aed';
     quillEdit.root.innerHTML = ann.html_content || '';
     updateEditPreview();
     document.getElementById('editStatus').classList.add('hidden');

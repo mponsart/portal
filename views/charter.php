@@ -8,33 +8,52 @@ $charterVersion = current_charter_version($config ?? []);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charte Informatique - Groupe Speed Cloud</title>
+    <title>Charte Informatique — Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
-        .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
-        .charter h2 { font-size:1.05rem; font-weight:700; color:#fff; margin-top:1rem; }
-        .charter p, .charter li { color:rgba(255,255,255,.78); font-size:.92rem; line-height:1.7; }
-        .charter ul { list-style:disc; padding-left:1.2rem; margin-top:.35rem; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; }
+        .bg-ambient {
+            position:fixed; inset:0; pointer-events:none; z-index:0;
+            background:
+                radial-gradient(ellipse 65% 50% at 10%  5%,  rgba(124,58,237,.25) 0%, transparent 58%),
+                radial-gradient(ellipse 50% 40% at 92% 95%,  rgba(8,145,178,.18)  0%, transparent 56%);
+        }
+        .panel { background:var(--surface); border:1px solid var(--border); border-radius:18px; }
+        .charter h2 { font-size:1rem; font-weight:700; color:#e2e8f0; margin-top:1.1rem; margin-bottom:.35rem; }
+        .charter p, .charter li { color:rgba(255,255,255,.72); font-size:.92rem; line-height:1.75; }
+        .charter ul { list-style:disc; padding-left:1.3rem; margin-top:.3rem; }
+        .charter li { margin:.18rem 0; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
 <div class="bg-ambient"></div>
 
-<main class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 page-stack">
-    <section class="glass rounded-3xl p-6 sm:p-8">
-        <h1 class="text-2xl sm:text-3xl font-bold">📜 Charte Informatique - Association à Distance</h1>
-        <p class="text-white/50 text-sm mt-2">Bienvenue <?= htmlspecialchars((string)($user['firstName'] ?? $user['name'] ?? '')) ?>. Cette validation est requise lors de votre première connexion.</p>
-        <p class="text-white/35 text-xs mt-1">Version de la charte : <?= htmlspecialchars($charterVersion) ?></p>
-    </section>
+<main class="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 py-10 page-stack">
 
-    <section class="glass rounded-3xl p-6 sm:p-8 charter">
+    <!-- Header -->
+    <div class="panel p-6 sm:p-8">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                 style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.35);">
+                <span class="text-xl">📜</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">Charte Informatique</h1>
+                <p class="text-white/40 text-xs mt-0.5">Validation requise à la première connexion.</p>
+            </div>
+        </div>
+        <p class="text-white/55 text-sm">
+            Bienvenue <strong class="text-white/80"><?= htmlspecialchars((string)($user['firstName'] ?? $user['name'] ?? '')) ?></strong>.
+            Veuillez lire et accepter la charte avant d'accéder au portail.
+        </p>
+        <p class="text-white/28 text-xs mt-2">Version : <?= htmlspecialchars($charterVersion) ?></p>
+    </div>
+
+    <!-- Charter content -->
+    <div class="panel p-6 sm:p-8 charter">
         <h2>1. Usage des comptes et accès</h2>
         <ul>
             <li>Le compte est personnel et ne doit jamais être partagé.</li>
@@ -69,19 +88,29 @@ $charterVersion = current_charter_version($config ?? []);
             <li>Le non-respect de la charte peut entraîner la suspension d'accès.</li>
             <li>La présente charte peut être mise à jour ; une nouvelle validation peut être demandée.</li>
         </ul>
-    </section>
+    </div>
 
-    <section class="glass rounded-3xl p-5 sm:p-6">
-        <form method="post" action="/accept-charter.php" class="space-y-3">
+    <!-- Accept form -->
+    <div class="panel p-5 sm:p-6">
+        <form method="post" action="/accept-charter.php" class="space-y-4">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
             <input type="hidden" name="accept_charter" value="yes">
-            <label class="flex items-start gap-2 text-sm text-white/80">
-                <input type="checkbox" id="confirmCharter" required class="mt-1">
-                <span>Je confirme avoir lu, compris et accepté la charte informatique de l'association.</span>
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" id="confirmCharter" required
+                       class="mt-1 w-4 h-4 flex-shrink-0 accent-violet-500">
+                <span class="text-sm text-white/70 leading-relaxed">
+                    Je confirme avoir lu, compris et accepté la charte informatique de l'association.
+                </span>
             </label>
-            <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">Valider et accéder au portail</button>
+            <button type="submit"
+                    class="w-full py-2.5 rounded-xl text-white font-semibold text-sm transition"
+                    style="background:var(--primary);"
+                    onmouseover="this.style.background='var(--primary-dk)'" onmouseout="this.style.background='var(--primary)'">
+                Valider et accéder au portail →
+            </button>
         </form>
-    </section>
+    </div>
+
 </main>
 </body>
 </html>

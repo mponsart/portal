@@ -114,130 +114,127 @@ function appEmoji(string $icon): string {
             theme: {
                 extend: {
                     colors: {
-                        'brand':     '#3454d1',
-                        'brand-dk':  '#2440a8',
-                        'brand-lt':  '#6b8fff',
-                        'accent':    '#0ea5e9',
-                    },                },
-            },
+                        'violet': { 400:'#a78bfa', 500:'#8b5cf6', 600:'#7c3aed', 700:'#6d28d9' },
+                        'cyan':   { 400:'#38bdf8', 500:'#0ea5e9', 600:'#0891b2' },
+                    }
+                }
+            }
         };
     </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        :root {
-            --bg:          #06080f;
-            --surface:     rgba(255,255,255,.055);
-            --surface-hov: rgba(255,255,255,.10);
-            --border:      rgba(255,255,255,.10);
-            --border-hov:  rgba(255,255,255,.22);
-        }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Titillium Web', sans-serif;
+            font-family: 'Inter', sans-serif;
             background: var(--bg);
             overflow-x: hidden;
+            color: #f1f5f9;
         }
 
-        /* ── fond ambiant ───────────────────────────────────────────── */
+        /* ── ambient background ─────────────────────────────────────── */
         .bg-ambient {
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background:
-                radial-gradient(ellipse 70% 55% at 15%  0%,  rgba(52,84,209,.30) 0%, transparent 65%),
-                radial-gradient(ellipse 55% 45% at 88% 100%, rgba(14,165,233,.20) 0%, transparent 60%),
-                radial-gradient(ellipse 40% 35% at 50%  50%, rgba(52,84,209,.06) 0%, transparent 80%);
+                radial-gradient(ellipse 65% 50% at 12%   5%,  rgba(124,58,237,.28) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 42% at 90%  95%,  rgba(8,145,178,.22)  0%, transparent 58%),
+                radial-gradient(ellipse 38% 30% at 55%  50%,  rgba(109,40,217,.07) 0%, transparent 75%);
         }
 
-        /* ── glassmorphism ──────────────────────────────────────────── */
-        .glass {
+        /* ── panel ──────────────────────────────────────────────────── */
+        .panel {
             background: var(--surface);
-            backdrop-filter: blur(16px) saturate(160%);
-            -webkit-backdrop-filter: blur(16px) saturate(160%);
             border: 1px solid var(--border);
+            border-radius: 20px;
         }
+        .panel:hover { border-color: var(--border-hov); }
 
-        /* ── app cards ──────────────────────────────────────────────── */
+        /* ── app card ───────────────────────────────────────────────── */
         .app-card {
-            transition: transform .16s cubic-bezier(.34,1.56,.64,1),
-                        background .14s ease,
-                        box-shadow .14s ease;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: transform .17s cubic-bezier(.34,1.56,.64,1),
+                        background .13s ease,
+                        border-color .13s ease;
             cursor: pointer;
-            min-height: 104px;
         }
         .app-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             background: var(--surface-hov);
-            border-color: var(--border-hov);
-            box-shadow: 0 8px 20px rgba(0,0,0,.22);
+            border-color: rgba(167,139,250,.35);
         }
-        .app-card:active {
-            transform: translateY(-1px);
+        .app-card:active { transform: translateY(-1px); }
+
+        /* ── emoji container ────────────────────────────────────────── */
+        .emoji-wrap {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.09);
         }
 
         /* ── search ─────────────────────────────────────────────────── */
-        .search-shell {
-            border: 1px solid rgba(255,255,255,.12);
-            background: rgba(255,255,255,.03);
+        .search-wrap {
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.10);
             border-radius: 14px;
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+            transition: border-color .14s, box-shadow .14s, background .14s;
         }
-        .search-shell:focus-within {
-            border-color: rgba(107,143,255,.55);
+        .search-wrap:focus-within {
+            border-color: rgba(167,139,250,.5);
             background: rgba(255,255,255,.07);
-            box-shadow: 0 0 0 3px rgba(52,84,209,.35);
+            box-shadow: 0 0 0 3px rgba(124,58,237,.22);
         }
-        .search-input:focus { outline: none; }
-        .google-logo {
-            font-size: 1.15rem;
-            font-weight: 700;
-            letter-spacing: .01em;
-            line-height: 1;
-            user-select: none;
-        }
-        .google-logo .b { color:#4285F4; }
-        .google-logo .r { color:#DB4437; }
-        .google-logo .y { color:#F4B400; }
-        .google-logo .g { color:#0F9D58; }
+        .search-wrap input:focus { outline: none; }
 
-        /* ── horloge ────────────────────────────────────────────────── */
-        #clock { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+        /* ── google coloured logo ───────────────────────────────────── */
+        .g-logo { font-size: 1.05rem; font-weight: 800; line-height: 1; user-select: none; }
+        .g-logo .gb { color:#4285F4; } .g-logo .gr { color:#EA4335; }
+        .g-logo .gy { color:#FBBC05; } .g-logo .gg { color:#34A853; }
 
-        /* ── section label ──────────────────────────────────────────── */
-        .section-label {
-            font-size: .7rem;
-            font-weight: 600;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,.45);
+        /* ── clock ───────────────────────────────────────────────────── */
+        #clock { font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+
+        /* ── section title ───────────────────────────────────────────── */
+        .sec-title {
+            font-size: .65rem; font-weight: 700;
+            letter-spacing: .1em; text-transform: uppercase;
+            color: rgba(255,255,255,.38);
         }
 
-        /* ── divider ────────────────────────────────────────────────── */
-        .divider { border-color: var(--border); }
+        /* ── featured card ───────────────────────────────────────────── */
+        .feat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: border-color .14s, background .14s;
+        }
+        .feat-card:hover {
+            background: var(--surface-hov);
+            border-color: rgba(167,139,250,.3);
+        }
 
-        .portal-shell { max-width: 1200px; }
-        .hero-grid { display:grid; grid-template-columns:1fr; gap:.8rem; }
-        .hero-panel { min-height: clamp(190px, 22vw, 260px); }
-        .mini-kpi { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
-        .featured-grid { grid-template-columns:1fr; }
-        .app-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
-        .panel-stack { display:flex; flex-direction:column; gap:.75rem; }
+        /* ── grid ────────────────────────────────────────────────────── */
+        .portal-shell { max-width: 1280px; }
+        .hero-grid { display: grid; grid-template-columns: 1fr; gap: .9rem; }
+        .app-grid  { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .feat-grid { grid-template-columns: 1fr; }
+
         @media (min-width: 640px) {
-            .app-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
+            .app-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
         }
         @media (min-width: 768px) {
-            .hero-grid { grid-template-columns:1.35fr .95fr; }
-            .featured-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
-            .app-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
+            .hero-grid { grid-template-columns: 1.4fr 1fr; }
+            .feat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .app-grid  { grid-template-columns: repeat(4, minmax(0,1fr)); }
         }
         @media (min-width: 1024px) {
-            .featured-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
-            .app-grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
-
+            .feat-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+            .app-grid  { grid-template-columns: repeat(6, minmax(0,1fr)); }
         }
-
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -246,129 +243,159 @@ function appEmoji(string $icon): string {
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
-<main class="page-stack portal-shell relative z-10 w-full mx-auto px-4 sm:px-6 py-6 sm:py-7">
+<main class="page-stack portal-shell relative z-10 w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
-        $toneCls = [
-            'danger' => 'bg-red-500/20 border-red-500/35 text-red-100',
-            'warning' => 'bg-amber-500/20 border-amber-500/35 text-amber-100',
-            'success' => 'bg-emerald-500/20 border-emerald-500/35 text-emerald-100',
-            'info' => 'bg-cyan-500/20 border-cyan-500/35 text-cyan-100',
-        ][$tone] ?? 'bg-red-500/20 border-red-500/35 text-red-100';
+        $bannerStyles = [
+            'danger'  => ['bg'=>'rgba(220,38,38,.14)',  'border'=>'rgba(220,38,38,.35)',  'text'=>'#fca5a5'],
+            'warning' => ['bg'=>'rgba(217,119,6,.14)',  'border'=>'rgba(217,119,6,.35)',  'text'=>'#fcd34d'],
+            'success' => ['bg'=>'rgba(5,150,105,.14)',  'border'=>'rgba(5,150,105,.35)',  'text'=>'#6ee7b7'],
+            'info'    => ['bg'=>'rgba(8,145,178,.14)',  'border'=>'rgba(8,145,178,.35)',  'text'=>'#7dd3fc'],
+        ][$tone] ?? ['bg'=>'rgba(220,38,38,.14)', 'border'=>'rgba(220,38,38,.35)', 'text'=>'#fca5a5'];
         $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
     ?>
-    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?>">
-        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce importante') ?></p>
-        <p class="text-sm opacity-90 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
-    </section>
+    <div class="rounded-2xl border px-4 py-3"
+         style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;">
+        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce') ?></p>
+        <p class="text-sm opacity-85 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+    </div>
     <?php endif; ?>
 
-    <!-- ══ HERO ═════════════════════════════════════════════════════════ -->
+    <!-- ══ HERO GRID ══════════════════════════════════════════════════ -->
     <section class="hero-grid items-start">
-        <article class="glass rounded-3xl p-4 sm:p-5">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
 
-            <!-- Profil -->
-            <div class="flex items-center gap-4">
-                <?php if (!empty($user['picture'])): ?>
-                <div class="relative flex-shrink-0">
-                    <img src="<?= htmlspecialchars($user['picture']) ?>"
-                         alt="Photo de profil"
-                         class="w-14 h-14 rounded-2xl border-2 border-white/15 shadow-lg">
-                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-[#06080f]"></span>
+        <!-- Greeting + Search -->
+        <article class="panel p-5 sm:p-6">
+
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
+
+                <!-- Avatar + name -->
+                <div class="flex items-center gap-4">
+                    <?php if (!empty($user['picture'])): ?>
+                    <div class="relative flex-shrink-0">
+                        <img src="<?= htmlspecialchars($user['picture']) ?>"
+                             alt="Photo"
+                             class="w-12 h-12 rounded-xl border border-white/15 shadow-lg">
+                        <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#07080e]"
+                              style="background:#34d399;"></span>
+                    </div>
+                    <?php endif; ?>
+                    <div>
+                        <p class="text-white/38 text-xs font-medium mb-0.5">Bonjour,</p>
+                        <h1 class="text-xl sm:text-2xl font-bold leading-tight">
+                            <?= htmlspecialchars($firstName) ?> <span style="opacity:.7">👋</span>
+                        </h1>
+                    </div>
                 </div>
-                <?php endif; ?>
-                <div class="min-w-0">
-                    <p class="text-white/40 text-xs font-medium mb-0.5">Bienvenue,</p>
-                    <h1 class="text-lg sm:text-2xl font-bold text-white leading-tight"><?= htmlspecialchars($firstName) ?> 👋</h1>
-                    <p class="text-white/40 text-xs mt-0.5">Accès rapide à vos applications.</p>
+
+                <!-- Clock -->
+                <div class="text-right flex-shrink-0">
+                    <p id="clock" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">--:--</p>
+                    <p id="date-display" class="text-white/38 text-xs mt-0.5 capitalize"></p>
                 </div>
             </div>
 
-            <!-- Horloge -->
-            <div class="flex flex-col items-start sm:items-end gap-0.5 flex-shrink-0">
-                <p id="clock" class="text-3xl sm:text-4xl font-bold tracking-tight text-white">--:--:--</p>
-                <p id="date-display" class="text-white/40 text-xs capitalize"></p>
-            </div>
-        </div>
+            <!-- Divider -->
+            <div class="mb-5" style="border-top:1px solid var(--border);"></div>
 
-        <hr class="divider my-3.5">
-
-        <!-- Recherche -->
-        <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener" class="space-y-2.5">
-            <input type="hidden" name="hl" value="fr">
-            <input type="hidden" name="source" value="hp">
-            <div class="search-shell p-2.5 sm:p-3">
-                <div class="flex items-center gap-2.5">
-                    <span class="google-logo" aria-hidden="true">
-                        <span class="b">G</span><span class="r">o</span><span class="y">o</span><span class="b">g</span><span class="g">l</span><span class="r">e</span>
+            <!-- Google search -->
+            <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener">
+                <input type="hidden" name="hl" value="fr">
+                <div class="search-wrap flex items-center gap-2.5 px-3 py-2.5">
+                    <span class="g-logo flex-shrink-0">
+                        <span class="gb">G</span><span class="gr">o</span><span class="gy">o</span><span class="gb">g</span><span class="gg">l</span><span class="gr">e</span>
                     </span>
-                    <input type="text" name="q" placeholder="Rechercher sur Google..." autocomplete="off"
-                           class="search-input flex-1 bg-transparent text-white placeholder-white/30 text-sm">
+                    <input type="text" name="q" placeholder="Rechercher…" autocomplete="off"
+                           class="flex-1 bg-transparent text-white placeholder-white/28 text-sm border-none shadow-none"
+                           style="height:auto;min-height:unset;border:none!important;box-shadow:none!important;">
                     <button type="submit"
-                            class="px-4 py-2 bg-brand hover:bg-brand-dk text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-brand/20 whitespace-nowrap">
-                        Recherche Google
+                            class="flex-shrink-0 px-4 py-2 rounded-xl text-white text-xs font-semibold transition"
+                            style="background:var(--primary);min-height:unset;">
+                        Rechercher
                     </button>
                 </div>
-            </div>
-        </form>
+            </form>
+
         </article>
 
-        <!-- ══ WIDGET INDISPONIBLES ════════════════════════════════════ -->
+        <!-- Unavailable apps widget (only when needed) -->
         <?php if (!empty($unavailableApps)): ?>
-        <aside class="glass rounded-3xl p-4 self-start">
-            <p class="section-label mb-3">⚠️ Services indisponibles</p>
-            <ul class="space-y-2.5">
+        <aside class="panel p-4 self-start">
+            <p class="sec-title mb-3">⚠ Services indisponibles</p>
+            <ul class="space-y-2">
                 <?php foreach ($unavailableApps as $ua):
                     $uaName   = htmlspecialchars($ua['name'] ?? '');
                     $uaIcon   = strtolower(trim((string)($ua['icon'] ?? 'link')));
                     $uaEmoji  = trim((string)($ua['emoji'] ?? ''));
                     $uaStatus = $ua['status'] ?? 'disabled';
                 ?>
-                <li class="flex items-center gap-2.5 py-1 border-b border-white/[0.06] last:border-0">
+                <li class="flex items-center gap-2.5 py-1.5" style="border-bottom:1px solid var(--border);">
                     <span class="text-xl leading-none select-none flex-shrink-0"><?= $uaEmoji !== '' ? htmlspecialchars($uaEmoji) : appEmoji($uaIcon) ?></span>
-                    <span class="flex-1 text-sm text-white/75 truncate font-medium"><?= $uaName ?></span>
-                    <span class="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full
-                        <?= $uaStatus === 'maintenance' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/[0.07] text-white/35 border border-white/10' ?>">
+                    <span class="flex-1 text-sm text-white/70 truncate font-medium"><?= $uaName ?></span>
+                    <span class="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                          style="<?= $uaStatus === 'maintenance'
+                                    ? 'background:rgba(217,119,6,.18);color:#fbbf24;border-color:rgba(217,119,6,.35);'
+                                    : 'background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);border-color:rgba(255,255,255,.10);' ?>">
                         <?= $uaStatus === 'maintenance' ? '🔧 Maintenance' : 'Désactivé' ?>
                     </span>
                 </li>
                 <?php endforeach; ?>
             </ul>
         </aside>
+        <?php elseif (!empty($workspaceApps)): ?>
+        <!-- Clock / quick stats side panel -->
+        <aside class="panel p-5 self-start flex flex-col gap-4">
+            <div>
+                <p class="sec-title mb-2">Workspace</p>
+                <p class="text-white/45 text-xs"><?= count($workspaceApps) ?> apps · <?= count($portalApps) ?> outils</p>
+            </div>
+            <div class="space-y-1">
+                <?php foreach (array_slice($workspaceApps, 0, 4) as $wa):
+                    $wIcon  = $wa['icon'] ?? 'default';
+                    $wEmoji = trim((string)($wa['emoji'] ?? ''));
+                    $wName  = htmlspecialchars($wa['name'] ?? '');
+                    $wUrl   = htmlspecialchars($wa['url'] ?? '#');
+                ?>
+                <a href="<?= $wUrl ?>" class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition"
+                   style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);">
+                    <span class="text-lg leading-none"><?= $wEmoji !== '' ? htmlspecialchars($wEmoji) : appEmoji($wIcon) ?></span>
+                    <span class="text-sm font-medium text-white/75"><?= $wName ?></span>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </aside>
         <?php endif; ?>
 
     </section>
 
-    <!-- ══ ANNONCES À LA UNE ═════════════════════════════════════════════ -->
-    <div class="panel-stack">
+    <!-- ══ FEATURED ANNOUNCEMENTS ═════════════════════════════════════ -->
     <?php if (!empty($featured)): ?>
     <section>
-        <p class="section-label mb-2">A la une</p>
-        <div class="featured-grid grid gap-3">
-            <?php foreach ($featured as $i => $ann):
-                $accentColor = htmlspecialchars($ann['color']    ?? '#3454d1');
-                $annTitle    = htmlspecialchars($ann['title']    ?? '');
+        <p class="sec-title mb-3">À la une</p>
+        <div class="feat-grid grid gap-3">
+            <?php foreach ($featured as $ann):
+                $accentColor = htmlspecialchars($ann['color'] ?? '#7c3aed');
+                $annTitle    = htmlspecialchars($ann['title'] ?? '');
                 $annHtml     = $ann['html_content'] ?? nl2br(htmlspecialchars($ann['content'] ?? ''));
-                $annEmoji    = htmlspecialchars($ann['emoji']    ?? '📢');
+                $annEmoji    = htmlspecialchars($ann['emoji'] ?? '📢');
                 $annDate     = htmlspecialchars($ann['created_at'] ?? ($ann['pinned_at'] ?? ''));
-                $annCat      = $ann['category'] ?? 'general';
-                $catColors   = ['general'=>'#3454d1','urgent'=>'#ef4444','event'=>'#8b5cf6','info'=>'#0ea5e9'];
-                $dotColor    = $catColors[$annCat] ?? '#3454d1';
             ?>
-              <div class="glass rounded-2xl p-4 hover:border-white/20 transition min-h-[150px]"
-                 style="border-left: 3px solid <?= $accentColor ?>;">
+            <div class="feat-card p-4" style="border-left:3px solid <?= $accentColor ?>;">
                 <div class="flex items-start gap-3">
                     <span class="text-lg select-none mt-0.5 flex-shrink-0"><?= $annEmoji ?></span>
                     <div class="min-w-0 flex-1">
                         <?php if ($annTitle): ?>
                         <p class="font-semibold text-sm text-white mb-1 leading-snug"><?= $annTitle ?></p>
                         <?php endif; ?>
-                        <div class="text-white/55 text-xs leading-relaxed line-clamp-2"><?= strip_tags($annHtml) ?></div>
-                        <div class="flex items-center justify-between mt-2">
-                            <?php if ($annDate): ?><p class="text-white/25 text-xs"><?= $annDate ?></p><?php endif; ?>
-                            <a href="/article.php?id=<?= urlencode((string)($ann['id'] ?? '')) ?>" class="text-xs text-brand-lt hover:underline ml-auto">Lire l'article &rarr;</a>
+                        <p class="text-white/50 text-xs leading-relaxed line-clamp-2"><?= strip_tags($annHtml) ?></p>
+                        <div class="flex items-center justify-between mt-2.5">
+                            <?php if ($annDate): ?><span class="text-white/25 text-[11px]"><?= $annDate ?></span><?php endif; ?>
+                            <a href="/article.php?id=<?= urlencode((string)($ann['id'] ?? '')) ?>"
+                               class="text-xs font-semibold ml-auto"
+                               style="color:var(--primary-lt);">
+                                Lire →
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -378,54 +405,53 @@ function appEmoji(string $icon): string {
     </section>
     <?php endif; ?>
 
-        <!-- ══ GOOGLE WORKSPACE ════════════════════════════════════════════════════════ -->
-        <?php if (!empty($workspaceApps)): ?>
-        <section>
-            <p class="section-label mb-3">Suite Google Workspace</p>
-            <div class="app-grid grid gap-3">
-                <?php foreach ($workspaceApps as $i => $app):
-                    $appName = htmlspecialchars($app['name'] ?? '');
-                    $appUrl  = htmlspecialchars($app['url']  ?? '#');
-                    $appIcon = $app['icon'] ?? 'default';
-                    $appEmojiValue = trim((string)($app['emoji'] ?? ''));
-                ?>
-                <a href="<?= $appUrl ?>" class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
-                    </div>
-                    <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-                </a>
-                <?php endforeach; ?>
-            </div>
-        </section>
+    <!-- ══ GOOGLE WORKSPACE ═══════════════════════════════════════════ -->
+    <?php if (!empty($workspaceApps)): ?>
+    <section>
+        <p class="sec-title mb-3">Suite Google Workspace</p>
+        <div class="app-grid grid gap-3">
+            <?php foreach ($workspaceApps as $app):
+                $appName       = htmlspecialchars($app['name'] ?? '');
+                $appUrl        = htmlspecialchars($app['url'] ?? '#');
+                $appIcon       = $app['icon'] ?? 'default';
+                $appEmojiValue = trim((string)($app['emoji'] ?? ''));
+            ?>
+            <a href="<?= $appUrl ?>"
+               class="app-card flex flex-col items-center gap-2 p-3 pt-4 text-center">
+                <div class="emoji-wrap">
+                    <span class="text-2xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+                </div>
+                <span class="text-xs font-medium text-white/60 leading-tight"><?= $appName ?></span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- ══ APPLICATIONS ═══════════════════════════════════════════════ -->
+    <section>
+        <p class="sec-title mb-3">Applications <?php if ($portalCount): ?>(<?= $portalCount ?>)<?php endif; ?></p>
+        <?php if (empty($portalApps)): ?>
+        <div class="panel p-5 text-sm text-white/40 text-center">Aucune application configurée.</div>
+        <?php else: ?>
+        <div class="app-grid grid gap-3">
+            <?php foreach ($portalApps as $app):
+                $appName       = htmlspecialchars($app['name'] ?? '');
+                $appUrl        = htmlspecialchars($app['url'] ?? '#');
+                $appIcon       = $app['icon'] ?? 'default';
+                $appEmojiValue = trim((string)($app['emoji'] ?? ''));
+            ?>
+            <a href="<?= $appUrl ?>"
+               class="app-card flex flex-col items-center gap-2 p-3 pt-4 text-center">
+                <div class="emoji-wrap">
+                    <span class="text-2xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
+                </div>
+                <span class="text-xs font-medium text-white/60 leading-tight"><?= $appName ?></span>
+            </a>
+            <?php endforeach; ?>
+        </div>
         <?php endif; ?>
-
-        <!-- ══ APPLICATIONS ════════════════════════════════════════════ -->
-        <section>
-            <p class="section-label mb-3">Applications (<?= $portalCount ?>)</p>
-            <?php if (empty($portalApps)): ?>
-            <div class="glass rounded-2xl p-4 text-sm text-white/50">Aucune application hors Google Workspace.</div>
-            <?php else: ?>
-            <div class="app-grid grid gap-3">
-                <?php foreach ($portalApps as $i => $app):
-                    $appName = htmlspecialchars($app['name'] ?? '');
-                    $appUrl  = htmlspecialchars($app['url']  ?? '#');
-                    $appIcon = $app['icon'] ?? 'default';
-                    $appEmojiValue = trim((string)($app['emoji'] ?? ''));
-                ?>
-                <a href="<?= $appUrl ?>" class="app-card glass rounded-2xl p-3 flex flex-col items-center gap-1.5">
-                    <div class="w-10 h-10 flex items-center justify-center">
-                        <span class="text-3xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
-                    </div>
-                    <span class="text-xs font-medium text-white/65 text-center leading-tight"><?= $appName ?></span>
-                </a>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-        </section>
-
-
-    </div>
+    </section>
 
 </main>
 
@@ -434,18 +460,16 @@ function appEmoji(string $icon): string {
     const dateEl  = document.getElementById('date-display');
     const JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
     const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-
     function tick() {
         const n = new Date();
         clockEl.textContent = [
             String(n.getHours()).padStart(2,'0'),
             String(n.getMinutes()).padStart(2,'0'),
-            String(n.getSeconds()).padStart(2,'0'),
         ].join(':');
         dateEl.textContent = `${JOURS[n.getDay()]} ${n.getDate()} ${MOIS[n.getMonth()]} ${n.getFullYear()}`;
     }
     tick();
-    setInterval(tick, 1000);
+    setInterval(tick, 60000);
 </script>
 
 </body>

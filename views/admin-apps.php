@@ -252,22 +252,22 @@ foreach ($apps as $idx => $app) {
     <title>Admin Applications - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
+            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124,58,237,.26) 0%, transparent 65%),
+                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(8,145,178,.18) 0%, transparent 60%); }
+        .glass { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); border-radius:16px; }
         .admin-tab { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
-        .admin-tab.active { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.35); color:#fcd34d; }
+        .admin-tab.active { background:rgba(124,58,237,.2); border-color:rgba(124,58,237,.45); color:#a78bfa; }
         .panel { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); border-radius:1rem; }
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .card { transition:transform .15s,border-color .15s; }
         .card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.2); }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#e5e7eb; }
-        .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.3); }
+        .input-dark:focus { outline:none; border-color:rgba(167,139,250,.55); box-shadow:0 0 0 2px rgba(124,58,237,.3); }
         .btn-soft { border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); }
         .btn-soft:hover { background:rgba(255,255,255,.15); }
     </style>
@@ -324,7 +324,7 @@ foreach ($apps as $idx => $app) {
                 <input type="checkbox" name="admin_only" value="1" class="accent-blue-500">
                 <span>Admin uniquement</span>
             </label>
-            <button class="sm:col-span-7 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
+            <button class="sm:col-span-7 px-3 py-2 rounded-xl text-sm font-semibold bg-violet-600 hover:bg-violet-700">Ajouter l'application</button>
         </form>
 
         <div class="flex items-center justify-between gap-2">
@@ -368,7 +368,7 @@ foreach ($apps as $idx => $app) {
                         <span class="font-semibold text-sm text-white truncate"><?= htmlspecialchars($name) ?></span>
                         <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 <?= $statusCls ?>"><?= $statusLabel ?></span>
                         <?php if ($adminOnly): ?>
-                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex-shrink-0">🔒 Admin</span>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-500/20 text-blue-300 border border-blue-500/30 flex-shrink-0">🔒 Admin</span>
                         <?php endif; ?>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -439,7 +439,7 @@ foreach ($apps as $idx => $app) {
                     </div>
 
                     <div class="flex justify-end">
-                        <button class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Enregistrer</button>
+                        <button class="px-4 py-2 rounded-xl text-sm font-semibold bg-violet-600 hover:bg-violet-700">Enregistrer</button>
                     </div>
                 </form>
 
@@ -483,12 +483,12 @@ foreach ($apps as $idx => $app) {
         const orig = btn.textContent;
         btn.textContent = ok ? '✓ ' + msg : '✗ ' + msg;
         btn.classList.add(ok ? 'bg-emerald-600' : 'bg-red-600');
-        btn.classList.remove('bg-blue-600', 'bg-blue-700', 'bg-emerald-600/70');
+        btn.classList.remove('bg-violet-600', 'bg-blue-700', 'bg-emerald-600/70');
         btn.disabled = true;
         setTimeout(() => {
             btn.textContent = orig;
             btn.classList.remove('bg-emerald-600', 'bg-red-600');
-            btn.classList.add(orig.includes('Enregistrer') ? 'bg-blue-600' : 'bg-emerald-600/70');
+            btn.classList.add(orig.includes('Enregistrer') ? 'bg-violet-600' : 'bg-emerald-600/70');
             btn.disabled = false;
         }, 2200);
     }

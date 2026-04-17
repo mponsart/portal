@@ -68,15 +68,19 @@ try {
     <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Erreur — Portail</title>
+        <title>Erreur d'authentification — Speed Cloud</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     </head>
-    <body class="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div class="text-center">
-            <div class="text-red-500 text-6xl mb-4">⚠️</div>
-            <h1 class="text-2xl font-bold text-white mb-2">Erreur d'authentification</h1>
-            <p class="text-gray-400 mb-6"><?= htmlspecialchars($e->getMessage()) ?></p>
-            <a href="/" class="text-purple-400 hover:text-purple-300">← Retour</a>
+    <body class="min-h-screen flex items-center justify-center px-4" style="background:#07080e;font-family:'Inter',sans-serif;">
+        <div class="text-center max-w-md">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                 style="background:rgba(220,38,38,.18);border:1px solid rgba(220,38,38,.35);">
+                <span class="text-3xl">⚠️</span>
+            </div>
+            <h1 class="text-xl font-bold text-white mb-2">Erreur d'authentification</h1>
+            <p class="text-white/55 mb-6 text-sm"><?= htmlspecialchars($e->getMessage()) ?></p>
+            <a href="/" class="text-violet-400 hover:text-violet-300 text-sm">← Retour</a>
         </div>
     </body>
     </html>

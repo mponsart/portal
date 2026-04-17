@@ -84,16 +84,16 @@ function formatIsoDate(?string $iso): string {
     <title>Admin Utilisateurs - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
+            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124,58,237,.26) 0%, transparent 65%),
+                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(8,145,178,.18) 0%, transparent 60%); }
+        .glass { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); border-radius:16px; }
         .admin-tab { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
-        .admin-tab.active { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.35); color:#fcd34d; }
+        .admin-tab.active { background:rgba(124,58,237,.2); border-color:rgba(124,58,237,.45); color:#a78bfa; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -118,7 +118,7 @@ function formatIsoDate(?string $iso): string {
     </section>
 
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="glass rounded-2xl p-4"><p class="text-blue-300 text-xs uppercase tracking-wider">Utilisateurs</p><p class="text-white text-2xl font-bold mt-1"><?= $totalUsers ?></p></div>
+        <div class="glass rounded-2xl p-4"><p class="text-violet-300 text-xs uppercase tracking-wider">Utilisateurs</p><p class="text-white text-2xl font-bold mt-1"><?= $totalUsers ?></p></div>
         <div class="glass rounded-2xl p-4"><p class="text-emerald-300 text-xs uppercase tracking-wider">Charte validée</p><p class="text-white text-2xl font-bold mt-1"><?= $acceptedUsers ?></p></div>
         <div class="glass rounded-2xl p-4"><p class="text-amber-300 text-xs uppercase tracking-wider">En attente</p><p class="text-white text-2xl font-bold mt-1"><?= $pendingUsers ?></p></div>
         <div class="glass rounded-2xl p-4"><p class="text-cyan-300 text-xs uppercase tracking-wider">Version suivie</p><p class="text-white text-sm font-semibold mt-2"><?= htmlspecialchars($version) ?></p></div>
