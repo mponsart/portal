@@ -38,48 +38,46 @@ $catBadge  = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Actualités — Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { colors: { brand:'#3454d1','brand-dk':'#2440a8' } } }
-        };
-    </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; }
-        .bg-ambient { position:fixed;inset:0;pointer-events:none;z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%,  rgba(52,84,209,.28) 0%,transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%,rgba(14,165,233,.18) 0%,transparent 60%); }
-        .glass { background:rgba(255,255,255,.055);backdrop-filter:blur(16px) saturate(160%);
-                 -webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.10); }
-        .section-label { font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35); }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
-        .fade-up { animation:fadeUp .4s ease both; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); }
+        .bg-ambient {
+            position:fixed; inset:0; pointer-events:none; z-index:0;
+            background:
+                radial-gradient(ellipse 65% 50% at 10%   5%,  rgba(124,58,237,.26) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 92%  95%,  rgba(8,145,178,.20)  0%, transparent 58%);
+        }
+        .panel {
+            background:var(--surface);
+            border:1px solid var(--border);
+            border-radius:18px;
+        }
+        .sec-title { font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38); }
 
-        /* Rendu du contenu riche */
-        .news-body h2 { font-size:1.1rem;font-weight:700;color:#fff;margin:1rem 0 .4rem; }
-        .news-body h3 { font-size:.95rem;font-weight:600;color:#e2e8f0;margin:.8rem 0 .3rem; }
-        .news-body p  { color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.7;margin:.35rem 0; }
-        .news-body strong { color:#fff;font-weight:600; }
-        .news-body em { font-style:italic;color:rgba(255,255,255,.7); }
-        .news-body u  { text-decoration:underline; }
-        .news-body s  { text-decoration:line-through;color:rgba(255,255,255,.4); }
-        .news-body ul { list-style:disc;padding-left:1.2rem;color:rgba(255,255,255,.65);font-size:.875rem;margin:.35rem 0; }
-        .news-body ol { list-style:decimal;padding-left:1.2rem;color:rgba(255,255,255,.65);font-size:.875rem;margin:.35rem 0; }
-        .news-body li { margin:.2rem 0; }
-        .news-body blockquote { border-left:3px solid #3454d1;padding:.4rem .8rem;margin:.6rem 0;background:rgba(52,84,209,.1);border-radius:0 8px 8px 0;color:rgba(255,255,255,.6);font-size:.875rem; }
-        .news-body a  { color:#6b8fff;text-decoration:underline; }
+        /* ── Article card ── */
+        .news-card {
+            background:var(--surface);
+            border:1px solid var(--border);
+            border-radius:16px;
+            transition:border-color .14s,transform .14s,background .14s;
+        }
+        .news-card:hover {
+            border-color:rgba(167,139,250,.3);
+            background:var(--surface-hov);
+            transform:translateY(-2px);
+        }
 
-        /* Filtres catégorie */
-        .filter-btn { transition: all .15s; }
-        .filter-btn.active { background:rgba(52,84,209,.35)!important;border-color:rgba(52,84,209,.7)!important;color:#fff!important; }
+        /* ── Rich text (excerpt) ── */
+        .news-body p  { color:rgba(255,255,255,.62); font-size:.875rem; line-height:1.7; }
 
-        /* Card */
-        .news-card { transition: border-color .15s, transform .15s, background .15s; }
-        .news-card:hover { border-color:rgba(255,255,255,.2);transform:translateY(-2px);background:rgba(255,255,255,.07); }
-        .news-excerpt { color:rgba(255,255,255,.62);font-size:.875rem;line-height:1.7; }
+        /* ── Filters ── */
+        .filter-btn { transition:all .14s; border-radius:999px; }
+        .filter-btn.active { color:#a78bfa!important; border-color:rgba(124,58,237,.5)!important; background:rgba(124,58,237,.18)!important; }
+
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+        .fade-up { animation:fadeUp .35s ease both; }
     </style>
 </head>
 <body class="min-h-screen text-white relative">
@@ -91,31 +89,41 @@ $catBadge  = [
 
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
-        $toneCls = [
-            'danger' => 'bg-red-500/20 border-red-500/35 text-red-100',
-            'warning' => 'bg-amber-500/20 border-amber-500/35 text-amber-100',
-            'success' => 'bg-emerald-500/20 border-emerald-500/35 text-emerald-100',
-            'info' => 'bg-cyan-500/20 border-cyan-500/35 text-cyan-100',
-        ][$tone] ?? 'bg-red-500/20 border-red-500/35 text-red-100';
+        $bannerStyles = [
+            'danger'  => ['bg'=>'rgba(220,38,38,.14)',  'border'=>'rgba(220,38,38,.35)',  'text'=>'#fca5a5'],
+            'warning' => ['bg'=>'rgba(217,119,6,.14)',  'border'=>'rgba(217,119,6,.35)',  'text'=>'#fcd34d'],
+            'success' => ['bg'=>'rgba(5,150,105,.14)',  'border'=>'rgba(5,150,105,.35)',  'text'=>'#6ee7b7'],
+            'info'    => ['bg'=>'rgba(8,145,178,.14)',  'border'=>'rgba(8,145,178,.35)',  'text'=>'#7dd3fc'],
+        ][$tone] ?? ['bg'=>'rgba(220,38,38,.14)', 'border'=>'rgba(220,38,38,.35)', 'text'=>'#fca5a5'];
         $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
     ?>
-    <section class="rounded-2xl border px-4 py-3 <?= $toneCls ?> fade-up" style="animation-delay:.03s;">
-        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce importante') ?></p>
-        <p class="text-sm opacity-90 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
-    </section>
+    <div class="rounded-2xl border px-4 py-3 fade-up"
+         style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;">
+        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce') ?></p>
+        <p class="text-sm opacity-85 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+    </div>
     <?php endif; ?>
 
-    <!-- En-tête -->
-    <section class="glass rounded-3xl p-5 sm:p-6 fade-up" style="animation-delay:.05s">
-        <h1 class="text-2xl font-bold text-white mb-1">📰 Actualités</h1>
-        <p class="text-white/45 text-sm">Toutes les annonces et informations de l'association.</p>
-    </section>
+    <!-- Header -->
+    <header class="panel p-5 sm:p-6 fade-up" style="animation-delay:.04s">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                 style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.35);">
+                <span class="text-xl">📰</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">Actualités</h1>
+                <p class="text-white/40 text-xs mt-0.5">Annonces et informations de l'association.</p>
+            </div>
+        </div>
+    </header>
 
-    <!-- Filtres -->
+    <!-- Filters -->
     <?php if (!empty($all)): ?>
-    <div class="glass rounded-2xl p-3 flex flex-wrap gap-2 fade-up" style="animation-delay:.10s">
+    <div class="flex flex-wrap gap-2 fade-up" style="animation-delay:.09s">
         <button onclick="filterCat('all')" data-cat="all"
-                class="filter-btn active px-3 py-1.5 rounded-xl text-xs font-medium text-white/70 glass border border-white/10">
+                class="filter-btn active px-3 py-1.5 text-xs font-semibold border text-white/60"
+                style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.10);">
             Tout (<?= count($all) ?>)
         </button>
         <?php foreach ($catLabels as $key => $label):
@@ -124,7 +132,7 @@ $catBadge  = [
             $badge = $catBadge[$key] ?? $catBadge['general'];
         ?>
         <button onclick="filterCat('<?= $key ?>')" data-cat="<?= $key ?>"
-                class="filter-btn px-3 py-1.5 rounded-xl text-xs font-medium border"
+                class="filter-btn px-3 py-1.5 text-xs font-semibold border"
                 style="background:<?= $badge['bg'] ?>;color:<?= $badge['color'] ?>;border-color:<?= $badge['color'] ?>40;">
             <?= $label ?> (<?= $cnt ?>)
         </button>
@@ -132,30 +140,29 @@ $catBadge  = [
     </div>
     <?php endif; ?>
 
-    <!-- Liste des actualités -->
-    <div id="newsList" class="space-y-4">
+    <!-- List -->
+    <div id="newsList" class="space-y-3">
         <?php if (empty($all)): ?>
-        <div class="glass rounded-2xl p-10 text-center fade-up" style="animation-delay:.15s">
-            <span class="text-4xl">📭</span>
-            <p class="text-white/40 mt-3">Aucune actualité pour le moment.</p>
+        <div class="panel p-10 text-center fade-up" style="animation-delay:.13s">
+            <span class="text-4xl block mb-3">📭</span>
+            <p class="text-white/38">Aucune actualité pour le moment.</p>
         </div>
         <?php else:
             foreach ($all as $i => $ann):
-                $annId      = htmlspecialchars($ann['id']             ?? '');
-                $annEmoji   = htmlspecialchars($ann['emoji']          ?? '📢');
-                $annTitle   = htmlspecialchars($ann['title']          ?? '');
+                $annId      = htmlspecialchars($ann['id'] ?? '');
+                $annEmoji   = htmlspecialchars($ann['emoji'] ?? '📢');
+                $annTitle   = htmlspecialchars($ann['title'] ?? '');
                 $annHtml    = $ann['html_content'] ?? nl2br(htmlspecialchars($ann['content'] ?? ''));
-            $annExcerpt = mb_substr(trim(strip_tags($annHtml)), 0, 220);
-                $annColor   = htmlspecialchars($ann['color']          ?? '#3454d1');
+                $annExcerpt = mb_substr(trim(strip_tags($annHtml)), 0, 220);
+                $annColor   = htmlspecialchars($ann['color'] ?? '#7c3aed');
                 $annCat     = $ann['category'] ?? 'general';
                 $annDate    = htmlspecialchars($ann['created_at'] ?? ($ann['pinned_at'] ?? ''));
-                $annUpdated = htmlspecialchars($ann['updated_at']     ?? '');
-                $badge      = $catBadge[$annCat]  ?? $catBadge['general'];
+                $badge      = $catBadge[$annCat] ?? $catBadge['general'];
                 $catLabel   = $catLabels[$annCat] ?? 'Général';
-                $delay      = min($i * 0.06 + 0.15, 0.9);
+                $delay      = min($i * 0.05 + 0.13, 0.85);
         ?>
         <article id="art-<?= $annId ?>" data-cat="<?= htmlspecialchars($annCat) ?>"
-                 class="news-card glass rounded-2xl overflow-hidden fade-up"
+                 class="news-card overflow-hidden fade-up"
                  style="border-left:3px solid <?= $annColor ?>;animation-delay:<?= $delay ?>s;">
             <div class="p-5 flex items-start gap-4">
                 <span class="text-2xl select-none flex-shrink-0 mt-0.5"><?= $annEmoji ?></span>
@@ -164,23 +171,22 @@ $catBadge  = [
                         <?php if ($annTitle): ?>
                         <p class="font-semibold text-white leading-snug"><?= $annTitle ?></p>
                         <?php endif; ?>
-                        <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                        <span class="text-[11px] px-2 py-0.5 rounded-full font-medium"
                               style="background:<?= $badge['bg'] ?>;color:<?= $badge['color'] ?>;">
                             <?= $catLabel ?>
                         </span>
                     </div>
-                    <p class="text-white/40 text-xs">
-                        <?= $annDate ?>
-                        <?= ($annUpdated && $annUpdated !== $annDate) ? ' · Modifié le ' . $annUpdated : '' ?>
-                    </p>
-                    <?php if ($annExcerpt !== ''): ?>
-                    <p class="news-excerpt mt-3"><?= htmlspecialchars($annExcerpt) ?><?= mb_strlen(trim(strip_tags($annHtml))) > 220 ? '…' : '' ?></p>
+                    <?php if ($annDate): ?>
+                    <p class="text-white/35 text-xs mb-2"><?= $annDate ?></p>
                     <?php endif; ?>
-                    <div class="mt-4">
+                    <?php if ($annExcerpt !== ''): ?>
+                    <p class="text-white/55 text-sm leading-relaxed"><?= htmlspecialchars($annExcerpt) ?><?= mb_strlen(trim(strip_tags($annHtml))) > 220 ? '…' : '' ?></p>
+                    <?php endif; ?>
+                    <div class="mt-3">
                         <a href="/article.php?id=<?= urlencode((string)($ann['id'] ?? '')) ?>"
-                           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand/25 hover:bg-brand/35 text-brand-lt text-xs font-semibold border border-brand/35 transition">
-                            <span>📖</span>
-                            Lire l'article
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                           style="background:rgba(124,58,237,.2);color:#a78bfa;border:1px solid rgba(124,58,237,.35);">
+                            Lire l'article →
                         </a>
                     </div>
                 </div>
@@ -192,17 +198,13 @@ $catBadge  = [
 </main>
 
 <script>
-// ── Filtre catégorie ─────────────────────────────────────────────────────────
 function filterCat(cat) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     document.querySelector(`[data-cat="${cat}"]`).classList.add('active');
-
     document.querySelectorAll('#newsList article').forEach(art => {
-        const show = cat === 'all' || art.dataset.cat === cat;
-        art.style.display = show ? '' : 'none';
+        art.style.display = (cat === 'all' || art.dataset.cat === cat) ? '' : 'none';
     });
 }
 </script>
-
 </body>
 </html>
