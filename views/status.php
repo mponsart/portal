@@ -190,9 +190,15 @@ $sites = readJsonArray($sitesFile, $defaultSites);
 $apps = readJsonArray($appsFile, $defaultApps);
 $workspaceIcons = ['gmail','drive','calendar','meet','docs','sheets','slides'];
 
-$apps = array_values(array_filter($apps, function ($app) use ($workspaceIcons) {
+$apps = array_values(array_filter($apps, function ($app) use ($workspaceIcons, $isAdmin) {
     $icon = strtolower(trim((string)($app['icon'] ?? 'link')));
-    return !in_array($icon, $workspaceIcons, true);
+    if (in_array($icon, $workspaceIcons, true)) {
+        return false;
+    }
+    if (!$isAdmin && !empty($app['admin_only'])) {
+        return false;
+    }
+    return true;
 }));
 
 $bannerFile = __DIR__ . '/../uploads/banners.json';
@@ -247,13 +253,20 @@ foreach ($sites as $i => $site) {
 }
 
 $appResults = [];
+$unavailableAppResults = [];
 foreach ($apps as $i => $app) {
     $name = trim((string)($app['name'] ?? 'Application'));
     $url = trim((string)($app['url'] ?? ''));
     $icon = trim((string)($app['icon'] ?? 'link'));
     $emoji = trim((string)($app['emoji'] ?? ''));
+    $appStatus = $app['status'] ?? 'active';
     $ping = $pingData['app:' . $i] ?? singlePing($url);
-    $appResults[] = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'ping' => $ping];
+    $entry = ['name' => $name, 'url' => $url, 'icon' => $icon, 'emoji' => $emoji, 'status' => $appStatus, 'ping' => $ping];
+    if (in_array($appStatus, ['maintenance', 'disabled'], true)) {
+        $unavailableAppResults[] = $entry;
+    } else {
+        $appResults[] = $entry;
+    }
 }
 
 $upCount = count(array_filter($results, fn($r) => $r['ping']['ok']));
@@ -433,6 +446,41 @@ $lastCheckLabel = $lastCheckAgo < 60
                 <?php if (!$ok && $err !== ''): ?>
                 <p class="text-xs mt-2 pl-5" style="color:#fca5a5;">Erreur : <?= htmlspecialchars($err) ?></p>
                 <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- Unavailable Apps -->
+    <?php if (!empty($unavailableAppResults)): ?>
+    <section>
+        <p class="sec-title mb-3">Applications indisponibles</p>
+        <div class="space-y-2">
+            <?php foreach ($unavailableAppResults as $item):
+                $appStatus = $item['status'] ?? 'disabled';
+            ?>
+            <div class="status-row px-4 py-3 opacity-60">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="status-dot-err flex-shrink-0" style="background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);"></div>
+                        <div class="min-w-0">
+                            <p class="text-white font-semibold text-sm">
+                                <?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?>
+                                <?= htmlspecialchars($item['name']) ?>
+                            </p>
+                            <a href="<?= htmlspecialchars($item['url']) ?>" target="_blank" rel="noopener noreferrer"
+                               class="text-xs text-white/38 hover:text-white/65 truncate block">
+                                <?= htmlspecialchars($item['url']) ?>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-sm font-semibold" style="color:#fbbf24;">
+                            <?= $appStatus === 'maintenance' ? '🔧 Maintenance' : '⛔ Désactivé' ?>
+                        </p>
+                    </div>
+                </div>
             </div>
             <?php endforeach; ?>
         </div>
