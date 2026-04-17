@@ -35,7 +35,7 @@ foreach ($channels as $key => $channelConfig) {
             theme: {
                 extend: {
                     colors: {
-                        'brand-indigo': '#3454d1',
+                        '#7c3aed': '#7c3aed',
                         'brand-cyan': '#0ea5e9',
                         'brand-ink': '#0b132b',
                     },
@@ -45,10 +45,10 @@ foreach ($channels as $key => $channelConfig) {
     </script>
     <link rel="icon" type="image/png" href="https://sign.groupe-speed.cloud/assets/images/cloudy.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
 </head>
-<body class="min-h-screen text-slate-100" style="font-family: 'Titillium Web', sans-serif; background: radial-gradient(circle at 10% 10%, #1d4ed8 0%, #0b132b 45%, #020617 100%);">
+<body class="min-h-screen text-slate-100" style="font-family: 'Inter', sans-serif; background: radial-gradient(circle at 10% 10%, #1d4ed8 0%, #0b132b 45%, #020617 100%);">
     <?php include __DIR__ . '/_nav.php'; ?>
 
     <main class="container mx-auto px-4 py-8">
@@ -93,14 +93,14 @@ foreach ($channels as $key => $channelConfig) {
                         </div>
                         <div id="colorField">
                             <label for="color" class="block text-sm font-semibold mb-2">Couleur</label>
-                            <input id="color" name="color" type="color" value="#3454d1" class="w-full h-12 p-1 rounded-lg bg-slate-900/60 border border-white/20 cursor-pointer">
+                            <input id="color" name="color" type="color" value="#7c3aed" class="w-full h-12 p-1 rounded-lg bg-slate-900/60 border border-white/20 cursor-pointer">
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input id="useEmbed" name="useEmbed" type="checkbox" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-brand-cyan rounded-full peer peer-checked:bg-brand-indigo after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-brand-cyan rounded-full peer peer-checked:bg-#7c3aed after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                         </label>
                         <span id="embedToggleLabel" class="text-sm font-semibold">Mode embed</span>
                         <span id="embedToggleHint" class="text-xs text-slate-400">(activé — titre, couleur et encadré Discord)</span>
@@ -163,7 +163,7 @@ foreach ($channels as $key => $channelConfig) {
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
-                        <button id="sendBtn" type="submit" class="px-5 py-3 rounded-lg bg-brand-indigo hover:bg-blue-700 transition font-semibold">
+                        <button id="sendBtn" type="submit" class="px-5 py-3 rounded-lg bg-#7c3aed hover:bg-violet-700 transition font-semibold">
                             Envoyer l'annonce
                         </button>
                         <span id="status" class="text-sm text-slate-200"></span>
@@ -177,7 +177,7 @@ foreach ($channels as $key => $channelConfig) {
                 <!-- Discord embed preview -->
                 <div id="previewEmbed" class="rounded-lg overflow-hidden text-sm">
                     <div class="flex">
-                        <div id="embedColorBar" class="w-1 flex-shrink-0" style="background:#3454d1"></div>
+                        <div id="embedColorBar" class="w-1 flex-shrink-0" style="background:#7c3aed"></div>
                         <div class="bg-[#2f3136] flex-1 p-3 relative min-w-0 space-y-1">
                             <img id="previewThumb" src="" alt="" class="hidden absolute top-3 right-3 w-14 h-14 rounded object-cover">
                             <div id="previewAuthorRow" class="hidden flex items-center gap-1.5 mb-1">
@@ -516,7 +516,7 @@ foreach ($channels as $key => $channelConfig) {
                 statusNode.textContent = 'Annonce envoyée avec succès.';
                 statusNode.className = 'text-sm text-emerald-300';
                 form.reset();
-                form.color.value = '#3454d1';
+                form.color.value = '#7c3aed';
                 useEmbedToggle.checked = true;
                 embedFields = [];
                 renderFieldsUI();

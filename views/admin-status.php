@@ -175,16 +175,16 @@ $totalApps = count($apps);
     <title>Admin Statuts - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
+            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124,58,237,.26) 0%, transparent 65%),
+                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(8,145,178,.18) 0%, transparent 60%); }
+        .glass { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); border-radius:16px; }
         .admin-tab { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
-        .admin-tab.active { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.35); color:#fcd34d; }
+        .admin-tab.active { background:rgba(124,58,237,.2); border-color:rgba(124,58,237,.45); color:#a78bfa; }
         .panel { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); border-radius:1rem; }
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .status-card { transition:transform .15s,border-color .15s; }
@@ -233,7 +233,7 @@ $totalApps = count($apps);
                 <input type="hidden" name="action" value="add_site">
                 <input type="text" name="name" maxlength="80" required placeholder="Nom du site" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                 <input type="text" name="url" maxlength="220" required placeholder="https://..." class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
-                <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter le site</button>
+                <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-violet-600 hover:bg-violet-700">Ajouter le site</button>
             </form>
 
             <?php foreach ($sites as $idx => $site):
@@ -249,7 +249,7 @@ $totalApps = count($apps);
                     <input type="text" name="url" maxlength="220" required value="<?= htmlspecialchars($url) ?>" class="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm">
                     <div class="flex items-center justify-between text-xs text-white/60">
                         <span>Entrée de configuration</span>
-                        <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
+                        <button class="px-2.5 py-1.5 rounded-lg text-xs bg-violet-600 hover:bg-violet-700">Modifier</button>
                     </div>
                 </form>
                 <form method="post" class="mt-1 flex justify-end">
@@ -284,7 +284,7 @@ $totalApps = count($apps);
                     <option value="notion">🗂️ Notion</option>
                     <option value="figma">🎨 Figma</option>
                 </select>
-                <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700">Ajouter l'application</button>
+                <button class="px-3 py-2 rounded-xl text-sm font-semibold bg-violet-600 hover:bg-violet-700">Ajouter l'application</button>
             </form>
 
             <?php foreach ($apps as $idx => $app):
@@ -321,7 +321,7 @@ $totalApps = count($apps);
                     </div>
                     <div class="flex items-center justify-between text-xs text-white/60">
                         <span>Entrée de configuration</span>
-                        <button class="px-2.5 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700">Modifier</button>
+                        <button class="px-2.5 py-1.5 rounded-lg text-xs bg-violet-600 hover:bg-violet-700">Modifier</button>
                     </div>
                 </form>
                 <form method="post" class="mt-1 flex justify-end">

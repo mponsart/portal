@@ -26,29 +26,29 @@ $csrfToken = $_SESSION['csrf_token'];
     <title>Admin Actualités - Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Titillium Web',sans-serif; background:#06080f; color-scheme:dark; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(52,84,209,.28) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(14,165,233,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); backdrop-filter:blur(16px) saturate(160%); border:1px solid rgba(255,255,255,.10); }
+            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124,58,237,.26) 0%, transparent 65%),
+                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(8,145,178,.18) 0%, transparent 60%); }
+        .glass { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); border-radius:16px; }
         .admin-tab { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
-        .admin-tab.active { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.35); color:#fcd34d; }
+        .admin-tab.active { background:rgba(124,58,237,.2); border-color:rgba(124,58,237,.45); color:#a78bfa; }
         .panel { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); border-radius:1rem; }
-        .btn-primary { background:#3454d1; color:#fff; border:1px solid rgba(255,255,255,.10); }
-        .btn-primary:hover { background:#2440a8; }
+        .btn-primary { background:var(--primary); color:#fff; border:none; }
+        .btn-primary:hover { background:var(--primary-dk); }
         .btn-ghost { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14); color:#e5e7eb; }
         .btn-ghost:hover { background:rgba(255,255,255,.18); }
         .crumb { color:rgba(229,231,235,.55); font-size:.75rem; }
         .input-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#e5e7eb; }
-        .input-dark:focus { outline:none; border-color:rgba(107,143,255,.6); box-shadow:0 0 0 2px rgba(52,84,209,.35); }
+        .input-dark:focus { outline:none; border-color:rgba(167,139,250,.55); box-shadow:0 0 0 2px rgba(124,58,237,.25); }
         .tiptap-shell { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
         .tiptap-toolbar { border-bottom:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); }
         .tiptap-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); color:#e2e8f0; }
         .tiptap-btn:hover { background:rgba(255,255,255,.15); }
-        .tiptap-btn.active { background:rgba(52,84,209,.35); border-color:rgba(107,143,255,.8); }
+        .tiptap-btn.active { background:rgba(124,58,237,.25); border-color:rgba(167,139,250,.8); }
         .tiptap-editor { min-height:220px; padding:.9rem 1rem; }
         .tiptap-editor:focus { outline:none; }
         .tiptap-editor .ProseMirror { min-height:220px; }
@@ -329,10 +329,10 @@ function renderAnnouncements() {
     list.innerHTML = items.map(a => {
         const status = (a.status || 'published') === 'draft' ? 'Brouillon' : 'Publié';
         const statusCls = (a.status || 'published') === 'draft' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300';
-        const catCls = a.category === 'urgent' ? 'bg-red-500/20 text-red-300' : (a.category === 'event' ? 'bg-violet-500/20 text-violet-300' : (a.category === 'info' ? 'bg-cyan-500/20 text-cyan-300' : 'bg-blue-500/20 text-blue-300'));
+        const catCls = a.category === 'urgent' ? 'bg-red-500/20 text-red-300' : (a.category === 'event' ? 'bg-violet-500/20 text-violet-300' : (a.category === 'info' ? 'bg-cyan-500/20 text-cyan-300' : 'bg-violet-500/20 text-blue-300'));
         const catLabel = a.category === 'urgent' ? 'Urgent' : (a.category === 'event' ? 'Événement' : (a.category === 'info' ? 'Info' : 'Général'));
         const title = a.title ? `<p class="font-semibold text-sm text-white leading-snug">${esc(a.title)}</p>` : '';
-        return `<div class="news-card glass rounded-2xl p-4" style="border-left:3px solid ${esc(a.color || '#3454d1')}">
+        return `<div class="news-card glass rounded-2xl p-4" style="border-left:3px solid ${esc(a.color || '#7c3aed')}">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-start gap-3 min-w-0 flex-1">
                     <span class="text-lg mt-0.5">${esc(a.emoji || '📢')}</span>
@@ -346,7 +346,7 @@ function renderAnnouncements() {
                     </div>
                 </div>
                 <div class="flex gap-1">
-                    <button onclick="editAnn('${esc(a.id)}')" class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg">✏️</button>
+                    <button onclick="editAnn('${esc(a.id)}')" class="p-1.5 text-blue-400 hover:bg-violet-500/20 rounded-lg">✏️</button>
                     <button onclick="deleteAnn('${esc(a.id)}')" class="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg">🗑️</button>
                 </div>
             </div>
@@ -380,7 +380,7 @@ function editAnn(id) {
     document.getElementById('editTitle').value = ann.title || '';
     document.getElementById('editCategory').value = ann.category || 'general';
     document.getElementById('editStatusType').value = ann.status || 'published';
-    document.getElementById('editColor').value = ann.color || '#3454d1';
+    document.getElementById('editColor').value = ann.color || '#7c3aed';
     const htmlContent = String(ann.html_content || '').trim();
     const fallbackText = ann.markdown_content || htmlToText(ann.html_content || '');
     const fallbackHtml = `<p>${escHtml(fallbackText).replace(/\n/g, '<br>')}</p>`;
