@@ -35,7 +35,7 @@ foreach ($channels as $key => $channelConfig) {
             theme: {
                 extend: {
                     colors: {
-                        '#7c3aed': '#7c3aed',
+                        'brand-violet': '#7c3aed',
                         'brand-cyan': '#0ea5e9',
                         'brand-ink': '#0b132b',
                     },
@@ -100,7 +100,7 @@ foreach ($channels as $key => $channelConfig) {
                     <div class="flex items-center gap-3">
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input id="useEmbed" name="useEmbed" type="checkbox" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-brand-cyan rounded-full peer peer-checked:bg-#7c3aed after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-brand-cyan rounded-full peer peer-checked:bg-brand-violet after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                         </label>
                         <span id="embedToggleLabel" class="text-sm font-semibold">Mode embed</span>
                         <span id="embedToggleHint" class="text-xs text-slate-400">(activé — titre, couleur et encadré Discord)</span>
@@ -163,7 +163,7 @@ foreach ($channels as $key => $channelConfig) {
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
-                        <button id="sendBtn" type="submit" class="px-5 py-3 rounded-lg bg-#7c3aed hover:bg-violet-700 transition font-semibold">
+                        <button id="sendBtn" type="submit" class="px-5 py-3 rounded-lg bg-brand-violet hover:bg-violet-700 transition font-semibold text-white">
                             Envoyer l'annonce
                         </button>
                         <span id="status" class="text-sm text-slate-200"></span>

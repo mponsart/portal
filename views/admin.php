@@ -28,7 +28,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
 $catLabels = ['general' => 'Général', 'event' => 'Événement', 'urgent' => 'Urgent', 'info' => 'Info'];
 $catColors = ['general' => '#7c3aed', 'urgent' => '#ef4444', 'event' => '#8b5cf6', 'info' => '#0ea5e9'];
-$catBadge  = ['general' => 'bg-violet-500/20 text-blue-300', 'urgent' => 'bg-red-500/20 text-red-300', 'event' => 'bg-violet-500/20 text-violet-300', 'info' => 'bg-cyan-500/20 text-cyan-300'];
+$catBadge  = ['general' => 'bg-violet-500/20 text-violet-300', 'urgent' => 'bg-red-500/20 text-red-300', 'event' => 'bg-violet-500/20 text-violet-300', 'info' => 'bg-cyan-500/20 text-cyan-300'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">

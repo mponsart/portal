@@ -469,7 +469,7 @@ function appEmoji(string $icon): string {
         dateEl.textContent = `${JOURS[n.getDay()]} ${n.getDate()} ${MOIS[n.getMonth()]} ${n.getFullYear()}`;
     }
     tick();
-    setInterval(tick, 30000);
+    setInterval(tick, 60000);
 </script>
 
 </body>
