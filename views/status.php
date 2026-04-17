@@ -62,28 +62,34 @@ function singlePing(string $url): array {
     if (function_exists('curl_init')) {
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
+            CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_CONNECTTIMEOUT => 2,
-            CURLOPT_TIMEOUT => 6,
-            CURLOPT_NOBODY => false,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_RANGE => '0-0',
-            CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_NOBODY         => true,   // HEAD request — no body download
+            CURLOPT_USERAGENT      => 'GroupeSpeedCloudStatus/1.0',
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ]);
 
-        $result = curl_exec($ch);
-        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
-        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
+        curl_exec($ch);
+        $ms    = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
+        $code  = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $errno = curl_errno($ch);
+        $err   = curl_error($ch);
         curl_close($ch);
 
+        // 405 = server responded but HEAD not allowed → still up
+        if ($code === 405) {
+            return ['ok' => true, 'code' => $code, 'ms' => $ms, 'error' => ''];
+        }
+
         return [
-            'ok' => $result !== false && $code >= 200 && $code < 500,
-            'code' => $code,
-            'ms' => $ms,
-            'error' => $result === false ? ($err ?: 'Echec ping') : '',
+            'ok'    => $errno === 0 && $code >= 200 && $code < 500,
+            'code'  => $code,
+            'ms'    => $ms,
+            'error' => $errno !== 0 ? ($err ?: 'Echec ping') : '',
         ];
     }
 
@@ -91,7 +97,7 @@ function singlePing(string $url): array {
     $headers = @get_headers($url);
     $ms = (int)round((microtime(true) - $start) * 1000);
     if (!is_array($headers) || !isset($headers[0])) {
-        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de reponse'];
+        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de réponse'];
     }
 
     preg_match('/\s(\d{3})\s/', $headers[0], $m);
@@ -119,15 +125,15 @@ function batchPing(array $urls): array {
 
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
+            CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_CONNECTTIMEOUT => 2,
-            CURLOPT_TIMEOUT => 6,
-            CURLOPT_NOBODY => false,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_RANGE => '0-0',
-            CURLOPT_USERAGENT => 'GroupeSpeedCloudStatus/1.0',
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_NOBODY         => true,   // HEAD request — no body download
+            CURLOPT_USERAGENT      => 'GroupeSpeedCloudStatus/1.0',
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ]);
         $handles[$idx] = $ch;
         curl_multi_add_handle($mh, $ch);
@@ -141,20 +147,26 @@ function batchPing(array $urls): array {
     } while ($active && $status === CURLM_OK);
 
     foreach ($handles as $idx => $ch) {
-        $raw = curl_multi_getcontent($ch);
-        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $ms = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
-        $err = curl_error($ch);
-
-        $results[$idx] = [
-            'ok' => $raw !== false && $code >= 200 && $code < 500,
-            'code' => $code,
-            'ms' => $ms,
-            'error' => $raw === false ? ($err ?: 'Echec ping') : '',
-        ];
+        $code  = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $ms    = (int)round(((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME)) * 1000);
+        $errno = curl_errno($ch);
+        $err   = curl_error($ch);
 
         curl_multi_remove_handle($mh, $ch);
         curl_close($ch);
+
+        // 405 = server responded but HEAD not allowed → still up
+        if ($code === 405) {
+            $results[$idx] = ['ok' => true, 'code' => $code, 'ms' => $ms, 'error' => ''];
+            continue;
+        }
+
+        $results[$idx] = [
+            'ok'    => $errno === 0 && $code >= 200 && $code < 500,
+            'code'  => $code,
+            'ms'    => $ms,
+            'error' => $errno !== 0 ? ($err ?: 'Echec ping') : '',
+        ];
     }
     curl_multi_close($mh);
 
@@ -203,7 +215,8 @@ foreach ($apps as $i => $app) {
 
 $signature = hash('sha256', json_encode(array_column($targets, 'url')) ?: '');
 $cache = readPingCache($pingCacheFile);
-$useCache = isset($cache['signature'], $cache['created_at'], $cache['data'])
+$forceRefresh = isset($_GET['refresh']);
+$useCache = !$forceRefresh && isset($cache['signature'], $cache['created_at'], $cache['data'])
     && $cache['signature'] === $signature
     && (time() - (int)$cache['created_at']) <= $pingCacheTtl
     && is_array($cache['data']);
@@ -247,6 +260,12 @@ $upCount = count(array_filter($results, fn($r) => $r['ping']['ok']));
 $totalCount = count($results);
 $upApps = count(array_filter($appResults, fn($r) => $r['ping']['ok']));
 $totalApps = count($appResults);
+
+$lastCheckTs  = $useCache ? (int)$cache['created_at'] : time();
+$lastCheckAgo = max(0, time() - $lastCheckTs);
+$lastCheckLabel = $lastCheckAgo < 60
+    ? "il y a {$lastCheckAgo}s"
+    : 'il y a ' . floor($lastCheckAgo / 60) . 'min';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -313,7 +332,10 @@ $totalApps = count($appResults);
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-white">Statuts des services</h1>
-                    <p class="text-white/40 text-xs mt-0.5">Mesure serveur en temps réel.</p>
+                    <p class="text-white/40 text-xs mt-0.5">
+                        Mesure serveur en temps réel · <?= htmlspecialchars($lastCheckLabel) ?>
+                        <?php if ($useCache): ?><span class="text-white/25">(cache)</span><?php endif; ?>
+                    </p>
                 </div>
             </div>
             <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
@@ -325,6 +347,11 @@ $totalApps = count($appResults);
                       style="<?= $upApps === $totalApps ? 'background:rgba(5,150,105,.18);color:#34d399;border:1px solid rgba(5,150,105,.35);' : 'background:rgba(220,38,38,.14);color:#f87171;border:1px solid rgba(220,38,38,.3);' ?>">
                     <?= $upApps === $totalApps ? '✓' : '!' ?> Apps <?= $upApps ?>/<?= $totalApps ?>
                 </span>
+                <a href="/status.php?refresh=1"
+                   class="text-xs px-2.5 py-1 rounded-full font-semibold transition"
+                   style="background:rgba(124,58,237,.14);color:#a78bfa;border:1px solid rgba(124,58,237,.3);">
+                    ↺ Rafraîchir
+                </a>
             </div>
         </div>
     </header>
@@ -370,8 +397,8 @@ $totalApps = count($appResults);
 
     <!-- Apps -->
     <?php if (!empty($appResults)): ?>
-    <section class="panel p-5">
-        <h2 class="font-bold mb-4">Applications</h2>
+    <section>
+        <p class="sec-title mb-3">Applications surveillées</p>
         <div class="space-y-2">
             <?php foreach ($appResults as $item):
                 $ok   = $item['ping']['ok'];
