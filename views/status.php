@@ -54,9 +54,19 @@ function appEmoji(string $icon): string {
     };
 }
 
+/** Network-error curl codes that indicate connectivity restriction, not server downtime */
+const CURL_NETWORK_ERRORS = [
+    CURLE_COULDNT_RESOLVE_HOST,   // 6  — DNS failure
+    CURLE_COULDNT_CONNECT,        // 7  — Connection refused / unreachable
+    CURLE_OPERATION_TIMEDOUT,     // 28 — Timeout
+    CURLE_SSL_CONNECT_ERROR,      // 35 — SSL handshake failed
+    CURLE_SEND_ERROR,             // 55 — Send failure
+    CURLE_RECV_ERROR,             // 56 — Receive failure
+];
+
 function singlePing(string $url): array {
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        return ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
+        return ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide', 'net_err' => false];
     }
 
     if (function_exists('curl_init')) {
@@ -82,14 +92,17 @@ function singlePing(string $url): array {
 
         // 405 = server responded but HEAD not allowed → still up
         if ($code === 405) {
-            return ['ok' => true, 'code' => $code, 'ms' => $ms, 'error' => ''];
+            return ['ok' => true, 'code' => $code, 'ms' => $ms, 'error' => '', 'net_err' => false];
         }
 
+        $isNetworkErr = $errno !== 0 && in_array($errno, CURL_NETWORK_ERRORS, true);
+
         return [
-            'ok'    => $errno === 0 && $code >= 200 && $code < 500,
-            'code'  => $code,
-            'ms'    => $ms,
-            'error' => $errno !== 0 ? ($err ?: 'Echec ping') : '',
+            'ok'      => $errno === 0 && $code >= 200 && $code < 500,
+            'code'    => $code,
+            'ms'      => $ms,
+            'error'   => $errno !== 0 ? ($err ?: 'Échec ping') : '',
+            'net_err' => $isNetworkErr,
         ];
     }
 
@@ -97,12 +110,12 @@ function singlePing(string $url): array {
     $headers = @get_headers($url);
     $ms = (int)round((microtime(true) - $start) * 1000);
     if (!is_array($headers) || !isset($headers[0])) {
-        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de réponse'];
+        return ['ok' => false, 'code' => 0, 'ms' => $ms, 'error' => 'Pas de réponse', 'net_err' => true];
     }
 
     preg_match('/\s(\d{3})\s/', $headers[0], $m);
     $code = isset($m[1]) ? (int)$m[1] : 0;
-    return ['ok' => $code >= 200 && $code < 500, 'code' => $code, 'ms' => $ms, 'error' => ''];
+    return ['ok' => $code >= 200 && $code < 500, 'code' => $code, 'ms' => $ms, 'error' => '', 'net_err' => false];
 }
 
 function batchPing(array $urls): array {
@@ -119,7 +132,7 @@ function batchPing(array $urls): array {
     foreach ($urls as $idx => $url) {
         $url = (string)$url;
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            $results[$idx] = ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide'];
+            $results[$idx] = ['ok' => false, 'code' => 0, 'ms' => 0, 'error' => 'URL invalide', 'net_err' => false];
             continue;
         }
 
@@ -157,15 +170,18 @@ function batchPing(array $urls): array {
 
         // 405 = server responded but HEAD not allowed → still up
         if ($code === 405) {
-            $results[$idx] = ['ok' => true, 'code' => $code, 'ms' => $ms, 'error' => ''];
+            $results[$idx] = ['ok' => true, 'code' => $code, 'ms' => $ms, 'error' => '', 'net_err' => false];
             continue;
         }
 
+        $isNetworkErr = $errno !== 0 && in_array($errno, CURL_NETWORK_ERRORS, true);
+
         $results[$idx] = [
-            'ok'    => $errno === 0 && $code >= 200 && $code < 500,
-            'code'  => $code,
-            'ms'    => $ms,
-            'error' => $errno !== 0 ? ($err ?: 'Echec ping') : '',
+            'ok'      => $errno === 0 && $code >= 200 && $code < 500,
+            'code'    => $code,
+            'ms'      => $ms,
+            'error'   => $errno !== 0 ? ($err ?: 'Échec ping') : '',
+            'net_err' => $isNetworkErr,
         ];
     }
     curl_multi_close($mh);
@@ -274,6 +290,17 @@ $totalCount = count($results);
 $upApps = count(array_filter($appResults, fn($r) => $r['ping']['ok']));
 $totalApps = count($appResults);
 
+// Detect "network limited" mode: when every non-cached check returned a network error
+$allPings = array_merge(
+    array_column($results, 'ping'),
+    array_column($appResults, 'ping')
+);
+$failedPings = array_filter($allPings, fn($p) => !$p['ok']);
+$failedCount = count($failedPings);
+$networkLimited = !$useCache && $failedCount > 0
+    && count(array_filter($failedPings, fn($p) => !empty($p['net_err']))) === $failedCount
+    && $failedCount === count($allPings);
+
 $lastCheckTs  = $useCache ? (int)$cache['created_at'] : time();
 $lastCheckAgo = max(0, time() - $lastCheckTs);
 $lastCheckLabel = $lastCheckAgo < 60
@@ -291,28 +318,35 @@ $lastCheckLabel = $lastCheckAgo < 60
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Inter',sans-serif; background:var(--bg); }
-        .bg-ambient {
-            position:fixed; inset:0; pointer-events:none; z-index:0;
-            background:
-                radial-gradient(ellipse 65% 50% at 10%  5%,  rgba(124,58,237,.25) 0%, transparent 58%),
-                radial-gradient(ellipse 50% 40% at 92% 95%,  rgba(8,145,178,.18)  0%, transparent 56%);
-        }
-        .panel { background:var(--surface); border:1px solid var(--border); border-radius:18px; }
-        .sec-title { font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38); }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--on-surface); }
+
+        /* ── Status row ── */
         .status-row {
-            background:rgba(255,255,255,.03);
-            border:1px solid var(--border);
-            border-radius:12px;
-            transition:border-color .13s;
+            background: var(--surface-1);
+            border-radius: var(--shape-lg);
+            box-shadow: var(--elev-1);
+            transition: box-shadow .2s, background .14s;
         }
-        .status-row:hover { border-color:rgba(167,139,250,.25); }
-        .status-dot-ok  { width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,.6); }
-        .status-dot-err { width:8px;height:8px;border-radius:50%;background:#f87171;box-shadow:0 0 6px rgba(248,113,113,.6); }
+        .status-row:hover { box-shadow: var(--elev-2); background: var(--surface-2); }
+
+        /* ── Status dot ── */
+        .dot-ok  { width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 6px rgba(109,213,140,.65); flex-shrink:0; }
+        .dot-err { width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px rgba(242,184,184,.55); flex-shrink:0; }
+        .dot-warn{ width:8px;height:8px;border-radius:50%;background:var(--warning);box-shadow:0 0 6px rgba(255,185,81,.55); flex-shrink:0; }
+        .dot-unknown { width:8px;height:8px;border-radius:50%;background:var(--outline);flex-shrink:0; }
+
+        /* ── Sec title ── */
+        .sec-title { font-size:.6875rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--on-surface-var); }
+
+        /* ── Banner ── */
+        .md-banner { border-radius:var(--shape-lg); border-left:4px solid; display:flex; align-items:flex-start; gap:12px; padding:14px 16px; }
+
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+        .fade-up { animation:fadeUp .38s cubic-bezier(.22,1,.36,1) both; }
     </style>
 </head>
-<body class="min-h-screen text-white relative">
-<div class="bg-ambient"></div>
+<body class="min-h-screen relative">
+<div class="bg-ambient" aria-hidden="true"></div>
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
@@ -321,48 +355,68 @@ $lastCheckLabel = $lastCheckAgo < 60
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
         $bannerStyles = [
-            'danger'  => ['bg'=>'rgba(220,38,38,.14)',  'border'=>'rgba(220,38,38,.35)',  'text'=>'#fca5a5'],
-            'warning' => ['bg'=>'rgba(217,119,6,.14)',  'border'=>'rgba(217,119,6,.35)',  'text'=>'#fcd34d'],
-            'success' => ['bg'=>'rgba(5,150,105,.14)',  'border'=>'rgba(5,150,105,.35)',  'text'=>'#6ee7b7'],
-            'info'    => ['bg'=>'rgba(8,145,178,.14)',  'border'=>'rgba(8,145,178,.35)',  'text'=>'#7dd3fc'],
-        ][$tone] ?? ['bg'=>'rgba(220,38,38,.14)', 'border'=>'rgba(220,38,38,.35)', 'text'=>'#fca5a5'];
+            'danger'  => ['bg'=>'var(--danger-cnt)',  'border'=>'var(--danger)',  'text'=>'var(--danger)'],
+            'warning' => ['bg'=>'var(--warning-cnt)', 'border'=>'var(--warning)', 'text'=>'var(--warning)'],
+            'success' => ['bg'=>'var(--success-cnt)', 'border'=>'var(--success)', 'text'=>'var(--success)'],
+            'info'    => ['bg'=>'rgba(0,79,80,.5)',   'border'=>'var(--tertiary)','text'=>'var(--tertiary)'],
+        ][$tone] ?? ['bg'=>'var(--danger-cnt)', 'border'=>'var(--danger)', 'text'=>'var(--danger)'];
         $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
     ?>
-    <div class="rounded-2xl border px-4 py-3"
-         style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;">
-        <p class="font-semibold text-sm"><?= $toneIcon ?> <?= htmlspecialchars($activeBanner['title'] ?? 'Annonce') ?></p>
-        <p class="text-sm opacity-85 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+    <div class="md-banner" style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;" role="alert">
+        <span class="text-lg flex-shrink-0 mt-px" aria-hidden="true"><?= $toneIcon ?></span>
+        <div>
+            <p class="font-semibold text-sm"><?= htmlspecialchars($activeBanner['title'] ?? 'Annonce') ?></p>
+            <p class="text-sm opacity-85 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Network limited warning -->
+    <?php if ($networkLimited): ?>
+    <div class="md-banner fade-up" style="background:var(--warning-cnt);border-color:var(--warning);color:var(--warning);" role="alert">
+        <span class="text-lg flex-shrink-0 mt-px" aria-hidden="true">⚠️</span>
+        <div>
+            <p class="font-semibold text-sm">Réseau serveur limité</p>
+            <p class="text-sm opacity-85 mt-0.5">
+                Le serveur ne peut pas atteindre les services externes. Les résultats ci-dessous peuvent
+                refléter une restriction réseau et non un vrai problème de disponibilité.
+                <a href="/status.php?refresh=1" class="underline font-medium">Rafraîchir</a>
+            </p>
+        </div>
     </div>
     <?php endif; ?>
 
     <!-- Header -->
-    <header class="panel p-5 sm:p-6">
-        <div class="flex items-start justify-between gap-4">
+    <header class="panel p-5 sm:p-6 fade-up" style="animation-delay:.04s">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style="background:rgba(5,150,105,.18);border:1px solid rgba(5,150,105,.35);">
-                    <span class="text-xl">📡</span>
+                <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                     style="background:var(--success-cnt);border:1px solid rgba(109,213,140,.25);">
+                    <span class="text-xl" aria-hidden="true">📡</span>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-white">Statuts des services</h1>
-                    <p class="text-white/40 text-xs mt-0.5">
-                        Mesure serveur en temps réel · <?= htmlspecialchars($lastCheckLabel) ?>
-                        <?php if ($useCache): ?><span class="text-white/25">(cache)</span><?php endif; ?>
+                    <h1 class="text-xl font-bold" style="color:var(--on-surface);">Statuts des services</h1>
+                    <p class="text-xs mt-0.5" style="color:var(--on-surface-var);">
+                        Mesure serveur · <?= htmlspecialchars($lastCheckLabel) ?>
+                        <?php if ($useCache): ?><span style="color:var(--outline);">(cache)</span><?php endif; ?>
                     </p>
                 </div>
             </div>
-            <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-                <span class="text-xs px-2.5 py-1 rounded-full font-semibold"
-                      style="<?= $upCount === $totalCount ? 'background:rgba(5,150,105,.18);color:#34d399;border:1px solid rgba(5,150,105,.35);' : 'background:rgba(220,38,38,.14);color:#f87171;border:1px solid rgba(220,38,38,.3);' ?>">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs px-3 py-1.5 rounded-full font-medium"
+                      style="<?= $upCount === $totalCount ? 'background:var(--success-cnt);color:var(--success);' : 'background:var(--danger-cnt);color:var(--danger);' ?>">
                     <?= $upCount === $totalCount ? '✓' : '!' ?> Sites <?= $upCount ?>/<?= $totalCount ?>
                 </span>
-                <span class="text-xs px-2.5 py-1 rounded-full font-semibold"
-                      style="<?= $upApps === $totalApps ? 'background:rgba(5,150,105,.18);color:#34d399;border:1px solid rgba(5,150,105,.35);' : 'background:rgba(220,38,38,.14);color:#f87171;border:1px solid rgba(220,38,38,.3);' ?>">
+                <?php if ($totalApps > 0): ?>
+                <span class="text-xs px-3 py-1.5 rounded-full font-medium"
+                      style="<?= $upApps === $totalApps ? 'background:var(--success-cnt);color:var(--success);' : 'background:var(--danger-cnt);color:var(--danger);' ?>">
                     <?= $upApps === $totalApps ? '✓' : '!' ?> Apps <?= $upApps ?>/<?= $totalApps ?>
                 </span>
+                <?php endif; ?>
                 <a href="/status.php?refresh=1"
-                   class="text-xs px-2.5 py-1 rounded-full font-semibold transition"
-                   style="background:rgba(124,58,237,.14);color:#a78bfa;border:1px solid rgba(124,58,237,.3);">
+                   class="text-xs px-3 py-1.5 rounded-full font-medium transition"
+                   style="background:var(--primary-cnt);color:var(--primary-cnt-on);"
+                   onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                     ↺ Rafraîchir
                 </a>
             </div>
@@ -370,38 +424,50 @@ $lastCheckLabel = $lastCheckAgo < 60
     </header>
 
     <!-- Sites -->
-    <section>
-        <p class="sec-title mb-3">Sites surveillés</p>
-        <div class="space-y-2">
+    <section aria-labelledby="sites-heading">
+        <p id="sites-heading" class="sec-title mb-3">Sites surveillés</p>
+        <div class="space-y-2" role="list">
             <?php foreach ($results as $item):
-                $ok   = $item['ping']['ok'];
-                $code = (int)$item['ping']['code'];
-                $ms   = (int)$item['ping']['ms'];
-                $err  = $item['ping']['error'];
+                $ok      = $item['ping']['ok'];
+                $code    = (int)$item['ping']['code'];
+                $ms      = (int)$item['ping']['ms'];
+                $err     = $item['ping']['error'];
+                $netErr  = !empty($item['ping']['net_err']);
+                // Classify HTTP status
+                if ($ok) {
+                    $dotClass = ($code >= 400) ? 'dot-warn' : 'dot-ok';
+                    $statusLabel = ($code >= 400) ? 'Accessible (HTTP '.$code.')' : 'En ligne';
+                    $statusColor = ($code >= 400) ? 'var(--warning)' : 'var(--success)';
+                } else {
+                    $dotClass = $netErr ? 'dot-unknown' : 'dot-err';
+                    $statusLabel = $netErr ? 'Inaccessible (réseau)' : 'Hors ligne';
+                    $statusColor = $netErr ? 'var(--outline)' : 'var(--danger)';
+                }
             ?>
-            <div class="status-row px-4 py-3">
+            <div class="status-row px-4 py-3" role="listitem">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="<?= $ok ? 'status-dot-ok' : 'status-dot-err' ?> flex-shrink-0"></div>
+                        <div class="<?= $dotClass ?>" aria-hidden="true"></div>
                         <div class="min-w-0">
-                            <p class="text-white font-semibold text-sm"><?= htmlspecialchars($item['name']) ?></p>
+                            <p class="font-semibold text-sm" style="color:var(--on-surface);"><?= htmlspecialchars($item['name']) ?></p>
                             <a href="<?= htmlspecialchars($item['url']) ?>" target="_blank" rel="noopener noreferrer"
-                               class="text-xs text-white/38 hover:text-white/65 truncate block">
+                               class="text-xs truncate block transition-opacity hover:opacity-75"
+                               style="color:var(--outline);">
                                 <?= htmlspecialchars($item['url']) ?>
                             </a>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
-                            <?= $ok ? 'En ligne' : 'Hors ligne' ?>
+                        <p class="text-sm font-medium" style="color:<?= $statusColor ?>;">
+                            <?= $statusLabel ?>
                         </p>
-                        <p class="text-xs text-white/35 mt-0.5">
+                        <p class="text-xs mt-0.5" style="color:var(--outline);">
                             <?= $code ? 'HTTP '.$code : '—' ?> · <?= $ms ?> ms
                         </p>
                     </div>
                 </div>
-                <?php if (!$ok && $err !== ''): ?>
-                <p class="text-xs mt-2 pl-5" style="color:#fca5a5;">Erreur : <?= htmlspecialchars($err) ?></p>
+                <?php if (!$ok && $err !== '' && !$netErr): ?>
+                <p class="text-xs mt-2 pl-5" style="color:var(--danger);">Erreur : <?= htmlspecialchars($err) ?></p>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
@@ -410,41 +476,52 @@ $lastCheckLabel = $lastCheckAgo < 60
 
     <!-- Apps -->
     <?php if (!empty($appResults)): ?>
-    <section>
-        <p class="sec-title mb-3">Applications surveillées</p>
-        <div class="space-y-2">
+    <section aria-labelledby="apps-heading">
+        <p id="apps-heading" class="sec-title mb-3">Applications surveillées</p>
+        <div class="space-y-2" role="list">
             <?php foreach ($appResults as $item):
-                $ok   = $item['ping']['ok'];
-                $code = (int)$item['ping']['code'];
-                $ms   = (int)$item['ping']['ms'];
-                $err  = $item['ping']['error'];
+                $ok      = $item['ping']['ok'];
+                $code    = (int)$item['ping']['code'];
+                $ms      = (int)$item['ping']['ms'];
+                $err     = $item['ping']['error'];
+                $netErr  = !empty($item['ping']['net_err']);
+                if ($ok) {
+                    $dotClass = ($code >= 400) ? 'dot-warn' : 'dot-ok';
+                    $statusLabel = ($code >= 400) ? 'Accessible (HTTP '.$code.')' : 'En ligne';
+                    $statusColor = ($code >= 400) ? 'var(--warning)' : 'var(--success)';
+                } else {
+                    $dotClass = $netErr ? 'dot-unknown' : 'dot-err';
+                    $statusLabel = $netErr ? 'Inaccessible (réseau)' : 'Hors ligne';
+                    $statusColor = $netErr ? 'var(--outline)' : 'var(--danger)';
+                }
             ?>
-            <div class="status-row px-4 py-3">
+            <div class="status-row px-4 py-3" role="listitem">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="<?= $ok ? 'status-dot-ok' : 'status-dot-err' ?> flex-shrink-0"></div>
+                        <div class="<?= $dotClass ?>" aria-hidden="true"></div>
                         <div class="min-w-0">
-                            <p class="text-white font-semibold text-sm">
-                                <?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?>
+                            <p class="font-semibold text-sm" style="color:var(--on-surface);">
+                                <span aria-hidden="true"><?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?></span>
                                 <?= htmlspecialchars($item['name']) ?>
                             </p>
                             <a href="<?= htmlspecialchars($item['url']) ?>" target="_blank" rel="noopener noreferrer"
-                               class="text-xs text-white/38 hover:text-white/65 truncate block">
+                               class="text-xs truncate block transition-opacity hover:opacity-75"
+                               style="color:var(--outline);">
                                 <?= htmlspecialchars($item['url']) ?>
                             </a>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-sm font-semibold <?= $ok ? 'text-emerald-300' : 'text-red-300' ?>">
-                            <?= $ok ? 'En ligne' : 'Hors ligne' ?>
+                        <p class="text-sm font-medium" style="color:<?= $statusColor ?>;">
+                            <?= $statusLabel ?>
                         </p>
-                        <p class="text-xs text-white/35 mt-0.5">
+                        <p class="text-xs mt-0.5" style="color:var(--outline);">
                             <?= $code ? 'HTTP '.$code : '—' ?> · <?= $ms ?> ms
                         </p>
                     </div>
                 </div>
-                <?php if (!$ok && $err !== ''): ?>
-                <p class="text-xs mt-2 pl-5" style="color:#fca5a5;">Erreur : <?= htmlspecialchars($err) ?></p>
+                <?php if (!$ok && $err !== '' && !$netErr): ?>
+                <p class="text-xs mt-2 pl-5" style="color:var(--danger);">Erreur : <?= htmlspecialchars($err) ?></p>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
@@ -454,29 +531,30 @@ $lastCheckLabel = $lastCheckAgo < 60
 
     <!-- Unavailable Apps -->
     <?php if (!empty($unavailableAppResults)): ?>
-    <section>
-        <p class="sec-title mb-3">Applications indisponibles</p>
-        <div class="space-y-2">
+    <section aria-labelledby="unavail-heading">
+        <p id="unavail-heading" class="sec-title mb-3">Applications indisponibles</p>
+        <div class="space-y-2" role="list">
             <?php foreach ($unavailableAppResults as $item):
                 $appStatus = $item['status'] ?? 'disabled';
             ?>
-            <div class="status-row px-4 py-3 opacity-60">
+            <div class="status-row px-4 py-3 opacity-70" role="listitem">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="status-dot-err flex-shrink-0" style="background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);"></div>
+                        <div class="dot-warn" aria-hidden="true"></div>
                         <div class="min-w-0">
-                            <p class="text-white font-semibold text-sm">
-                                <?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?>
+                            <p class="font-semibold text-sm" style="color:var(--on-surface);">
+                                <span aria-hidden="true"><?= ($item['emoji'] ?? '') !== '' ? htmlspecialchars((string)$item['emoji']) : appEmoji((string)$item['icon']) ?></span>
                                 <?= htmlspecialchars($item['name']) ?>
                             </p>
                             <a href="<?= htmlspecialchars($item['url']) ?>" target="_blank" rel="noopener noreferrer"
-                               class="text-xs text-white/38 hover:text-white/65 truncate block">
+                               class="text-xs truncate block transition-opacity hover:opacity-75"
+                               style="color:var(--outline);">
                                 <?= htmlspecialchars($item['url']) ?>
                             </a>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-sm font-semibold" style="color:#fbbf24;">
+                        <p class="text-sm font-medium" style="color:var(--warning);">
                             <?= $appStatus === 'maintenance' ? '🔧 Maintenance' : '⛔ Désactivé' ?>
                         </p>
                     </div>
