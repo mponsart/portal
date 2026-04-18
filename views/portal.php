@@ -109,18 +109,6 @@ function appEmoji(string $icon): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail — Groupe Speed Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'violet': { 400:'#a78bfa', 500:'#8b5cf6', 600:'#7c3aed', 700:'#6d28d9' },
-                        'cyan':   { 400:'#38bdf8', 500:'#0ea5e9', 600:'#0891b2' },
-                    }
-                }
-            }
-        };
-    </script>
     <link rel="icon" type="image/png" href="/assets/images/cloudy.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -130,193 +118,189 @@ function appEmoji(string $icon): string {
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             overflow-x: hidden;
-            color: #f1f5f9;
+            color: var(--on-surface);
         }
 
-        /* ── ambient background ─────────────────────────────────────── */
-        .bg-ambient {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background:
-                radial-gradient(ellipse 70% 55% at 8%    0%,  rgba(124,58,237,.32) 0%, transparent 55%),
-                radial-gradient(ellipse 55% 45% at 94%  100%, rgba(8,145,178,.25)  0%, transparent 55%),
-                radial-gradient(ellipse 40% 32% at 52%   52%, rgba(109,40,217,.08) 0%, transparent 68%);
+        /* ── Hero Card ──────────────────────────────────────────────── */
+        .hero-card {
+            background: linear-gradient(145deg, rgba(79,55,139,.28) 0%, var(--surface-1) 60%);
+            border-radius: var(--shape-xl);
+            box-shadow: var(--elev-2);
+            transition: box-shadow .2s;
         }
 
-        /* ── panel ──────────────────────────────────────────────────── */
-        .panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            transition: border-color .14s;
-        }
-        .panel:hover { border-color: var(--border-hov); }
-
-        /* ── hero panel ─────────────────────────────────────────────── */
-        .hero-panel {
-            background: linear-gradient(145deg, rgba(124,58,237,.13) 0%, var(--surface) 55%);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            transition: border-color .14s;
-        }
-        .hero-panel:hover { border-color: rgba(124,58,237,.25); }
-
-        /* ── app card ───────────────────────────────────────────────── */
+        /* ── App Card ───────────────────────────────────────────────── */
         .app-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            transition: transform .17s cubic-bezier(.34,1.56,.64,1),
-                        background .13s ease,
-                        border-color .13s ease,
-                        box-shadow .17s ease;
+            background: var(--surface-1);
+            border-radius: var(--shape-lg);
+            box-shadow: var(--elev-1);
+            transition: transform .2s cubic-bezier(.34,1.56,.64,1),
+                        box-shadow .2s ease,
+                        background .14s ease;
             cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .app-card:hover {
             transform: translateY(-4px);
-            background: var(--surface-hov);
-            border-color: rgba(167,139,250,.38);
-            box-shadow: 0 14px 36px rgba(124,58,237,.2), 0 0 0 1px rgba(167,139,250,.1);
+            background: var(--surface-2);
+            box-shadow: var(--elev-3);
         }
-        .app-card:active { transform: translateY(-1px); }
+        .app-card:active { transform: translateY(-1px); box-shadow: var(--elev-1); }
 
-        /* ── workspace app card (cyan accent) ───────────────────────── */
-        .app-card.ws:hover {
-            border-color: rgba(56,189,248,.38);
-            box-shadow: 0 14px 36px rgba(8,145,178,.2), 0 0 0 1px rgba(56,189,248,.1);
-        }
+        /* ── App Card — workspace (teal accent) ─────────────────────── */
+        .app-card.ws:hover { box-shadow: 0 8px 24px rgba(0,79,80,.35), var(--elev-2); }
 
-        /* ── emoji container ────────────────────────────────────────── */
+        /* ── Emoji wrap ─────────────────────────────────────────────── */
         .emoji-wrap {
-            width: 48px; height: 48px;
-            border-radius: 14px;
+            width: 52px; height: 52px;
+            border-radius: var(--shape-md);
             display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,.07);
-            border: 1px solid rgba(255,255,255,.09);
-            transition: transform .17s ease, background .13s ease;
+            background: rgba(208,188,255,.08);
+            transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .14s;
         }
         .app-card:hover .emoji-wrap {
-            background: rgba(255,255,255,.12);
-            transform: scale(1.1);
+            background: rgba(208,188,255,.14);
+            transform: scale(1.08);
         }
 
-        /* ── search ─────────────────────────────────────────────────── */
+        /* ── Search ─────────────────────────────────────────────────── */
         .search-wrap {
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.11);
-            border-radius: 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--outline-var);
+            border-radius: var(--shape-full);
             transition: border-color .14s, box-shadow .14s, background .14s;
+            overflow: hidden;
         }
         .search-wrap:focus-within {
-            border-color: rgba(167,139,250,.55);
-            background: rgba(255,255,255,.08);
-            box-shadow: 0 0 0 3px rgba(124,58,237,.2), 0 4px 24px rgba(124,58,237,.12);
+            border-color: var(--primary);
+            box-shadow: var(--focus-ring);
         }
-        .search-wrap input:focus { outline: none; }
+        .search-wrap input:focus { outline: none !important; box-shadow: none !important; border: none !important; }
 
-        /* ── google coloured logo ───────────────────────────────────── */
-        .g-logo { font-size: 1.1rem; font-weight: 800; line-height: 1; user-select: none; }
+        /* ── Google coloured logo ───────────────────────────────────── */
+        .g-logo { font-size: 1rem; font-weight: 800; line-height: 1; user-select: none; letter-spacing: -.01em; }
         .g-logo .gb { color:#4285F4; } .g-logo .gr { color:#EA4335; }
         .g-logo .gy { color:#FBBC05; } .g-logo .gg { color:#34A853; }
 
-        /* ── clock ───────────────────────────────────────────────────── */
+        /* ── Clock ──────────────────────────────────────────────────── */
         #clock {
-            font-variant-numeric: tabular-nums; letter-spacing: -.045em;
-            background: linear-gradient(135deg, #fff 35%, rgba(167,139,250,.85) 100%);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -.04em;
+            background: linear-gradient(135deg, var(--on-surface) 30%, var(--primary) 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        /* ── section title ───────────────────────────────────────────── */
+        /* ── Section title ──────────────────────────────────────────── */
         .sec-title {
-            font-size: .68rem; font-weight: 700;
-            letter-spacing: .1em; text-transform: uppercase;
-            color: rgba(255,255,255,.40);
+            font-size: .6875rem; font-weight: 500;
+            letter-spacing: .06em; text-transform: uppercase;
+            color: var(--on-surface-var);
         }
         .sec-dot {
-            display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-            margin-right: .45rem; vertical-align: middle; position: relative; top: -1px;
+            display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+            margin-right: .5rem; vertical-align: middle; position: relative; top: -1px;
         }
 
-        /* ── featured card ───────────────────────────────────────────── */
+        /* ── Featured card ──────────────────────────────────────────── */
         .feat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            transition: border-color .14s, background .14s, transform .15s ease, box-shadow .15s ease;
+            background: var(--surface-1);
+            border-radius: var(--shape-lg);
+            box-shadow: var(--elev-1);
+            transition: box-shadow .2s, transform .18s ease, background .14s;
         }
         .feat-card:hover {
-            background: var(--surface-hov);
-            border-color: rgba(167,139,250,.32);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px rgba(0,0,0,.22);
+            transform: translateY(-3px);
+            box-shadow: var(--elev-3);
+            background: var(--surface-2);
         }
 
-        /* ── workspace quick-link ───────────────────────────────────── */
+        /* ── Workspace quick-link ───────────────────────────────────── */
         .ws-link {
-            background: rgba(255,255,255,.04);
-            border: 1px solid rgba(255,255,255,.07);
-            border-radius: 12px;
+            background: rgba(208,188,255,.04);
+            border: 1px solid var(--outline-var);
+            border-radius: var(--shape-md);
             transition: background .12s, border-color .12s;
+            text-decoration: none;
         }
         .ws-link:hover {
-            background: rgba(8,145,178,.12);
-            border-color: rgba(56,189,248,.28);
+            background: rgba(158,236,235,.08);
+            border-color: rgba(158,236,235,.3);
         }
 
-        /* ── avatar online ring + status dot ───────────────────────── */
-        .avatar-ring { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px rgba(52,211,153,.65); }
-        @keyframes pulse-green {
-            0%,100% { box-shadow: 0 0 0 0   rgba(52,211,153,.55); }
-            50%     { box-shadow: 0 0 0 4px  rgba(52,211,153,0);   }
+        /* ── Avatar status dot ──────────────────────────────────────── */
+        .avatar-ring { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--success); }
+        @keyframes pulse-ok {
+            0%,100% { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--success); }
+            50%     { box-shadow: 0 0 0 2px var(--bg), 0 0 0 5px rgba(109,213,140,0); }
         }
-        .status-dot { animation: pulse-green 2.6s ease infinite; }
+        .status-dot {
+            background: var(--success);
+            border: 2px solid var(--bg);
+            animation: pulse-ok 2.8s ease infinite;
+        }
 
-        /* ── search submit btn ───────────────────────────────────────── */
+        /* ── Search submit btn ──────────────────────────────────────── */
         .search-btn {
-            background: var(--primary);
+            background: var(--primary-cnt);
+            color: var(--primary-cnt-on);
+            border-radius: var(--shape-full);
             transition: background .14s, transform .1s, box-shadow .14s;
         }
         .search-btn:hover {
-            background: var(--primary-dk);
-            box-shadow: 0 4px 14px rgba(124,58,237,.4);
+            box-shadow: var(--elev-2);
+            transform: scale(1.02);
         }
         .search-btn:active { transform: scale(.96); }
 
-        /* ── page grid ───────────────────────────────────────────────── */
+        /* ── Page grid ──────────────────────────────────────────────── */
         .portal-shell { max-width: 1280px; }
-        .hero-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        .app-grid  { grid-template-columns: repeat(2, minmax(0,1fr)); }
-        .feat-grid { grid-template-columns: 1fr; }
+        .hero-grid  { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        .app-grid   { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .feat-grid  { grid-template-columns: 1fr; }
 
         @media (min-width: 640px) {
             .app-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
         }
         @media (min-width: 768px) {
-            .hero-grid { grid-template-columns: 1.5fr 1fr; }
-            .feat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-            .app-grid  { grid-template-columns: repeat(4, minmax(0,1fr)); }
+            .hero-grid  { grid-template-columns: 1.5fr 1fr; }
+            .feat-grid  { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .app-grid   { grid-template-columns: repeat(4, minmax(0,1fr)); }
         }
         @media (min-width: 1024px) {
             .feat-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
             .app-grid  { grid-template-columns: repeat(6, minmax(0,1fr)); }
         }
 
-        /* ── entry animations ────────────────────────────────────────── */
+        /* ── Entry animations ───────────────────────────────────────── */
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(14px); }
+            from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: none; }
         }
-        main > * { animation: fadeUp .38s ease both; }
+        main > * { animation: fadeUp .4s cubic-bezier(.22,1,.36,1) both; }
         main > *:nth-child(1) { animation-delay: .04s; }
-        main > *:nth-child(2) { animation-delay: .09s; }
-        main > *:nth-child(3) { animation-delay: .14s; }
-        main > *:nth-child(4) { animation-delay: .19s; }
-        main > *:nth-child(5) { animation-delay: .24s; }
+        main > *:nth-child(2) { animation-delay: .10s; }
+        main > *:nth-child(3) { animation-delay: .16s; }
+        main > *:nth-child(4) { animation-delay: .22s; }
+        main > *:nth-child(5) { animation-delay: .28s; }
+
+        /* ── Banner ─────────────────────────────────────────────────── */
+        .md-banner {
+            border-radius: var(--shape-lg);
+            border-left: 4px solid;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+        }
     </style>
 </head>
-<body class="min-h-screen text-white relative">
+<body class="min-h-screen relative">
 
-<div class="bg-ambient"></div>
+<div class="bg-ambient" aria-hidden="true"></div>
 
 <?php include __DIR__ . '/_nav.php'; ?>
 
@@ -325,16 +309,15 @@ function appEmoji(string $icon): string {
     <?php if ($activeBanner):
         $tone = $activeBanner['style'] ?? 'danger';
         $bannerStyles = [
-            'danger'  => ['bg'=>'rgba(220,38,38,.14)',  'border'=>'rgba(220,38,38,.35)',  'text'=>'#fca5a5'],
-            'warning' => ['bg'=>'rgba(217,119,6,.14)',  'border'=>'rgba(217,119,6,.35)',  'text'=>'#fcd34d'],
-            'success' => ['bg'=>'rgba(5,150,105,.14)',  'border'=>'rgba(5,150,105,.35)',  'text'=>'#6ee7b7'],
-            'info'    => ['bg'=>'rgba(8,145,178,.14)',  'border'=>'rgba(8,145,178,.35)',  'text'=>'#7dd3fc'],
-        ][$tone] ?? ['bg'=>'rgba(220,38,38,.14)', 'border'=>'rgba(220,38,38,.35)', 'text'=>'#fca5a5'];
+            'danger'  => ['bg'=>'var(--danger-cnt)',  'border'=>'var(--danger)',  'text'=>'var(--danger)'],
+            'warning' => ['bg'=>'var(--warning-cnt)', 'border'=>'var(--warning)', 'text'=>'var(--warning)'],
+            'success' => ['bg'=>'var(--success-cnt)', 'border'=>'var(--success)', 'text'=>'var(--success)'],
+            'info'    => ['bg'=>'rgba(0,79,80,.5)',   'border'=>'var(--tertiary)','text'=>'var(--tertiary)'],
+        ][$tone] ?? ['bg'=>'var(--danger-cnt)', 'border'=>'var(--danger)', 'text'=>'var(--danger)'];
         $toneIcon = ['danger'=>'🚨','warning'=>'⚠️','success'=>'✅','info'=>'ℹ️'][$tone] ?? '🚨';
     ?>
-    <div class="rounded-2xl border px-5 py-3.5 flex items-start gap-3"
-         style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;">
-        <span class="text-lg flex-shrink-0 mt-px"><?= $toneIcon ?></span>
+    <div class="md-banner" style="background:<?= $bannerStyles['bg'] ?>;border-color:<?= $bannerStyles['border'] ?>;color:<?= $bannerStyles['text'] ?>;" role="alert">
+        <span class="text-lg flex-shrink-0 mt-px" aria-hidden="true"><?= $toneIcon ?></span>
         <div>
             <p class="font-semibold text-sm"><?= htmlspecialchars($activeBanner['title'] ?? 'Annonce') ?></p>
             <p class="text-sm opacity-80 mt-0.5"><?= htmlspecialchars($activeBanner['message'] ?? '') ?></p>
@@ -346,7 +329,7 @@ function appEmoji(string $icon): string {
     <section class="hero-grid items-stretch">
 
         <!-- Greeting + Search -->
-        <article class="hero-panel p-6 sm:p-7 flex flex-col gap-5">
+        <article class="hero-card p-6 sm:p-7 flex flex-col gap-5">
 
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
 
@@ -355,43 +338,44 @@ function appEmoji(string $icon): string {
                     <?php if (!empty($user['picture'])): ?>
                     <div class="relative flex-shrink-0">
                         <img src="<?= htmlspecialchars($user['picture']) ?>"
-                             alt="Photo"
+                             alt="Photo de profil"
                              class="w-14 h-14 rounded-2xl object-cover avatar-ring">
-                        <span class="status-dot absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2"
-                              style="background:#34d399;border-color:var(--bg);"></span>
+                        <span class="status-dot absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full"
+                              aria-hidden="true"></span>
                     </div>
                     <?php endif; ?>
                     <div>
-                        <p class="text-white/40 text-xs font-semibold mb-1 tracking-widest uppercase">Bonjour,</p>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">
-                            <?= htmlspecialchars($firstName) ?>&thinsp;<span style="opacity:.75">👋</span>
+                        <p class="sec-title mb-1">Bonjour,</p>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight" style="color:var(--on-surface);">
+                            <?= htmlspecialchars($firstName) ?>&thinsp;<span aria-hidden="true">👋</span>
                         </h1>
-                        <p id="date-display" class="text-white/35 text-xs mt-1.5 capitalize font-medium"></p>
+                        <p id="date-display" class="text-xs mt-1.5 capitalize font-medium" style="color:var(--on-surface-var);"></p>
                     </div>
                 </div>
 
                 <!-- Clock -->
                 <div class="text-right flex-shrink-0">
-                    <p id="clock" class="text-4xl sm:text-5xl font-black">--:--</p>
-                    <p class="text-white/28 text-[11px] mt-1.5 font-semibold tracking-widest uppercase">Heure locale</p>
+                    <p id="clock" class="text-4xl sm:text-5xl font-black" aria-live="polite" aria-label="Heure">--:--</p>
+                    <p class="sec-title mt-1.5">Heure locale</p>
                 </div>
             </div>
 
             <!-- Divider -->
-            <div style="border-top:1px solid var(--border);"></div>
+            <hr class="md-divider">
 
             <!-- Google search -->
-            <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener">
+            <form action="https://www.google.com/search" method="get" target="_blank" rel="noopener noreferrer" role="search" aria-label="Recherche Google">
                 <input type="hidden" name="hl" value="fr">
-                <div class="search-wrap flex items-center gap-3 px-4 py-3">
-                    <span class="g-logo flex-shrink-0">
+                <div class="search-wrap flex items-center gap-3 px-4 py-2.5">
+                    <span class="g-logo flex-shrink-0" aria-label="Google">
                         <span class="gb">G</span><span class="gr">o</span><span class="gy">o</span><span class="gb">g</span><span class="gg">l</span><span class="gr">e</span>
                     </span>
                     <input type="text" name="q" placeholder="Rechercher sur Google…" autocomplete="off"
-                           class="flex-1 bg-transparent text-white placeholder-white/30 text-sm border-none shadow-none"
-                           style="height:auto;min-height:unset;border:none!important;box-shadow:none!important;">
+                           aria-label="Terme de recherche"
+                           class="flex-1 bg-transparent text-sm"
+                           style="color:var(--on-surface);border:none!important;box-shadow:none!important;min-height:unset;height:auto;border-radius:0;">
                     <button type="submit"
-                            class="search-btn flex-shrink-0 px-4 py-2 rounded-xl text-white text-xs font-semibold"
+                            class="search-btn flex-shrink-0 px-4 py-2 text-xs font-medium"
                             style="min-height:unset;">
                         Rechercher
                     </button>
@@ -400,24 +384,24 @@ function appEmoji(string $icon): string {
 
         </article>
 
-        <!-- Unavailable apps widget (only when needed) -->
+        <!-- Side panel -->
         <?php if (!empty($unavailableApps)): ?>
         <aside class="panel p-5 self-start">
-            <p class="sec-title mb-3.5"><span class="sec-dot" style="background:#fbbf24;"></span>Services indisponibles</p>
-            <ul class="space-y-1.5">
+            <p class="sec-title mb-4"><span class="sec-dot" style="background:var(--warning);"></span>Services indisponibles</p>
+            <ul class="space-y-1" role="list">
                 <?php foreach ($unavailableApps as $ua):
                     $uaName   = htmlspecialchars($ua['name'] ?? '');
                     $uaIcon   = strtolower(trim((string)($ua['icon'] ?? 'link')));
                     $uaEmoji  = trim((string)($ua['emoji'] ?? ''));
                     $uaStatus = $ua['status'] ?? 'disabled';
                 ?>
-                <li class="flex items-center gap-3 py-2" style="border-bottom:1px solid var(--border);">
-                    <span class="text-xl leading-none select-none flex-shrink-0"><?= $uaEmoji !== '' ? htmlspecialchars($uaEmoji) : appEmoji($uaIcon) ?></span>
-                    <span class="flex-1 text-sm text-white/75 truncate font-medium"><?= $uaName ?></span>
-                    <span class="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                <li class="md-list-item" style="border-bottom:1px solid var(--outline-var);">
+                    <span class="text-xl leading-none select-none flex-shrink-0" aria-hidden="true"><?= $uaEmoji !== '' ? htmlspecialchars($uaEmoji) : appEmoji($uaIcon) ?></span>
+                    <span class="flex-1 text-sm truncate font-medium" style="color:var(--on-surface);"><?= $uaName ?></span>
+                    <span class="flex-shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-full"
                           style="<?= $uaStatus === 'maintenance'
-                                    ? 'background:rgba(217,119,6,.18);color:#fbbf24;border-color:rgba(217,119,6,.35);'
-                                    : 'background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);border-color:rgba(255,255,255,.10);' ?>">
+                                    ? 'background:var(--warning-cnt);color:var(--warning);'
+                                    : 'background:rgba(255,255,255,.07);color:var(--on-surface-var);' ?>">
                         <?= $uaStatus === 'maintenance' ? '🔧 Maintenance' : 'Désactivé' ?>
                     </span>
                 </li>
@@ -425,29 +409,30 @@ function appEmoji(string $icon): string {
             </ul>
         </aside>
         <?php elseif (!empty($workspaceApps)): ?>
-        <!-- Workspace quick-access side panel -->
         <aside class="panel p-5 self-start flex flex-col gap-4">
             <div class="flex items-center justify-between">
-                <p class="sec-title"><span class="sec-dot" style="background:#38bdf8;"></span>Workspace</p>
-                <span class="text-[10px] font-semibold text-white/30 bg-white/[.055] px-2.5 py-0.5 rounded-full"><?= count($workspaceApps) ?> apps</span>
+                <p class="sec-title"><span class="sec-dot" style="background:var(--tertiary);"></span>Workspace</p>
+                <span class="text-[10px] font-medium px-2.5 py-1 rounded-full" style="background:rgba(208,188,255,.08);color:var(--on-surface-var);"><?= count($workspaceApps) ?> apps</span>
             </div>
-            <div class="space-y-1.5">
+            <div class="space-y-1" role="list">
                 <?php foreach (array_slice($workspaceApps, 0, 5) as $wa):
                     $wIcon  = $wa['icon'] ?? 'default';
                     $wEmoji = trim((string)($wa['emoji'] ?? ''));
                     $wName  = htmlspecialchars($wa['name'] ?? '');
                     $wUrl   = htmlspecialchars($wa['url'] ?? '#');
                 ?>
-                <a href="<?= $wUrl ?>" class="ws-link flex items-center gap-3 px-3 py-2.5 rounded-xl">
-                    <span class="text-xl leading-none"><?= $wEmoji !== '' ? htmlspecialchars($wEmoji) : appEmoji($wIcon) ?></span>
-                    <span class="text-sm font-medium text-white/80"><?= $wName ?></span>
-                    <span class="ml-auto text-white/22 text-xs">↗</span>
+                <a href="<?= $wUrl ?>" class="ws-link md-list-item block" role="listitem">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl leading-none" aria-hidden="true"><?= $wEmoji !== '' ? htmlspecialchars($wEmoji) : appEmoji($wIcon) ?></span>
+                        <span class="text-sm font-medium flex-1" style="color:var(--on-surface);"><?= $wName ?></span>
+                        <span class="text-xs" style="color:var(--on-surface-var);" aria-hidden="true">↗</span>
+                    </div>
                 </a>
                 <?php endforeach; ?>
             </div>
             <?php if ($portalCount): ?>
-            <div class="pt-1" style="border-top:1px solid var(--border);">
-                <p class="text-[11px] text-white/30 font-medium"><?= $portalCount ?> outil<?= $portalCount > 1 ? 's' : '' ?> configuré<?= $portalCount > 1 ? 's' : '' ?></p>
+            <div class="pt-2" style="border-top:1px solid var(--outline-var);">
+                <p class="text-[11px] font-medium" style="color:var(--on-surface-var);"><?= $portalCount ?> outil<?= $portalCount > 1 ? 's' : '' ?> configuré<?= $portalCount > 1 ? 's' : '' ?></p>
             </div>
             <?php endif; ?>
         </aside>
@@ -457,8 +442,8 @@ function appEmoji(string $icon): string {
 
     <!-- ══ FEATURED ANNOUNCEMENTS ═════════════════════════════════════ -->
     <?php if (!empty($featured)): ?>
-    <section>
-        <p class="sec-title mb-3.5"><span class="sec-dot" style="background:var(--primary-lt);"></span>À la une</p>
+    <section aria-labelledby="featured-heading">
+        <p id="featured-heading" class="sec-title mb-4"><span class="sec-dot" style="background:var(--primary-lt);"></span>À la une</p>
         <div class="feat-grid grid gap-3">
             <?php foreach ($featured as $ann):
                 $accentColor = htmlspecialchars($ann['color'] ?? '#7c3aed');
@@ -469,17 +454,17 @@ function appEmoji(string $icon): string {
             ?>
             <div class="feat-card p-4 sm:p-5" style="border-left:3px solid <?= $accentColor ?>;">
                 <div class="flex items-start gap-3.5">
-                    <span class="text-xl select-none mt-0.5 flex-shrink-0"><?= $annEmoji ?></span>
+                    <span class="text-xl select-none mt-0.5 flex-shrink-0" aria-hidden="true"><?= $annEmoji ?></span>
                     <div class="min-w-0 flex-1">
                         <?php if ($annTitle): ?>
-                        <p class="font-semibold text-sm text-white mb-1.5 leading-snug"><?= $annTitle ?></p>
+                        <p class="font-semibold text-sm mb-1.5 leading-snug" style="color:var(--on-surface);"><?= $annTitle ?></p>
                         <?php endif; ?>
-                        <p class="text-white/50 text-xs leading-relaxed line-clamp-2"><?= strip_tags($annHtml) ?></p>
+                        <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--on-surface-var);"><?= strip_tags($annHtml) ?></p>
                         <div class="flex items-center justify-between mt-3">
-                            <?php if ($annDate): ?><span class="text-white/25 text-[11px]"><?= $annDate ?></span><?php endif; ?>
+                            <?php if ($annDate): ?><span class="text-[11px]" style="color:var(--outline);"><?= $annDate ?></span><?php endif; ?>
                             <a href="/article.php?id=<?= urlencode((string)($ann['id'] ?? '')) ?>"
-                               class="text-xs font-semibold ml-auto transition-opacity hover:opacity-75"
-                               style="color:var(--primary-lt);">
+                               class="text-xs font-medium ml-auto transition-opacity hover:opacity-75"
+                               style="color:var(--primary);">
                                 Lire l'article →
                             </a>
                         </div>
@@ -493,8 +478,8 @@ function appEmoji(string $icon): string {
 
     <!-- ══ GOOGLE WORKSPACE ═══════════════════════════════════════════ -->
     <?php if (!empty($workspaceApps)): ?>
-    <section>
-        <p class="sec-title mb-3.5"><span class="sec-dot" style="background:#38bdf8;"></span>Suite Google Workspace</p>
+    <section aria-labelledby="workspace-heading">
+        <p id="workspace-heading" class="sec-title mb-4"><span class="sec-dot" style="background:var(--tertiary);"></span>Suite Google Workspace</p>
         <div class="app-grid grid gap-3">
             <?php foreach ($workspaceApps as $app):
                 $appName       = htmlspecialchars($app['name'] ?? '');
@@ -503,11 +488,12 @@ function appEmoji(string $icon): string {
                 $appEmojiValue = trim((string)($app['emoji'] ?? ''));
             ?>
             <a href="<?= $appUrl ?>"
-               class="app-card ws flex flex-col items-center gap-2.5 p-3.5 pt-5 text-center">
-                <div class="emoji-wrap">
+               class="app-card ws gap-2.5 p-3.5 pt-5 text-center"
+               aria-label="<?= $appName ?>">
+                <div class="emoji-wrap" aria-hidden="true">
                     <span class="text-2xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
-                <span class="text-xs font-semibold text-white/65 leading-tight pb-1"><?= $appName ?></span>
+                <span class="text-xs font-medium leading-tight pb-1" style="color:var(--on-surface-var);"><?= $appName ?></span>
             </a>
             <?php endforeach; ?>
         </div>
@@ -515,10 +501,13 @@ function appEmoji(string $icon): string {
     <?php endif; ?>
 
     <!-- ══ APPLICATIONS ═══════════════════════════════════════════════ -->
-    <section>
-        <p class="sec-title mb-3.5"><span class="sec-dot" style="background:var(--primary-lt);"></span>Applications<?php if ($portalCount): ?> <span class="normal-case tracking-normal opacity-55 font-semibold">(<?= $portalCount ?>)</span><?php endif; ?></p>
+    <section aria-labelledby="apps-heading">
+        <p id="apps-heading" class="sec-title mb-4">
+            <span class="sec-dot" style="background:var(--primary);"></span>
+            Applications<?php if ($portalCount): ?> <span class="normal-case tracking-normal font-medium" style="color:var(--outline);">(<?= $portalCount ?>)</span><?php endif; ?>
+        </p>
         <?php if (empty($portalApps)): ?>
-        <div class="panel p-6 text-sm text-white/40 text-center">Aucune application configurée.</div>
+        <div class="panel p-8 text-sm text-center" style="color:var(--on-surface-var);">Aucune application configurée.</div>
         <?php else: ?>
         <div class="app-grid grid gap-3">
             <?php foreach ($portalApps as $app):
@@ -528,11 +517,12 @@ function appEmoji(string $icon): string {
                 $appEmojiValue = trim((string)($app['emoji'] ?? ''));
             ?>
             <a href="<?= $appUrl ?>"
-               class="app-card flex flex-col items-center gap-2.5 p-3.5 pt-5 text-center">
-                <div class="emoji-wrap">
+               class="app-card gap-2.5 p-3.5 pt-5 text-center"
+               aria-label="<?= $appName ?>">
+                <div class="emoji-wrap" aria-hidden="true">
                     <span class="text-2xl leading-none select-none"><?= $appEmojiValue !== '' ? htmlspecialchars($appEmojiValue) : appEmoji($appIcon) ?></span>
                 </div>
-                <span class="text-xs font-semibold text-white/65 leading-tight pb-1"><?= $appName ?></span>
+                <span class="text-xs font-medium leading-tight pb-1" style="color:var(--on-surface-var);"><?= $appName ?></span>
             </a>
             <?php endforeach; ?>
         </div>

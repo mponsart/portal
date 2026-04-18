@@ -36,20 +36,21 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <?php include __DIR__ . '/_ui-tokens.php'; ?>
     <style>
-        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color-scheme:dark; color:var(--on-surface); }
         .bg-ambient { position:fixed; inset:0; pointer-events:none; z-index:0;
-            background: radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124,58,237,.26) 0%, transparent 65%),
-                        radial-gradient(ellipse 50% 40% at 88% 100%, rgba(8,145,178,.18) 0%, transparent 60%); }
-        .glass { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); border-radius:16px; }
-        .admin-card { transition:transform .16s,border-color .16s,background .16s,box-shadow .16s; min-height:clamp(108px, 10vw, 132px); }
-        .admin-card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,.24); background:rgba(255,255,255,.08); box-shadow:0 12px 28px rgba(0,0,0,.28); }
+            background:
+                radial-gradient(ellipse 70% 55% at 8% 0%, rgba(79,55,139,.35) 0%, transparent 55%),
+                radial-gradient(ellipse 55% 45% at 94% 100%, rgba(0,79,80,.25) 0%, transparent 55%); }
+        .glass { background:var(--surface-1); border-radius:var(--shape-xl); box-shadow:var(--elev-1); }
+        .admin-card { transition:transform .16s,box-shadow .2s,background .14s; min-height:clamp(108px, 10vw, 132px); }
+        .admin-card:hover { transform:translateY(-3px); box-shadow:var(--elev-3); background:var(--surface-2); }
         .stat-card { min-height:78px; }
         .kpi-value { font-size:clamp(1.15rem, 2.3vw, 1.7rem); line-height:1.05; }
         .dash-shell { max-width:1200px; }
-        .section-title { letter-spacing:.08em; font-size:.7rem; text-transform:uppercase; color:rgba(226,232,240,.6); }
+        .section-title { letter-spacing:.06em; font-size:.6875rem; text-transform:uppercase; color:var(--on-surface-var); font-weight:500; }
         .hero-grid { display:grid; gap:1rem; grid-template-columns:1fr; }
-        .quick-btn { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); }
-        .quick-btn:hover { background:rgba(255,255,255,.14); }
+        .quick-btn { background:var(--surface-2); border-radius:var(--shape-md); transition:background .14s; text-decoration:none; display:block; }
+        .quick-btn:hover { background:var(--surface-3); }
         @media (min-width: 1024px) {
             .hero-grid { grid-template-columns:1.35fr .95fr; }
             .no-scroll-desktop { height:calc(100vh - 64px); overflow:hidden; }
@@ -101,8 +102,8 @@ $activeBanners = count(array_filter($banners, fn($b) => !empty($b['active'])));
         <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 h-full">
             <a href="/admin-news.php" class="admin-card glass rounded-3xl p-4 block border border-white/10">
                 <p class="text-base font-semibold">📰 Actualités</p>
-                <p class="text-white/50 text-xs mt-1">Créer, publier, modifier.</p>
-                <p class="text-xs text-violet-400 mt-3">Ouvrir →</p>
+                 <p class="text-sm mt-1" style="color:var(--on-surface-var);">Créer, publier, modifier.</p>
+                 <p class="text-xs mt-3" style="color:var(--primary);">Ouvrir →</p>
             </a>
             <a href="/admin-banners.php" class="admin-card glass rounded-3xl p-4 block border border-white/10">
                 <p class="text-base font-semibold">📣 Bannières</p>
