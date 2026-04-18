@@ -296,9 +296,10 @@ $allPings = array_merge(
     array_column($appResults, 'ping')
 );
 $failedPings = array_filter($allPings, fn($p) => !$p['ok']);
-$networkLimited = !$useCache && count($failedPings) > 0
-    && count(array_filter($failedPings, fn($p) => !empty($p['net_err']))) === count($failedPings)
-    && count($failedPings) === count($allPings);
+$failedCount = count($failedPings);
+$networkLimited = !$useCache && $failedCount > 0
+    && count(array_filter($failedPings, fn($p) => !empty($p['net_err']))) === $failedCount
+    && $failedCount === count($allPings);
 
 $lastCheckTs  = $useCache ? (int)$cache['created_at'] : time();
 $lastCheckAgo = max(0, time() - $lastCheckTs);

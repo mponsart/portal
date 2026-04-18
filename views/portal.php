@@ -355,7 +355,7 @@ function appEmoji(string $icon): string {
 
                 <!-- Clock -->
                 <div class="text-right flex-shrink-0">
-                    <p id="clock" class="text-4xl sm:text-5xl font-black" aria-live="polite" aria-label="Heure">--:--</p>
+                    <p id="clock" class="text-4xl sm:text-5xl font-black" aria-live="polite" aria-label="Heure actuelle">--:--</p>
                     <p class="sec-title mt-1.5">Heure locale</p>
                 </div>
             </div>
