@@ -145,8 +145,16 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
+              || (($_POST['_ajax'] ?? '') === '1');
+
     $postedToken = $_POST['csrf_token'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'], (string)$postedToken)) {
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'message' => 'Token CSRF invalide.']);
+            exit;
+        }
         $_SESSION['admin_apps_flash'] = ['type' => 'error', 'message' => 'Token CSRF invalide.'];
         header('Location: /admin-apps.php');
         exit;
@@ -154,6 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action = trim((string)($_POST['action'] ?? ''));
     $ok = false;
+
+    ob_start();
 
     if ($action === 'add_app') {
         $name = normalizeName((string)($_POST['name'] ?? ''));
@@ -220,7 +230,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+    ob_end_clean();
+
+    if ($isAjax) {
         header('Content-Type: application/json');
         echo json_encode(['ok' => $ok, 'message' => $ok ? 'Enregistré.' : 'Échec de l\'enregistrement.']);
         exit;
@@ -496,6 +508,7 @@ foreach ($apps as $idx => $app) {
     // ── AJAX générique ───────────────────────────────────────────────────
     async function submitAjax(form, btn) {
         const body = new FormData(form);
+        body.append('_ajax', '1');
         btn.disabled = true;
         try {
             const res  = await fetch(form.action || window.location.href, {
@@ -503,7 +516,14 @@ foreach ($apps as $idx => $app) {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body,
             });
-            const json = await res.json();
+            const raw = await res.text();
+            let json;
+            try {
+                json = JSON.parse(raw);
+            } catch {
+                throw new Error(res.ok ? 'Réponse serveur invalide.' : `Erreur ${res.status}.`);
+            }
+            if (!res.ok) throw new Error(json.message || `Erreur ${res.status}.`);
             showFeedback(btn, json.ok, json.message);
 
             // Si suppression réussie → retirer la carte du DOM
@@ -516,8 +536,8 @@ foreach ($apps as $idx => $app) {
             if (json.ok && body.get('action') === 'add_app') {
                 setTimeout(() => window.location.reload(), 800);
             }
-        } catch {
-            showFeedback(btn, false, 'Erreur réseau');
+        } catch (err) {
+            showFeedback(btn, false, err.message || 'Erreur réseau');
         }
     }
 
