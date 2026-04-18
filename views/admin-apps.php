@@ -526,10 +526,10 @@ foreach ($apps as $idx => $app) {
             if (!res.ok) throw new Error(json.message || `Erreur ${res.status}.`);
             showFeedback(btn, json.ok, json.message);
 
-            // Si suppression réussie → retirer la carte du DOM
+            // Si suppression réussie → recharger pour garder les index en sync
             if (json.ok && (body.get('action') === 'delete_app')) {
                 const card = btn.closest('.app-sort-item');
-                card?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 }).finished.then(() => card.remove());
+                card?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 }).finished.then(() => window.location.reload());
             }
 
             // Si ajout réussi → recharger la liste silencieusement
